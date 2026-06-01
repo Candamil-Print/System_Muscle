@@ -1,70 +1,101 @@
 <script lang="ts">
-  import { onMount } from 'svelte';
-  import Chart from 'chart.js/auto';
+	import { onMount } from 'svelte';
+	import Download from 'lucide-svelte/icons/download';
+	import Chart from 'chart.js/auto';
+	import type { ChartData, ChartType } from 'chart.js';
 
-  export let title = '';
-  export let type = 'bar';
-  export let data = {};
+	export let title = '';
+	export let type: ChartType = 'bar';
+	export let data: ChartData;
 
-  let canvas: HTMLCanvasElement;
-  let chart;
+	let canvas: HTMLCanvasElement;
+	let chart: Chart | null = null;
 
-  onMount(() => {
-    chart = new Chart(canvas, {
-      type,
-      data,
+	onMount(() => {
+		if (!canvas) return;
 
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
+		chart = new Chart(canvas, {
+			type,
+			data,
 
-        plugins: {
-          legend: {
-            labels: {
-              color: '#64748b'
-            }
-          }
-        },
+			options: {
+				responsive: true,
+				maintainAspectRatio: false,
 
-        scales:
-          type !== 'pie'
-            ? {
-                x: {
-                  ticks: {
-                    color: '#64748b'
-                  },
-                  grid: {
-                    display: false
-                  }
-                },
+				plugins: {
+					legend: {
+						labels: {
+							color: '#64748b'
+						}
+					}
+				},
 
-                y: {
-                  ticks: {
-                    color: '#64748b'
-                  },
-                  grid: {
-                    color: '#e2e8f0'
-                  }
-                }
-              }
-            : {}
-      }
-    });
+				scales:
+					type !== 'pie'
+						? {
+								x: {
+									ticks: {
+										color: '#64748b'
+									},
+									grid: {
+										display: false
+									}
+								},
 
-    return () => chart?.destroy();
-  });
+								y: {
+									ticks: {
+										color: '#64748b'
+									},
+									grid: {
+										color: '#e2e8f0'
+									}
+								}
+							}
+						: {}
+			}
+		});
+
+		return () => {
+			chart?.destroy();
+		};
+	});
+
+	$: if (chart && data) {
+		chart.data = data;
+		chart.update('none');
+	}
+
+	function descargarGrafico() {
+		if (!canvas) return;
+		
+		const image = canvas.toDataURL('image/png');
+		const link = document.createElement('a');
+		link.href = image;
+		link.download = `grafico-${title}-${new Date().toISOString().split('T')[0]}.png`;
+		document.body.appendChild(link);
+		link.click();
+		document.body.removeChild(link);
+	}
 </script>
 
 <div
-  class="rounded-2xl border border-slate-200 bg-white p-5"
+	class="rounded-2xl border border-slate-200 bg-white p-5"
 >
-  <div class="mb-5 flex items-center justify-between">
-    <h3 class="text-xl font-semibold text-slate-800">
-      {title}
-    </h3>
-  </div>
+	<div class="mb-5 flex items-center justify-between">
+		<h3 class="text-xl font-semibold text-slate-800">
+			{title}
+		</h3>
 
-  <div class="h-[300px]">
-    <canvas bind:this={canvas}></canvas>
-  </div>
+		<button
+			on:click={descargarGrafico}
+			class="h-10 w-10 rounded-lg border border-slate-200 flex items-center justify-center hover:bg-slate-50 transition-colors"
+			title="Descargar gráfico"
+		>
+			<Download class="w-5 h-5 text-slate-700" />
+		</button>
+	</div>
+
+	<div class="h-[300px]">
+		<canvas bind:this={canvas}></canvas>
+	</div>
 </div>

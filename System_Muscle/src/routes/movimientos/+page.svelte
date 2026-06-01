@@ -1,4 +1,6 @@
-<script>
+<script lang="ts">
+  import { Toaster } from 'svelte-sonner';
+  
   import Header from '$lib/components/layout/Header.svelte';
   import Sidebar from '$lib/components/layout/Sidebar.svelte';
 
@@ -7,27 +9,78 @@
   import MovementsFilters from '$lib/components/movimientos/MovementsFilters.svelte';
   import MovementsTable from '$lib/components/movimientos/MovementsTable.svelte';
 
-  import { movementsData } from '$lib/data/movementsData';
+  import { onMount } from 'svelte';
+
+  import {
+    listarMovements
+  } from '$lib/services/api/movements';
+
+  import type {
+    MovementDetail
+  } from '$lib/services/api/movements/movements.types';
+
+  let movements: MovementDetail[] = [];
+
+  let search = '';
+
+  $: filteredMovements = movements.filter((movement) => {
+
+    return movement.nombre_producto
+      .toLowerCase()
+      .includes(search.toLowerCase());
+
+  });
+
+  async function loadMovements() {
+
+    try {
+
+      const response = await listarMovements();
+
+      console.log('MOVEMENTS =>', response);
+
+      movements = response;
+
+    } catch (error) {
+
+      console.error(error);
+
+    }
+
+  }
+
+  onMount(() => {
+
+    loadMovements();
+
+  });
+
 </script>
+
+<Toaster position="top-center" />
 
 <div class="flex min-h-screen bg-slate-50">
 
   <Sidebar />
 
-  <div class="flex flex-1 flex-col ml-70">
+  <div class="ml-70 flex flex-1 flex-col">
 
     <Header />
 
-    <main class="p-6 space-y-6">
+    <main class="space-y-6 p-6">
 
       <MovementsTitle />
 
-      <MovementsStats />
+      <MovementsStats
+        {movements}
+      />
 
-      <MovementsFilters />
+      <MovementsFilters
+        bind:search
+      />
 
       <MovementsTable
-        movements={movementsData}
+        movements={filteredMovements}
       />
 
     </main>

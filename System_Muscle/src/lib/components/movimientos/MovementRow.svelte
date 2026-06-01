@@ -1,38 +1,57 @@
-<script>
+<script lang="ts">
+
   import Plus from 'lucide-svelte/icons/plus';
 
-  export let movement;
+  import type {
+    MovementDetail
+  } from '$lib/services/api/movements/movements.types';
+
+  export let movement: MovementDetail;
+
 </script>
 
-<tr class="border-t border-slate-100 hover:bg-slate-50 transition">
+<tr class="border-t border-slate-100 transition hover:bg-slate-50">
 
-  <td class=" py-4">
+  <!-- PRODUCTO -->
+  <td class="py-4">
+
     <span class="px-6 py-4 text-sm text-slate-600">
-      {movement.product}
+      {movement.nombre_producto}
     </span>
+
   </td>
 
+  <!-- CANTIDAD -->
   <td class="px-6 py-4">
-    <span class="flex items-center gap-1 px-3 py-1 rounded-full bg-[#1c5476]/10 text-[#1c5476] text-xs font-medium w-fit">
-      <Plus class="w-3 h-3" />
-      {movement.quantity}
+
+    <span class="flex w-fit items-center gap-1 rounded-full bg-[#1c5476]/10 px-3 py-1 text-xs font-medium text-[#1c5476]">
+
+      <Plus class="h-3 w-3" />
+
+      {movement.cantidad}
+
     </span>
+
   </td>
 
-  <td class="px-6 py-4 text-sm  text-slate-600">
-    {movement.previousStock}
-  </td>
-
+  <!-- STOCK ANTERIOR -->
   <td class="px-6 py-4 text-sm text-slate-600">
-    {movement.newStock}
+    —
   </td>
 
+  <!-- STOCK NUEVO -->
   <td class="px-6 py-4 text-sm text-slate-600">
-    {movement.receivedBy}
+    —
   </td>
 
+  <!-- USUARIO -->
   <td class="px-6 py-4 text-sm text-slate-600">
-    {movement.date}
+    {movement.nombre_usuario}
+  </td>
+
+  <!-- FECHA -->
+  <td class="px-6 py-4 text-sm text-slate-600">
+    {movement.fecha}
   </td>
 
 </tr>

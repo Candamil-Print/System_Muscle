@@ -1,20 +1,97 @@
 <script lang="ts">
+  import { onMount } from 'svelte';
+
   import ProductCard from './ProductCard.svelte';
 
-  interface Producto {
-    nombre: string;
-    categoria: string;
-    precio: number;
-    stock: number;
-    total: number;
-    imagen: string;
-  }
+  // IMPORTAR API
+  import {
+    listarProductos
+  } from '$lib/services/api/inventory';
 
-  export let productos: Producto[] = [];
+  // IMPORTAR TYPES
+  import type {
+    ProductoConStock
+  } from '$lib/services/api/inventory/inventory.types';
+
+  interface Producto 
+  { nombre: string; 
+    categoria: string; 
+    precio: number; 
+    stock: number; 
+    total: number; 
+    imagen: string; } 
+    
+    export let productos: Producto[] = [];
+
+  let loading = false;
+
+  // CARGAR PRODUCTOS
+  onMount(async () => {
+
+    try {
+
+      loading = true;
+
+      const response: ProductoConStock[] =
+        await listarProductos();
+
+
+
+      productos = response.map((product) => ({
+        id_producto: product.id_producto,
+        nombre: product.nombre,
+        categoria: product.tipo_producto || 'Sin categoría',
+        precio: product.precio_sugerido || 0,
+        stock: product.stock_actual || 0,
+        total: (product.precio_sugerido || 0) * (product.stock_actual || 0),
+        imagen: product.imagen_url || ''
+      }));
+
+    } catch (error) {
+
+      console.error(error);
+
+    } finally {
+
+      loading = false;
+
+    }
+
+  });
 </script>
 
-<div class="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
-  {#each productos as producto}
-    <ProductCard {producto} />
-  {/each}
-</div>
+<!-- LOADING -->
+{#if loading}
+
+  <div
+    class="flex items-center justify-center py-20 text-slate-500"
+  >
+    Cargando productos...
+  </div>
+
+{:else}
+
+  <!-- SIN RESULTADOS -->
+  {#if productos.length === 0}
+
+    <div
+      class="flex items-center justify-center rounded-2xl border border-dashed border-slate-300 bg-white py-20 text-slate-500"
+    >
+      No hay productos disponibles
+    </div>
+
+  {:else}
+
+    <!-- GRID -->
+    <div class="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
+
+      {#each productos as producto} 
+        <ProductCard {producto} /> 
+      {/each}
+
+    </div>
+
+  {/if}
+
+{/if}
+

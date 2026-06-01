@@ -2,59 +2,79 @@
   import Search from 'lucide-svelte/icons/search';
   import LayoutList from 'lucide-svelte/icons/layout-list';
   import LayoutGrid from 'lucide-svelte/icons/layout-grid';
+  import ChevronDown from 'lucide-svelte/icons/chevron-down';
 
   export let view: 'table' | 'grid' = 'table';
+
+  export let search = '';
+  export let category = 'Todos';
 </script>
 
-<div class="bg-white border border-slate-200 rounded-2xl p-4">
-  <div class="flex flex-col xl:flex-row gap-4 xl:items-center">
+<div class="rounded-2xl border border-slate-200 bg-white p-4">
 
+  <div class="flex flex-col gap-4 xl:flex-row xl:items-center">
+
+    <!-- SEARCH -->
     <div class="relative flex-1">
+
       <Search
-        class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400"
+        class="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400"
       />
 
       <input
         type="text"
+        bind:value={search}
         placeholder="Buscar producto..."
-        class="w-full h-11 pl-10 pr-4 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-cyan-700/20"
+        class="h-11 w-full rounded-xl border border-slate-200 pl-10 pr-4 focus:outline-none focus:ring-2 focus:ring-cyan-700/20"
+      />
+
+    </div>
+
+    <!-- CATEGORY -->
+    <div class="relative">
+      <select
+        bind:value={category}
+        class="h-11 w-full appearance-none rounded-xl border border-slate-200 bg-white px-4 py-3 pr-11 text-sm text-slate-700 outline-none transition duration-200 focus:border-[#0C4A6E] focus:ring-4 focus:ring-sky-100 focus:scale-[1.01]"
+      >
+        <option value="Todos">Todos</option>
+        <option value="SNACKS">Snacks</option>
+        <option value="SUPLEMENTOS">Suplementos</option>
+        <option value="BEBIDAS">Bebidas</option>
+      </select>
+
+      <ChevronDown
+        size={18}
+        class="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-slate-400"
       />
     </div>
 
-    <select
-      class="h-11 px-4 pr-10 rounded-xl border border-slate-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-cyan-700/20"
-    >
-      <option>Todos</option>
-      <option>Snacks</option>
-      <option>Suplementos</option>
-      <option>Bebidas</option>
-    </select>
-
-    <div class="flex overflow-hidden border border-slate-200 rounded-xl">
+    <!-- VIEW -->
+    <div class="flex overflow-hidden rounded-xl border border-slate-200">
 
       <button
-        on:click={() => (view = 'table')}
-        class={`w-11 h-11 flex items-center justify-center transition ${
+        onclick={() => (view = 'table')}
+        class={`flex h-11 w-11 items-center justify-center transition ${
           view === 'table'
             ? 'bg-slate-100 text-slate-900'
             : 'bg-white text-slate-500'
         }`}
       >
-        <LayoutList class="w-4 h-4" />
+        <LayoutList class="h-4 w-4" />
       </button>
 
       <button
-        on:click={() => (view = 'grid')}
-        class={`w-11 h-11 flex items-center justify-center transition ${
+        onclick={() => (view = 'grid')}
+        class={`flex h-11 w-11 items-center justify-center transition ${
           view === 'grid'
             ? 'bg-slate-100 text-slate-900'
             : 'bg-white text-slate-500'
         }`}
       >
-        <LayoutGrid class="w-4 h-4" />
+        <LayoutGrid class="h-4 w-4" />
       </button>
 
     </div>
 
   </div>
+
 </div>

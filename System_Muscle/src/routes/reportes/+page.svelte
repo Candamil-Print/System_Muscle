@@ -12,6 +12,17 @@
     salesHistory,
     salesStats
   } from '$lib/data/reportsData';
+
+  let filtros = {
+    fechaInicio: '',
+    fechaFin: '',
+    metodoPago: 'todos',
+    vendedor: 'todos'
+  };
+
+  function aplicarFiltros(nuevosFiltros) {
+    filtros = nuevosFiltros;
+  }
 </script>
 
 <div class="flex min-h-screen bg-slate-50">
@@ -38,13 +49,17 @@
 
       <ReportsTabs />
 
-      <ReportsFilters />
+      <ReportsFilters
+        onFilter={aplicarFiltros}
+      />
 
       <ReportsStats
         stats={salesStats}
       />
 
-      <ReportsCharts />
+      <ReportsCharts
+        {filtros}
+      />
 
       <ReportsTable
         sales={salesHistory}

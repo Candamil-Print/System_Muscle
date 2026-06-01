@@ -1,19 +1,26 @@
-<script>
+<script lang="ts">
+
   import Search from 'lucide-svelte/icons/search';
+
+  export let search = '';
+
 </script>
 
-<div class="bg-white border border-slate-200 rounded-2xl p-4">
+<div class="rounded-2xl border border-slate-200 bg-white p-4">
 
   <div class="relative">
+
     <Search
-      class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400"
+      class="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400"
     />
 
     <input
+      bind:value={search}
       type="text"
       placeholder="Buscar por producto..."
-      class="w-full h-11 pl-10 pr-4 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-cyan-700/20"
+      class="h-11 w-full rounded-xl border border-slate-200 pl-10 pr-4 focus:outline-none focus:ring-2 focus:ring-cyan-700/20"
     />
+
   </div>
 
 </div>

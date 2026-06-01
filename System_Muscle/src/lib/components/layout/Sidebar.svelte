@@ -1,5 +1,36 @@
 <script lang="ts">
     import { page } from '$app/stores';
+    import { onMount } from 'svelte';
+
+    let usuario = {
+        nombre_completo: '',
+        rol: ''
+    };
+
+onMount(() => {
+	const sesion = localStorage.getItem('sesion');
+
+	if (sesion) {
+		const data = JSON.parse(sesion);
+
+		console.log('SESION:', data);
+
+		usuario = {
+			nombre_completo: data.nombre_completo,
+			rol: data.nombre_rol
+		};
+	}
+});
+
+function obtenerIniciales(nombre: string) {
+	return nombre
+		.split(' ')
+		.map((p) => p[0])
+		.slice(0, 2)
+		.join('')
+		.toUpperCase();
+}
+    
     import {
         LayoutGrid,
         ShoppingCart,
@@ -45,7 +76,7 @@
         {
             label: 'Usuarios',
             icon: Users,
-            href: '/usuarios'
+            href: '/users'
         }
     ];
 </script>
@@ -95,16 +126,16 @@
             <div
                 class="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[#0C4A6E] to-[#0284C7] font-semibold text-white"
             >
-                AD
+                {obtenerIniciales(usuario.nombre_completo)}
             </div>
 
             <div>
                 <p class="text-sm font-semibold text-zinc-900 dark:text-white">
-                    Administrador
+                    {usuario.nombre_completo}
                 </p>
 
                 <p class="text-xs text-zinc-500 dark:text-zinc-400">
-                    Administrador
+                    {usuario.rol}
                 </p>
             </div>
         </div>

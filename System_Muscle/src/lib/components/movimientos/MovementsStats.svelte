@@ -1,63 +1,107 @@
-<script>
+<script lang="ts">
+
   import Package from 'lucide-svelte/icons/package';
   import TrendingUp from 'lucide-svelte/icons/trending-up';
   import ArrowDownWideNarrow from 'lucide-svelte/icons/arrow-down-wide-narrow';
+
+  import type {
+    MovementDetail
+  } from '$lib/services/api/movements/movements.types';
+
+  export let movements: MovementDetail[] = [];
+
+
+  // TOTAL MOVIMIENTOS
+  $: totalMovements = movements.length;
+
+  // FECHA HOY
+  const today = new Date().toISOString().split('T')[0];
+
+  // ENTRADAS HOY
+  $: todayEntries = movements.filter((movement) => {
+
+    return movement.fecha?.startsWith(today);
+
+  }).length;
+
+  // TOTAL UNIDADES
+  $: totalUnits = movements.reduce((acc, movement) => {
+
+    return acc + movement.cantidad;
+
+  }, 0);
+
 </script>
 
-<div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+<div class="grid grid-cols-1 gap-5 md:grid-cols-3">
 
-  <div class="bg-white border border-slate-200 rounded-2xl p-5">
+  <!-- TOTAL MOVIMIENTOS -->
+  <div class="rounded-2xl border border-slate-200 bg-white p-5">
+
     <div class="flex items-center justify-between">
+
       <span class="text-sm text-slate-500">
         Total Movimientos
       </span>
 
-      <TrendingUp class="w-5 h-5 text-[#0C4A6E]" />
+      <TrendingUp class="h-5 w-5 text-[#0C4A6E]" />
+
     </div>
 
-    <h2 class="text-4xl font-bold mt-4 text-slate-800">
-      8
+    <h2 class="mt-4 text-4xl font-bold text-slate-800">
+      {totalMovements}
     </h2>
 
-    <p class="text-sm text-slate-500 mt-1">
+    <p class="mt-1 text-sm text-slate-500">
       entradas registradas
     </p>
+
   </div>
 
-  <div class="bg-white border border-slate-200 rounded-2xl p-5">
+  <!-- ENTRADAS HOY -->
+  <div class="rounded-2xl border border-slate-200 bg-white p-5">
+
     <div class="flex items-center justify-between">
+
       <span class="text-sm text-slate-500">
         Entradas Hoy
       </span>
 
-      <Package class="w-5 h-5 text-[#0C4A6E]" />
+      <Package class="h-5 w-5 text-[#0C4A6E]" />
+
     </div>
 
-    <h2 class="text-4xl font-bold mt-4 text-slate-800">
-      2
+    <h2 class="mt-4 text-4xl font-bold text-slate-800">
+      {todayEntries}
     </h2>
 
-    <p class="text-sm text-slate-500 mt-1">
+    <p class="mt-1 text-sm text-slate-500">
       movimientos del día
     </p>
+
   </div>
 
-  <div class="bg-white border border-slate-200 rounded-2xl p-5">
+  <!-- UNIDADES -->
+  <div class="rounded-2xl border border-slate-200 bg-white p-5">
+
     <div class="flex items-center justify-between">
+
       <span class="text-sm text-slate-500">
         Unidades Ingresadas
       </span>
 
-      <ArrowDownWideNarrow class="w-5 h-5 text-[#0C4A6E]" />
+      <ArrowDownWideNarrow class="h-5 w-5 text-[#0C4A6E]" />
+
     </div>
 
-    <h2 class="text-4xl font-bold mt-4 text-[#0C4A6E]">
-      150
+    <h2 class="mt-4 text-4xl font-bold text-[#0C4A6E]">
+      {totalUnits.toLocaleString('es-CO')}
     </h2>
 
-    <p class="text-sm text-slate-500 mt-1">
+    <p class="mt-1 text-sm text-slate-500">
       unidades totales
     </p>
+
   </div>
 
 </div>

@@ -1,81 +1,228 @@
-<script>
+<script lang="ts">
+  import { onMount } from 'svelte';
   import ReportsChartCard from './ReportsChartCard.svelte';
+  import type { ChartData } from 'chart.js';
 
-  const salesByDay = {
-    labels: ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sab', 'Dom'],
-    datasets: [
-      {
-        label: 'Ventas',
-        data: [250000, 320000, 280000, 410000, 390000, 320000, 280000],
-        borderColor: '#0C4A6E',
-        backgroundColor: 'rgba(12,74,110,.15)',
-        fill: true,
-        tension: 0.4
-      }
-    ]
+  import {
+    obtenerResumenVentasDiarioRango,
+    obtenerProductosMasVendidos,
+    obtenerVentasPorUsuario,
+    obtenerVentasPorMetodoPago
+  } from '$lib/services/api/reports/reports.service';
+
+  export let filtros = {
+    fechaInicio: '',
+    fechaFin: '',
+    metodoPago: 'todos',
+    vendedor: 'todos'
   };
 
-  const profitMargin = {
-    labels: ['Proteína', 'Red Bull', 'Barrita', 'Agua', 'BCAA'],
-    datasets: [
-      {
-        label: 'Margen %',
-        data: [35, 42, 28, 45, 38],
-        backgroundColor: '#0C4A6E'
-      }
-    ]
-  };
+  let salesByDay: ChartData<'line'> = { labels: [], datasets: [] };
+  let profitMargin: ChartData<'bar'> = { labels: [], datasets: [] };
+  let topProducts: ChartData<'bar'> = { labels: [], datasets: [] };
+  let salesBySeller: ChartData<'pie'> = { labels: [], datasets: [] };
 
-  const topProducts = {
-    labels: ['Proteína', 'Red Bull', 'Barrita', 'Agua', 'BCAA'],
-    datasets: [
-      {
-        label: 'Unidades',
-        data: [245, 189, 156, 312, 98],
-        backgroundColor: '#0284C7'
-      }
-    ]
-  };
+  let loading = true;
+  let error = '';
 
-  const salesBySeller = {
-    labels: ['Admin', 'Maria', 'Carlos'],
-    datasets: [
-      {
-        data: [580000, 420000, 250000],
-        backgroundColor: [
-          '#0C4A6E',
-          '#0284C7',
-          '#38BDF8'
+  async function cargarReportes(
+    fechaInicio: string,
+    fechaFin: string
+  ) {
+    try {
+      loading = true;
+      error = '';
+
+      const [
+        ventasDiarias,
+        productosMasVendidos,
+        ventasPorUsuario
+      ] = await Promise.all([
+        obtenerResumenVentasDiarioRango(
+          fechaInicio,
+          fechaFin
+        ),
+
+        obtenerProductosMasVendidos(
+          fechaInicio,
+          fechaFin,
+          5
+        ),
+
+        obtenerVentasPorUsuario(
+          fechaInicio,
+          fechaFin
+        )
+      ]);
+
+      // Gráfico 1
+      salesByDay = {
+        labels: ventasDiarias.map(v =>
+          new Date(v.fecha).toLocaleDateString(
+            'es-ES',
+            { weekday: 'short' }
+          )
+        ),
+
+        datasets: [
+          {
+            label: 'Total Ventas',
+            data: ventasDiarias.map(
+              v => v.total_general
+            ),
+            borderColor: '#0C4A6E',
+            backgroundColor:
+              'rgba(12,74,110,.15)',
+            fill: true,
+            tension: 0.4
+          }
         ]
-      }
-    ]
-  };
+      };
+
+      // Gráfico 2
+      profitMargin = {
+        labels: productosMasVendidos.map(
+          p => p.nombre_producto
+        ),
+
+        datasets: [
+          {
+            label: 'Ingresos por Producto',
+            data: productosMasVendidos.map(
+              p => p.total_ventas
+            ),
+            backgroundColor: '#0C4A6E'
+          }
+        ]
+      };
+
+      // Gráfico 3
+      topProducts = {
+        labels: productosMasVendidos.map(
+          p => p.nombre_producto
+        ),
+
+        datasets: [
+          {
+            label: 'Unidades Vendidas',
+            data: productosMasVendidos.map(
+              p => p.cantidad_vendida
+            ),
+            backgroundColor: '#0284C7'
+          }
+        ]
+      };
+
+      // Gráfico 4
+      salesBySeller = {
+        labels: ventasPorUsuario.map(
+          u => u.nombre_usuario
+        ),
+
+        datasets: [
+          {
+            data: ventasPorUsuario.map(
+              u => u.total_vendido
+            ),
+
+            backgroundColor: [
+              '#0C4A6E',
+              '#0284C7',
+              '#38BDF8',
+              '#7DD3FC',
+              '#BAE6FD'
+            ]
+          }
+        ]
+      };
+    }
+    catch (err) {
+      console.error(
+        'Error cargando reportes:',
+        err
+      );
+
+      error =
+        'Error al cargar los datos de reportes';
+    }
+    finally {
+      loading = false;
+    }
+  }
+
+  onMount(async () => {
+    const today = new Date();
+
+    const sevenDaysAgo = new Date(
+      today.getTime() -
+        7 * 24 * 60 * 60 * 1000
+    );
+
+    const fechaInicio =
+      sevenDaysAgo
+        .toISOString()
+        .split('T')[0];
+
+    const fechaFin =
+      today.toISOString().split('T')[0];
+
+    await cargarReportes(
+      fechaInicio,
+      fechaFin
+    );
+  });
+
+  $: if (
+    filtros?.fechaInicio &&
+    filtros?.fechaFin
+  ) {
+    cargarReportes(
+      filtros.fechaInicio,
+      filtros.fechaFin
+    );
+  }
 </script>
 
-<div class="grid grid-cols-1 gap-5 xl:grid-cols-2">
+{#if loading}
+  <div class="flex items-center justify-center py-12">
+    <p class="text-slate-500">
+      Cargando gráficos...
+    </p>
+  </div>
 
-  <ReportsChartCard
-    title="Ventas por Día"
-    type="line"
-    data={salesByDay}
-  />
+{:else if error}
+  <div class="rounded-2xl border border-red-200 bg-red-50 p-5">
+    <p class="text-red-600">
+      {error}
+    </p>
+  </div>
 
-  <ReportsChartCard
-    title="Margen de Ganancias"
-    type="bar"
-    data={profitMargin}
-  />
+{:else}
+  <div class="grid grid-cols-1 gap-5 xl:grid-cols-2">
 
-  <ReportsChartCard
-    title="Top Productos"
-    type="bar"
-    data={topProducts}
-  />
+    <ReportsChartCard
+      title="Ventas por Día"
+      type="line"
+      data={salesByDay}
+    />
 
-  <ReportsChartCard
-    title="Ventas por Vendedor"
-    type="pie"
-    data={salesBySeller}
-  />
+    <ReportsChartCard
+      title="Ingresos por Producto"
+      type="bar"
+      data={profitMargin}
+    />
 
-</div>
+    <ReportsChartCard
+      title="Top Productos"
+      type="bar"
+      data={topProducts}
+    />
+
+    <ReportsChartCard
+      title="Ventas por Vendedor"
+      type="pie"
+      data={salesBySeller}
+    />
+
+  </div>
+{/if}

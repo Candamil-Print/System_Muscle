@@ -5,8 +5,11 @@ pub mod commands;
 pub mod models;
 pub mod services;
 
+use tauri_plugin_fs;
+
 use services::db::connection::DbState;
 use std::sync::Mutex;
+
 
 // Exportar para tests
 pub use services::db::connection::get_db_connection;
@@ -25,10 +28,11 @@ pub fn run() {
         }
     };
 
-    tauri::Builder::default()
-        .manage(DbState {
-            conn: Mutex::new(conn),
-        })
+tauri::Builder::default()
+    .plugin(tauri_plugin_fs::init())
+    .manage(DbState {
+        conn: Mutex::new(conn),
+    })
         .invoke_handler(tauri::generate_handler![
             // Utilidades
             commands::test_db_connection,
