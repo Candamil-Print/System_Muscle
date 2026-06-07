@@ -21,6 +21,8 @@ pub struct MovimientoEntradaDetalle {
     pub fecha: String,
     pub id_usuario: i32,
     pub nombre_usuario: String,
+    pub stock_anterior: i32,
+    pub stock_nuevo: i32,
 }
 
 /// Struct para registrar un nuevo movimiento de entrada
