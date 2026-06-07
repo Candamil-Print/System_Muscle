@@ -1,6 +1,6 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import ReportsChartCard from './ReportsChartCard.svelte';
+  import ReportsChartCard from './ChartCard.svelte';
   import type { ChartData } from 'chart.js';
 
   import {

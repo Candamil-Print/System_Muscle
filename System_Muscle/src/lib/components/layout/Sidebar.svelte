@@ -82,9 +82,9 @@ function obtenerIniciales(nombre: string) {
 </script>
 
 <aside
-    class="fixed left-0 top-0 flex h-screen w-[280px] flex-col border-r border-zinc-200 bg-white dark:border-zinc-800 dark:bg-[#0f172a]"
+    class="fixed left-0 top-0 flex h-screen w-[280px] flex-col border-r border-zinc-200 bg-white dark:border-[#334156] dark:bg-[#1E293B]"
 >
-    <div class="flex items-center gap-3 p-6 border-b border-zinc-200 dark:border-zinc-800">
+    <div class="flex items-center gap-3 p-6 border-b border-zinc-200 dark:border-[#334156]">
         <div
             class="flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-to-br from-[#0C4A6E] to-[#0284C7] font-bold text-white"
         >
@@ -98,7 +98,7 @@ function obtenerIniciales(nombre: string) {
 
     <nav class="flex-1 px-4 py-4">
         <p
-            class="mb-4 px-3 text-xs font-semibold uppercase tracking-wider text-zinc-500"
+            class="mb-4 px-3 text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-100"
         >
             Menu
         </p>
@@ -109,7 +109,7 @@ function obtenerIniciales(nombre: string) {
                     href={item.href}
                     class={`flex w-full items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium transition-all ${
                         $page.url.pathname === item.href
-                            ? 'bg-[#0C4A6E] text-white'
+                            ? 'bg-[#0C4A6E] dark:bg-[#0284C7] text-white'
                             : 'text-zinc-600 hover:bg-zinc-100 dark:text-zinc-300 dark:hover:bg-zinc-800'
                     }`}
                 >
@@ -121,8 +121,8 @@ function obtenerIniciales(nombre: string) {
         </div>
     </nav>
 
-    <div class="border-t border-zinc-200 p-4 dark:border-zinc-800">
-        <div class="mb-4 flex items-center gap-3 rounded-lg bg-zinc-100 px-4 py-3 dark:bg-zinc-800">
+    <div class="border-t border-zinc-200 p-4 dark:border-[#334156]">
+        <div class="mb-4 flex items-center gap-3 rounded-lg bg-zinc-100 px-4 py-3 dark:bg-[#334156]">
             <div
                 class="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[#0C4A6E] to-[#0284C7] font-semibold text-white"
             >

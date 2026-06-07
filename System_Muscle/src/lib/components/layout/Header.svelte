@@ -3,12 +3,14 @@
 		Bell,
 		Clock,
 		Moon,
+		Sun,
 		ChevronDown,
 		TriangleAlert,
 		CheckCheck,
 		Trash2
 	} from 'lucide-svelte';
 	import { turnoStore } from '$lib/stores/shifts/turnoStore';
+	import { theme } from '$lib/stores/theme.store';
 	import { onMount } from 'svelte';
 
 	import type { Notificacion } from '$lib/services/api/notifications';
@@ -22,17 +24,13 @@
 	
 	let openTurnos = false;
 	let turnoActual: any = null;
-
 	let openNotificaciones = false;
-
-
+	let currentTheme: 'light' | 'dark' = 'light';
 
 	let notificaciones: Notificacion[] = [];
 	let totalNotificaciones = 0;
 
 
-	
-	
 	// Tipos de turno disponibles (hardcodeados por ahora)
 	const tiposTurno = [
 		{ id_tipo_turno: 1, nombre: 'MAÑANA', horario: '05:00 - 13:00' },
@@ -41,6 +39,11 @@
 		{ id_tipo_turno: 4, nombre: 'UNICO_SF', horario: '08:00 - 15:00' }
 	];
 	
+	// Suscribirse al store del tema
+	theme.subscribe(value => {
+		currentTheme = value;
+	});
+
 	// Suscribirse al store
 	turnoStore.subscribe(turno => {
 		turnoActual = turno;
@@ -69,23 +72,23 @@
 	}
 
 	async function marcarComoLeidas() {
-	try {
+		try {
 
-		await marcarTodasLeidas();
+			await marcarTodasLeidas();
 
-		notificaciones = await listarNotificaciones(false);
+			notificaciones = await listarNotificaciones(false);
 
-		totalNotificaciones = 0;
+			totalNotificaciones = 0;
 
-	} catch (error) {
+		} catch (error) {
 
-		console.error(
-			'Error marcando notificaciones:',
-			error
-		);
+			console.error(
+				'Error marcando notificaciones:',
+				error
+			);
 
+		}
 	}
-}
 
 	async function limpiarTodas() {
 		try {
@@ -105,10 +108,24 @@
 
 		}
 	}
+
+	const toggleTheme = () => {
+		const isDark = document.documentElement.classList.contains('dark');
+
+		if (isDark) {
+			document.documentElement.classList.remove('dark');
+			localStorage.setItem('theme', 'light');
+			theme.set('light');
+		} else {
+			document.documentElement.classList.add('dark');
+			localStorage.setItem('theme', 'dark');
+			theme.set('dark');
+		}
+	};
 </script>
 
 <header
-	class="sticky top-0 z-40 flex h-16 items-center justify-between border-b border-zinc-200 bg-white px-6 dark:border-zinc-800 dark:bg-[#0f172a]"
+	class="sticky top-0 z-40 flex h-16 items-center justify-between border-b border-zinc-200 bg-white px-6 dark:border-[#334156] dark:bg-[#1E293B]"
 >
 	<h1 class="text-lg font-semibold dark:text-white">
 		Steel Body Gym
@@ -203,7 +220,7 @@
 
 							<button
 								on:click={limpiarTodas}
-								class="flex items-center gap-1 rounded-lg border border--[#26557C] px-2 py-1 text-xs  text-[#26557C] transition hover:bg--[#26557C]/10 "
+								class="flex items-center gap-1 rounded-lg border border-[#26557C] px-2 py-1 text-xs text-[#26557C] transition hover:bg-[#26557C]/10 "
 							>
 								<Trash2 size={14} />
 								<span>Limpiar</span>
@@ -252,7 +269,7 @@
 											>
 												<TriangleAlert
 													size={18}
-													class="text-bg-[#26557C]"
+													class="text-[#26557C]"
 												/>
 											</div>
 
@@ -328,9 +345,14 @@
 		</div>
 
 		<button
-			class="flex h-10 w-10 items-center justify-center rounded-full border border-zinc-200 dark:border-zinc-700 dark:text-zinc-200"
+			on:click={toggleTheme}
+			class="flex h-10 w-10 items-center justify-center rounded-full border border-zinc-200 transition hover:bg-zinc-100 dark:border-zinc-700 dark:text-zinc-200 dark:hover:bg-slate-800"
 		>
-			<Moon size={18} />
+			{#if currentTheme === 'dark'}
+				<Sun size={18} />
+			{:else}
+				<Moon size={18} />
+			{/if}
 		</button>
 	</div>
 </header>

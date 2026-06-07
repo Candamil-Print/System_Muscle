@@ -3,7 +3,7 @@
 	import Header from './Header.svelte';
 </script>
 
-<div class="min-h-screen bg-[#f9fafb] dark:bg-[#020617]">
+<div class="min-h-screen bg-[#f9fafb] dark:bg-[#111827]">
 
 	<Sidebar />
 

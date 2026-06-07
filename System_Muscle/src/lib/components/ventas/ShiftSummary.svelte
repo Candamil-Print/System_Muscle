@@ -79,13 +79,13 @@
 </script>
 
 <div
-  class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm"
+  class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:bg-[#1E293B] dark:border-[#334156]"
 >
 
   <div class="mb-5">
 
     <h3
-      class="text-lg font-semibold text-slate-800"
+      class="text-lg font-semibold text-slate-800 dark:text-slate-500"
     >
       Resumen del Turno
     </h3>
@@ -108,7 +108,7 @@
 
   {:else}
 
-    <div class="space-y-4">
+    <div class="space-y-4 ">
 
       <!-- EFECTIVO -->
       <div
@@ -122,7 +122,7 @@
         </span>
 
         <span
-          class="font-semibold text-slate-800"
+          class="font-semibold text-slate-800 dark:text-white"
         >
           $
           {formatear(efectivo)}
@@ -142,7 +142,7 @@
         </span>
 
         <span
-          class="font-semibold text-slate-800"
+          class="font-semibold text-slate-800 dark:text-white"
         >
           $
           {formatear(transferencia)}
@@ -166,7 +166,7 @@
           </span>
 
           <span
-            class="text-xl font-bold text-[#0C4A6E]"
+            class="text-xl font-bold text-[#0C4A6E] dark:text-[#39BDF8]"
           >
             $
             {formatear(total)}

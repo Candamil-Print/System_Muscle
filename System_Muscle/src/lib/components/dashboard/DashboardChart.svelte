@@ -83,7 +83,7 @@
 </script>
 
 <div
-	class="rounded-lg border border-zinc-200 bg-white p-6 dark:border-zinc-800 dark:bg-zinc-900"
+	class="rounded-lg border border-zinc-200 bg-white p-6 dark:border-[#334156] dark:bg-[#1E293B]"
 >
 	<div class="mb-2 flex items-center gap-2">
 		<BarChart3

@@ -85,7 +85,7 @@
   });
 </script>
 
-<div class="flex min-h-screen bg-slate-50">
+<div class="flex min-h-screen bg-slate-50 dark:bg-[#111827]">
 
   <Sidebar />
 
@@ -100,7 +100,7 @@
 
         <div>
 
-          <h1 class="text-3xl font-bold text-slate-800">
+          <h1 class="text-3xl font-bold text-slate-800 dark:text-white">
             Ventas
           </h1>
 

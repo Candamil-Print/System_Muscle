@@ -118,36 +118,14 @@
 </script>
 
 <aside class="space-y-6">
-  <div class="sticky top-24 rounded-2xl border border-slate-200 bg-white shadow-sm">
-    <div class="border-b border-slate-200 p-5">
+  <div class="sticky top-24 rounded-2xl border border-slate-200 bg-white shadow-sm dark:bg-[#1E293B] dark:border-[#334156]">
+    <div class="border-b border-slate-200 dark:border-[#334156] p-5">
       <div class="flex items-center gap-2">
-        <ShoppingCart size={20} class="text-[#0C4A6E]" />
-        <h2 class="text-lg font-semibold text-slate-800">Carrito</h2>
+        <ShoppingCart size={20} class="text-[#0C4A6E] dark:text-[#39BDF8]" />
+        <h2 class="text-lg font-semibold text-slate-800 dark:text-white">Carrito</h2>
       </div>
       <p class="mt-1 text-sm text-slate-500">{$cart.length} productos</p>
     </div>
-
-    <!-- Mostrar turno actual desde el store -->
-    {#if turnoActual}
-      <div class="mx-5 rounded-lg bg-blue-50 p-3 border border-blue-200">
-        <div class="flex items-center justify-between text-sm">
-          <span class="text-blue-700 font-medium">Turno actual:</span>
-          <span class="text-blue-900 font-semibold">{turnoActual.nombre}</span>
-          <span class="text-blue-600">{turnoActual.horario}</span>
-        </div>
-      </div>
-    {/if}
-
-    <!-- Mostrar alerta si no hay caja activa -->
-    {#if errorCaja}
-      <div class="mx-5 rounded-lg bg-red-50 p-4 border border-red-200">
-        <div class="flex items-center gap-2 text-red-700">
-          <AlertCircle size={18} />
-          <span class="text-sm font-medium">{errorCaja}</span>
-        </div>
-      </div>
-    {/if}
-
 
     <div class="space-y-3 p-5">
       {#if $cart.length === 0}
@@ -183,7 +161,7 @@
       {/if}
     </div>
 
-    <div class="border-t border-slate-200 p-5">
+    <div class="border-t border-slate-200 dark:border-[#334156] p-5">
       <div class="mb-5 flex items-center justify-between">
         <span class="text-slate-600">Total</span>
         <span class="text-3xl font-bold text-[#0C4A6E]">$ {formatear(total)}</span>
@@ -196,7 +174,7 @@
             on:click={() => (metodoPago = 'efectivo')}
             class={`flex-1 flex items-center justify-center gap-2 rounded-lg px-4 py-3 text-sm font-medium transition ${
               metodoPago === 'efectivo'
-                ? 'bg-[#0C4A6E] text-white'
+                ? 'bg-[#0C4A6E] dark:text-[#39BDF8] text-white'
                 : 'border border-slate-300 text-slate-700 hover:bg-slate-50'
             }`}
           >
@@ -207,7 +185,7 @@
             on:click={() => (metodoPago = 'transferencia')}
             class={`flex-1 flex items-center justify-center gap-2 rounded-lg px-4 py-3 text-sm font-medium transition ${
               metodoPago === 'transferencia'
-                ? 'bg-[#0C4A6E] text-white'
+                ? 'bg-[#0C4A6E] dark:text-[#39BDF8] text-white'
                 : 'border border-slate-300 text-slate-700 hover:bg-slate-50'
             }`}
           >

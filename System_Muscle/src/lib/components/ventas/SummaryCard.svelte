@@ -10,7 +10,7 @@
 </script>
 
 <div
-  class="flex items-center gap-6 rounded-2xl border border-slate-200 bg-white px-6 py-4 shadow-sm"
+  class="flex items-center gap-6 rounded-2xl border border-slate-200 bg-white px-6 py-4 shadow-sm dark:bg-[#1E293B] dark:border-[#334156]"
 >
 
   <div class="text-center">
@@ -19,13 +19,13 @@
       Ventas Hoy
     </p>
 
-    <h3 class="text-lg font-bold text-slate-800">
+    <h3 class="text-lg font-bold text-slate-800 dark:text-white">
       {ventasHoy}
     </h3>
 
   </div>
 
-  <div class="h-10 w-px bg-slate-200"></div>
+  <div class="h-10 w-px bg-slate-200 dark:bg-[#334156]"></div>
 
   <div class="text-center">
 
@@ -33,7 +33,7 @@
       Total
     </p>
 
-    <h3 class="text-lg font-bold text-[#0C4A6E]">
+    <h3 class="text-lg font-bold text-[#0C4A6E] dark:text-[#39BDF8]">
 
       $
       {formatear(totalVentas)}

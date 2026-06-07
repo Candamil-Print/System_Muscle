@@ -48,7 +48,7 @@
 
 	<!-- TOTAL PRODUCTOS -->
 	<div
-		class="rounded-lg border border-zinc-200 bg-white p-6 dark:border-zinc-800 dark:bg-zinc-900"
+		class="rounded-lg border border-zinc-200 bg-white p-6 dark:border-[#334156] dark:bg-[#1E293B]"
 	>
 		<div class="flex items-start justify-between">
 
@@ -78,7 +78,7 @@
 
 	<!-- STOCK BAJO -->
 	<div
-		class="rounded-lg border border-zinc-200 bg-white p-6 dark:border-zinc-800 dark:bg-zinc-900"
+		class="rounded-lg border border-zinc-200 bg-white p-6 dark:border-[#334156] dark:bg-[#1E293B]"
 	>
 		<div class="flex items-start justify-between">
 
@@ -87,7 +87,7 @@
 					Stock Bajo
 				</p>
 
-				<p class="mt-2 text-3xl font-bold">
+				<p class="mt-2 text-3xl font-bold dark:text-[#39BDF8]">
 					{cargando
 						? '...'
 						: resumen?.productos_stock_bajo ?? 0}
@@ -99,7 +99,7 @@
 			</div>
 
 			<AlertTriangle
-				class="text-zinc-400"
+				class="text-zinc-400 dark:text-[#39BDF8]"
 				size={18}
 			/>
 
@@ -108,7 +108,7 @@
 
 	<!-- VENTAS HOY -->
 	<div
-		class="rounded-lg border border-zinc-200 bg-white p-6 dark:border-zinc-800 dark:bg-zinc-900"
+		class="rounded-lg border border-zinc-200 bg-white p-6 dark:border-[#334156] dark:bg-[#1E293B]"
 	>
 		<div class="flex items-start justify-between">
 
@@ -140,7 +140,7 @@
 
 	<!-- INGRESOS HOY -->
 	<div
-		class="rounded-lg border border-zinc-200 bg-white p-6 dark:border-zinc-800 dark:bg-zinc-900"
+		class="rounded-lg border border-zinc-200 bg-white p-6 dark:border-[#334156] dark:bg-[#1E293B]"
 	>
 		<div class="flex items-start justify-between">
 
@@ -150,7 +150,7 @@
 				</p>
 
 				<p
-					class="mt-2 text-3xl font-bold text-[#0C4A6E]"
+					class="mt-2 text-3xl font-bold text-[#0C4A6E] dark:text-[#39BDF8]"
 				>
 					$
 					{cargando
@@ -166,7 +166,7 @@
 			</div>
 
 			<DollarSign
-				class="text-[#0C4A6E]"
+				class="text-[#0C4A6E] dark:text-[#39BDF8]"
 				size={18}
 			/>
 
