@@ -75,34 +75,64 @@ pub fn obtener_movimiento_logic(conn: &Connection, id: i32) -> Result<Movimiento
     Ok(movimiento)
 }
 
+/// Mapea una fila al struct MovimientoEntradaDetalle (incluyendo stock_anterior y stock_nuevo).
+fn map_detalle(row: &rusqlite::Row<'_>) -> rusqlite::Result<MovimientoEntradaDetalle> {
+    Ok(MovimientoEntradaDetalle {
+        id_movimiento: row.get(0)?,
+        id_producto: row.get(1)?,
+        nombre_producto: row.get(2)?,
+        tipo_producto: row.get(3)?,
+        cantidad: row.get(4)?,
+        fecha: row.get(5)?,
+        id_usuario: row.get(6)?,
+        nombre_usuario: row.get(7)?,
+        stock_anterior: row.get(8)?,
+        stock_nuevo: row.get(9)?,
+    })
+}
+
 /// Lista todos los movimientos de entrada con detalles del producto y usuario.
 pub fn listar_movimientos_entrada_logic(
     conn: &Connection,
 ) -> Result<Vec<MovimientoEntradaDetalle>, String> {
     let mut stmt = conn
         .prepare(
-            r#"SELECT me.id_movimiento, me.id_producto, p.nombre, p.tipo_producto,
-                      me.cantidad, me.fecha, me.id_usuario, u.nombre_completo
-               FROM movimientos_entrada me
-               INNER JOIN productos p ON me.id_producto = p.id_producto
-               INNER JOIN usuarios u ON me.id_usuario = u.id_usuario
-               ORDER BY me.fecha DESC"#,
+            r#"SELECT
+                me.id_movimiento,
+                me.id_producto,
+                p.nombre,
+                p.tipo_producto,
+                me.cantidad,
+                me.fecha,
+                me.id_usuario,
+                u.nombre_completo,
+                s.stock_actual
+                    - COALESCE((
+                        SELECT SUM(m2.cantidad)
+                        FROM movimientos_entrada m2
+                        WHERE m2.id_producto = me.id_producto
+                          AND (m2.fecha > me.fecha
+                               OR (m2.fecha = me.fecha AND m2.id_movimiento > me.id_movimiento))
+                    ), 0)
+                    - me.cantidad AS stock_anterior,
+                s.stock_actual
+                    - COALESCE((
+                        SELECT SUM(m2.cantidad)
+                        FROM movimientos_entrada m2
+                        WHERE m2.id_producto = me.id_producto
+                          AND (m2.fecha > me.fecha
+                               OR (m2.fecha = me.fecha AND m2.id_movimiento > me.id_movimiento))
+                    ), 0) AS stock_nuevo
+            FROM movimientos_entrada me
+            INNER JOIN productos p ON me.id_producto = p.id_producto
+            INNER JOIN usuarios u ON me.id_usuario = u.id_usuario
+            INNER JOIN stock s ON s.id_producto = me.id_producto
+            ORDER BY me.fecha DESC, me.id_movimiento DESC"#,
         )
         .map_err(|e| e.to_string())?;
 
     let rows = stmt
-        .query_map([], |row| {
-            Ok(MovimientoEntradaDetalle {
-                id_movimiento: row.get(0)?,
-                id_producto: row.get(1)?,
-                nombre_producto: row.get(2)?,
-                tipo_producto: row.get(3)?,
-                cantidad: row.get(4)?,
-                fecha: row.get(5)?,
-                id_usuario: row.get(6)?,
-                nombre_usuario: row.get(7)?,
-            })
-        })
+        .query_map([], map_detalle)
         .map_err(|e| e.to_string())?;
 
     let mut lista = Vec::new();
@@ -120,29 +150,43 @@ pub fn movimientos_por_producto_logic(
 ) -> Result<Vec<MovimientoEntradaDetalle>, String> {
     let mut stmt = conn
         .prepare(
-            r#"SELECT me.id_movimiento, me.id_producto, p.nombre, p.tipo_producto,
-                      me.cantidad, me.fecha, me.id_usuario, u.nombre_completo
-               FROM movimientos_entrada me
-               INNER JOIN productos p ON me.id_producto = p.id_producto
-               INNER JOIN usuarios u ON me.id_usuario = u.id_usuario
-               WHERE me.id_producto = ?1
-               ORDER BY me.fecha DESC"#,
+            r#"SELECT
+                me.id_movimiento,
+                me.id_producto,
+                p.nombre,
+                p.tipo_producto,
+                me.cantidad,
+                me.fecha,
+                me.id_usuario,
+                u.nombre_completo,
+                s.stock_actual
+                    - COALESCE((
+                        SELECT SUM(m2.cantidad)
+                        FROM movimientos_entrada m2
+                        WHERE m2.id_producto = me.id_producto
+                          AND (m2.fecha > me.fecha
+                               OR (m2.fecha = me.fecha AND m2.id_movimiento > me.id_movimiento))
+                    ), 0)
+                    - me.cantidad AS stock_anterior,
+                s.stock_actual
+                    - COALESCE((
+                        SELECT SUM(m2.cantidad)
+                        FROM movimientos_entrada m2
+                        WHERE m2.id_producto = me.id_producto
+                          AND (m2.fecha > me.fecha
+                               OR (m2.fecha = me.fecha AND m2.id_movimiento > me.id_movimiento))
+                    ), 0) AS stock_nuevo
+            FROM movimientos_entrada me
+            INNER JOIN productos p ON me.id_producto = p.id_producto
+            INNER JOIN usuarios u ON me.id_usuario = u.id_usuario
+            INNER JOIN stock s ON s.id_producto = me.id_producto
+            WHERE me.id_producto = ?1
+            ORDER BY me.fecha DESC, me.id_movimiento DESC"#,
         )
         .map_err(|e| e.to_string())?;
 
     let rows = stmt
-        .query_map([id_producto], |row| {
-            Ok(MovimientoEntradaDetalle {
-                id_movimiento: row.get(0)?,
-                id_producto: row.get(1)?,
-                nombre_producto: row.get(2)?,
-                tipo_producto: row.get(3)?,
-                cantidad: row.get(4)?,
-                fecha: row.get(5)?,
-                id_usuario: row.get(6)?,
-                nombre_usuario: row.get(7)?,
-            })
-        })
+        .query_map([id_producto], map_detalle)
         .map_err(|e| e.to_string())?;
 
     let mut lista = Vec::new();
@@ -160,29 +204,43 @@ pub fn movimientos_por_usuario_logic(
 ) -> Result<Vec<MovimientoEntradaDetalle>, String> {
     let mut stmt = conn
         .prepare(
-            r#"SELECT me.id_movimiento, me.id_producto, p.nombre, p.tipo_producto,
-                      me.cantidad, me.fecha, me.id_usuario, u.nombre_completo
-               FROM movimientos_entrada me
-               INNER JOIN productos p ON me.id_producto = p.id_producto
-               INNER JOIN usuarios u ON me.id_usuario = u.id_usuario
-               WHERE me.id_usuario = ?1
-               ORDER BY me.fecha DESC"#,
+            r#"SELECT
+                me.id_movimiento,
+                me.id_producto,
+                p.nombre,
+                p.tipo_producto,
+                me.cantidad,
+                me.fecha,
+                me.id_usuario,
+                u.nombre_completo,
+                s.stock_actual
+                    - COALESCE((
+                        SELECT SUM(m2.cantidad)
+                        FROM movimientos_entrada m2
+                        WHERE m2.id_producto = me.id_producto
+                          AND (m2.fecha > me.fecha
+                               OR (m2.fecha = me.fecha AND m2.id_movimiento > me.id_movimiento))
+                    ), 0)
+                    - me.cantidad AS stock_anterior,
+                s.stock_actual
+                    - COALESCE((
+                        SELECT SUM(m2.cantidad)
+                        FROM movimientos_entrada m2
+                        WHERE m2.id_producto = me.id_producto
+                          AND (m2.fecha > me.fecha
+                               OR (m2.fecha = me.fecha AND m2.id_movimiento > me.id_movimiento))
+                    ), 0) AS stock_nuevo
+            FROM movimientos_entrada me
+            INNER JOIN productos p ON me.id_producto = p.id_producto
+            INNER JOIN usuarios u ON me.id_usuario = u.id_usuario
+            INNER JOIN stock s ON s.id_producto = me.id_producto
+            WHERE me.id_usuario = ?1
+            ORDER BY me.fecha DESC, me.id_movimiento DESC"#,
         )
         .map_err(|e| e.to_string())?;
 
     let rows = stmt
-        .query_map([id_usuario], |row| {
-            Ok(MovimientoEntradaDetalle {
-                id_movimiento: row.get(0)?,
-                id_producto: row.get(1)?,
-                nombre_producto: row.get(2)?,
-                tipo_producto: row.get(3)?,
-                cantidad: row.get(4)?,
-                fecha: row.get(5)?,
-                id_usuario: row.get(6)?,
-                nombre_usuario: row.get(7)?,
-            })
-        })
+        .query_map([id_usuario], map_detalle)
         .map_err(|e| e.to_string())?;
 
     let mut lista = Vec::new();
@@ -202,29 +260,43 @@ pub fn movimientos_por_rango_fechas_logic(
 ) -> Result<Vec<MovimientoEntradaDetalle>, String> {
     let mut stmt = conn
         .prepare(
-            r#"SELECT me.id_movimiento, me.id_producto, p.nombre, p.tipo_producto,
-                      me.cantidad, me.fecha, me.id_usuario, u.nombre_completo
-               FROM movimientos_entrada me
-               INNER JOIN productos p ON me.id_producto = p.id_producto
-               INNER JOIN usuarios u ON me.id_usuario = u.id_usuario
-               WHERE DATE(me.fecha) BETWEEN DATE(?1) AND DATE(?2)
-               ORDER BY me.fecha DESC"#,
+            r#"SELECT
+                me.id_movimiento,
+                me.id_producto,
+                p.nombre,
+                p.tipo_producto,
+                me.cantidad,
+                me.fecha,
+                me.id_usuario,
+                u.nombre_completo,
+                s.stock_actual
+                    - COALESCE((
+                        SELECT SUM(m2.cantidad)
+                        FROM movimientos_entrada m2
+                        WHERE m2.id_producto = me.id_producto
+                          AND (m2.fecha > me.fecha
+                               OR (m2.fecha = me.fecha AND m2.id_movimiento > me.id_movimiento))
+                    ), 0)
+                    - me.cantidad AS stock_anterior,
+                s.stock_actual
+                    - COALESCE((
+                        SELECT SUM(m2.cantidad)
+                        FROM movimientos_entrada m2
+                        WHERE m2.id_producto = me.id_producto
+                          AND (m2.fecha > me.fecha
+                               OR (m2.fecha = me.fecha AND m2.id_movimiento > me.id_movimiento))
+                    ), 0) AS stock_nuevo
+            FROM movimientos_entrada me
+            INNER JOIN productos p ON me.id_producto = p.id_producto
+            INNER JOIN usuarios u ON me.id_usuario = u.id_usuario
+            INNER JOIN stock s ON s.id_producto = me.id_producto
+            WHERE DATE(me.fecha) BETWEEN DATE(?1) AND DATE(?2)
+            ORDER BY me.fecha DESC, me.id_movimiento DESC"#,
         )
         .map_err(|e| e.to_string())?;
 
     let rows = stmt
-        .query_map(rusqlite::params![fecha_inicio, fecha_fin], |row| {
-            Ok(MovimientoEntradaDetalle {
-                id_movimiento: row.get(0)?,
-                id_producto: row.get(1)?,
-                nombre_producto: row.get(2)?,
-                tipo_producto: row.get(3)?,
-                cantidad: row.get(4)?,
-                fecha: row.get(5)?,
-                id_usuario: row.get(6)?,
-                nombre_usuario: row.get(7)?,
-            })
-        })
+        .query_map(rusqlite::params![fecha_inicio, fecha_fin], map_detalle)
         .map_err(|e| e.to_string())?;
 
     let mut lista = Vec::new();
