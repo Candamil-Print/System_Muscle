@@ -25,8 +25,7 @@ pub use productos::logic::{
     obtener_producto_simple_logic,
     listar_productos_logic,
     buscar_productos_logic,
-    activar_producto_logic,
-    desactivar_producto_logic,
+    eliminar_producto_logic,
 };
 
 // Modulo de stock
@@ -273,21 +272,12 @@ pub fn buscar_productos(
 }
 
 #[tauri::command]
-pub fn activar_producto(
+pub fn eliminar_producto(
     state: State<'_, DbState>,
     id: i32,
 ) -> Result<(), String> {
     let conn = state.conn.lock().unwrap();
-    activar_producto_logic(&conn, id)
-}
-
-#[tauri::command]
-pub fn desactivar_producto(
-    state: State<'_, DbState>,
-    id: i32,
-) -> Result<(), String> {
-    let conn = state.conn.lock().unwrap();
-    desactivar_producto_logic(&conn, id)
+    productos::logic::eliminar_producto_logic(&conn, id)
 }
 
 // Comandos de stock

@@ -243,25 +243,6 @@ pub fn buscar_productos_logic(
     Ok(productos)
 }
 
-/// Activa un producto (activo = 1).
-pub fn activar_producto_logic(conn: &Connection, id: i32) -> Result<(), String> {
-    conn.execute(
-        "UPDATE productos SET activo = 1 WHERE id_producto = ?1",
-        [id],
-    )
-    .map_err(|e| e.to_string())?;
-    Ok(())
-}
-
-/// Desactiva un producto de forma lógica (activo = 0). No elimina el registro.
-pub fn desactivar_producto_logic(conn: &Connection, id: i32) -> Result<(), String> {
-    conn.execute(
-        "UPDATE productos SET activo = 0 WHERE id_producto = ?1",
-        [id],
-    )
-    .map_err(|e| e.to_string())?;
-    Ok(())
-}
 
 /// Obtiene solo los campos básicos de un producto (sin stock).
 pub fn obtener_producto_simple_logic(conn: &Connection, id: i32) -> Result<Producto, String> {
@@ -289,4 +270,28 @@ pub fn obtener_producto_simple_logic(conn: &Connection, id: i32) -> Result<Produ
         .map_err(|e| e.to_string())?;
 
     Ok(producto)
+}
+
+/// Elimina un producto de forma lógica (activo = 0).
+/// No elimina el registro de la base de datos, solo lo desactiva.
+pub fn eliminar_producto_logic(conn: &Connection, id: i32) -> Result<(), String> {
+    // Verificar que el producto existe
+    let mut stmt = conn
+        .prepare("SELECT 1 FROM productos WHERE id_producto = ?1")
+        .map_err(|e| e.to_string())?;
+    
+    let existe = stmt.exists([id]).map_err(|e| e.to_string())?;
+    
+    if !existe {
+        return Err("El producto no existe".to_string());
+    }
+    
+    // Desactivar el producto (eliminación lógica)
+    conn.execute(
+        "UPDATE productos SET activo = 0 WHERE id_producto = ?1",
+        [id],
+    )
+    .map_err(|e| e.to_string())?;
+    
+    Ok(())
 }

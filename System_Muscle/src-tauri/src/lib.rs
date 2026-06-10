@@ -47,8 +47,7 @@ pub fn run() {
             commands::obtener_producto,
             commands::listar_productos,
             commands::buscar_productos,
-            commands::activar_producto,
-            commands::desactivar_producto,
+            commands::eliminar_producto,
             // Stock
             commands::obtener_stock_por_producto,
             commands::listar_stock,
