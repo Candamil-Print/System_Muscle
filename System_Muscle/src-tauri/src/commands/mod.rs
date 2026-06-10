@@ -712,3 +712,15 @@ pub fn dashboard_resumen(
     let conn = state.conn.lock().unwrap();
     dashboard_resumen_logic(&conn)
 }
+
+// Comandos de reportes de entradas
+pub mod reportes_entrada;
+
+pub use reportes_entrada::logic::{
+    resumen_entradas_por_producto_logic,
+    totales_entradas_rango_logic,
+    entradas_por_dia_logic,
+    entradas_por_usuario_logic,
+    entradas_por_tipo_producto_logic,
+    dashboard_entradas_logic,
+};
