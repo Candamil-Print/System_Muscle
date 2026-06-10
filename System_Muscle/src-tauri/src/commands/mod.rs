@@ -148,7 +148,8 @@ use crate::models::ventas::venta::NuevaVenta;
 use crate::models::caja::caja::{NuevaCaja, CierreCaja};
 use crate::models::historial::historial::{NuevaAccion, FiltroHistorial};
 use crate::models::turnos::turno::{NuevoTurno, Turno, TurnoDetalle, FiltroTurno};
-use crate::models::reportes_entrada::reporte_entrada::{ResumenEntradasPorProducto, TotalesEntradasRango, EntradasPorDia, EntradasPorUsuario, EntradasPorTipoProducto, DashboardEntradas};
+#[allow(unused_imports)]
+use crate::models::reportes_entrada::reporte_entrada::{ResumenEntradasProducto, TotalesEntradas, EntradasPorDia, EntradasPorUsuario, EntradasPorTipoProducto, DashboardEntradas};
 
 // Comandos de utilidad
 #[tauri::command]

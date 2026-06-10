@@ -5,10 +5,29 @@ use system_muscle_lib::services::db::connection::get_db_connection;
 use system_muscle_lib::commands::turnos::logic::*;
 use system_muscle_lib::models::turnos::turno::{NuevoTurno, FiltroTurno};
 
-/// Limpiar turnos de prueba
+/// Limpiar turnos de prueba (excepto los que queremos conservar)
 fn limpiar_turnos_prueba(conn: &rusqlite::Connection) {
-    let _ = conn.execute("DELETE FROM turnos WHERE id_turno > 1", []);
+    // Cerrar todos los turnos abiertos primero
+    let _ = conn.execute("UPDATE turnos SET estado = 'CERRADO' WHERE estado = 'ABIERTO'", []);
+    // Limpiar turnos de prueba
+    let _ = conn.execute("DELETE FROM turnos WHERE id_turno > 2", []);
 }
+
+/// Obtener un usuario válido
+fn obtener_usuario_valido(conn: &rusqlite::Connection) -> i32 {
+    conn.query_row("SELECT id_usuario FROM usuarios WHERE estado = 1 LIMIT 1", [], |row| row.get(0))
+        .unwrap_or(1)
+}
+
+/// Obtener un tipo de turno válido
+fn obtener_tipo_turno_valido(conn: &rusqlite::Connection) -> i32 {
+    conn.query_row("SELECT id_tipo_turno FROM tipos_turno LIMIT 1", [], |row| row.get(0))
+        .unwrap_or(1)
+}
+
+// ==============================================
+// TESTS DE TURNOS
+// ==============================================
 
 #[test]
 fn test_abrir_turno() {
@@ -16,10 +35,12 @@ fn test_abrir_turno() {
     let conn = get_db_connection().unwrap();
     
     limpiar_turnos_prueba(&conn);
+    let id_usuario = obtener_usuario_valido(&conn);
+    let id_tipo_turno = obtener_tipo_turno_valido(&conn);
     
     let nuevo = NuevoTurno {
-        id_usuario: 1,
-        id_tipo_turno: 1,
+        id_usuario,
+        id_tipo_turno,
     };
     
     let resultado = abrir_turno_logic(&conn, &nuevo);
@@ -37,6 +58,17 @@ fn test_abrir_turno() {
 fn test_obtener_turno_activo() {
     println!("\n🔍 TEST: Obtener turno activo");
     let conn = get_db_connection().unwrap();
+    
+    // Asegurar que hay al menos un turno abierto
+    limpiar_turnos_prueba(&conn);
+    let id_usuario = obtener_usuario_valido(&conn);
+    let id_tipo_turno = obtener_tipo_turno_valido(&conn);
+    
+    let nuevo = NuevoTurno {
+        id_usuario,
+        id_tipo_turno,
+    };
+    let _ = abrir_turno_logic(&conn, &nuevo).unwrap();
     
     let resultado = obtener_turno_activo_general_logic(&conn);
     
@@ -108,13 +140,21 @@ fn test_cerrar_turno() {
     println!("\n🔒 TEST: Cerrar turno");
     let conn = get_db_connection().unwrap();
     
-    // Abrir un turno primero
+    // Limpiar y crear un turno nuevo específicamente para este test
+    limpiar_turnos_prueba(&conn);
+    let id_usuario = obtener_usuario_valido(&conn);
+    let id_tipo_turno = obtener_tipo_turno_valido(&conn);
+    
     let nuevo = NuevoTurno {
-        id_usuario: 1,
-        id_tipo_turno: 1,
+        id_usuario,
+        id_tipo_turno,
     };
     let id_turno = abrir_turno_logic(&conn, &nuevo).unwrap();
     println!("   📌 Turno abierto con ID: {}", id_turno);
+    
+    // Verificar que está abierto
+    let turno = obtener_turno_logic(&conn, id_turno).unwrap();
+    assert_eq!(turno.estado, "ABIERTO");
     
     // Cerrarlo
     let resultado = cerrar_turno_logic(&conn, id_turno);
@@ -122,8 +162,9 @@ fn test_cerrar_turno() {
     match resultado {
         Ok(()) => {
             println!("   ✅ Turno cerrado correctamente");
-            let turno = obtener_turno_logic(&conn, id_turno).unwrap();
-            assert_eq!(turno.estado, "CERRADO");
+            let turno_cerrado = obtener_turno_logic(&conn, id_turno).unwrap();
+            assert_eq!(turno_cerrado.estado, "CERRADO");
+            println!("   ✅ Verificación: Estado = CERRADO");
         }
         Err(e) => panic!("❌ Error: {}", e),
     }
