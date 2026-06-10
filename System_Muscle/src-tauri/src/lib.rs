@@ -102,6 +102,14 @@ pub fn run() {
             commands::obtener_accion,
             commands::historial_por_usuario,
             commands::historial_por_turno,
+            // Turnos
+            commands::abrir_turno,
+            commands::cerrar_turno,
+            commands::obtener_turno,
+            commands::obtener_turno_activo,
+            commands::obtener_turno_activo_general,
+            commands::listar_turnos,
+            commands::listar_turnos_detalle,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

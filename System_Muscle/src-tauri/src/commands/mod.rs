@@ -121,6 +121,21 @@ pub use historial::logic::{
     ultimos_historial_logic,
 };
 
+// Modulo de turnos
+pub mod turnos;
+
+pub use turnos::logic::{
+    abrir_turno_logic,
+    cerrar_turno_logic,
+    obtener_turno_logic,
+    obtener_turno_activo_logic,
+    obtener_turno_activo_general_logic,
+    listar_turnos_logic,
+    listar_turnos_detalle_logic,
+    turnos_por_usuario_logic,
+    turnos_por_estado_logic,
+};
+
 // Comandos de Tauri
 use tauri::State;
 use crate::services::db::connection::DbState;
@@ -132,6 +147,7 @@ use crate::models::movimientos_entrada::movimiento_entrada::NuevoMovimientoEntra
 use crate::models::ventas::venta::NuevaVenta;
 use crate::models::caja::caja::{NuevaCaja, CierreCaja};
 use crate::models::historial::historial::{NuevaAccion, FiltroHistorial};
+use crate::models::turnos::turno::{NuevoTurno, Turno, TurnoDetalle, FiltroTurno};
 
 // Comandos de utilidad
 #[tauri::command]
@@ -711,4 +727,67 @@ pub fn dashboard_resumen(
 ) -> Result<crate::models::reportes::reporte::DashboardResumen, String> {
     let conn = state.conn.lock().unwrap();
     dashboard_resumen_logic(&conn)
+}
+
+// Comandos de turnos
+#[tauri::command]
+pub fn abrir_turno(
+    state: State<'_, DbState>,
+    nuevo: NuevoTurno,
+) -> Result<i32, String> {
+    let conn = state.conn.lock().unwrap();
+    abrir_turno_logic(&conn, &nuevo)
+}
+
+#[tauri::command]
+pub fn cerrar_turno(
+    state: State<'_, DbState>,
+    id_turno: i32,
+) -> Result<(), String> {
+    let conn = state.conn.lock().unwrap();
+    cerrar_turno_logic(&conn, id_turno)
+}
+
+#[tauri::command]
+pub fn obtener_turno(
+    state: State<'_, DbState>,
+    id: i32,
+) -> Result<Turno, String> {
+    let conn = state.conn.lock().unwrap();
+    obtener_turno_logic(&conn, id)
+}
+
+#[tauri::command]
+pub fn obtener_turno_activo(
+    state: State<'_, DbState>,
+    id_usuario: i32,
+) -> Result<Option<Turno>, String> {
+    let conn = state.conn.lock().unwrap();
+    obtener_turno_activo_logic(&conn, id_usuario)
+}
+
+#[tauri::command]
+pub fn obtener_turno_activo_general(
+    state: State<'_, DbState>,
+) -> Result<Option<Turno>, String> {
+    let conn = state.conn.lock().unwrap();
+    obtener_turno_activo_general_logic(&conn)
+}
+
+#[tauri::command]
+pub fn listar_turnos(
+    state: State<'_, DbState>,
+    filtro: FiltroTurno,
+) -> Result<Vec<Turno>, String> {
+    let conn = state.conn.lock().unwrap();
+    listar_turnos_logic(&conn, &filtro)
+}
+
+#[tauri::command]
+pub fn listar_turnos_detalle(
+    state: State<'_, DbState>,
+    filtro: FiltroTurno,
+) -> Result<Vec<TurnoDetalle>, String> {
+    let conn = state.conn.lock().unwrap();
+    listar_turnos_detalle_logic(&conn, &filtro)
 }

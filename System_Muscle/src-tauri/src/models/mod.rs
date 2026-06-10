@@ -8,3 +8,4 @@ pub mod ventas;
 pub mod caja;
 pub mod historial;
 pub mod reportes;
+pub mod turnos;
