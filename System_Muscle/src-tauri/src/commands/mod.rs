@@ -148,6 +148,7 @@ use crate::models::ventas::venta::NuevaVenta;
 use crate::models::caja::caja::{NuevaCaja, CierreCaja};
 use crate::models::historial::historial::{NuevaAccion, FiltroHistorial};
 use crate::models::turnos::turno::{NuevoTurno, Turno, TurnoDetalle, FiltroTurno};
+use crate::models::reportes_entrada::reporte_entrada::{ResumenEntradasPorProducto, TotalesEntradasRango, EntradasPorDia, EntradasPorUsuario, EntradasPorTipoProducto, DashboardEntradas};
 
 // Comandos de utilidad
 #[tauri::command]
@@ -791,3 +792,14 @@ pub fn listar_turnos_detalle(
     let conn = state.conn.lock().unwrap();
     listar_turnos_detalle_logic(&conn, &filtro)
 }
+// Comandos de reportes de entradas
+pub mod reportes_entrada;
+
+pub use reportes_entrada::logic::{
+    resumen_entradas_por_producto_logic,
+    totales_entradas_rango_logic,
+    entradas_por_dia_logic,
+    entradas_por_usuario_logic,
+    entradas_por_tipo_producto_logic,
+    dashboard_entradas_logic,
+};
