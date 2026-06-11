@@ -51,8 +51,7 @@ tauri::Builder::default()
             commands::obtener_producto,
             commands::listar_productos,
             commands::buscar_productos,
-            commands::activar_producto,
-            commands::desactivar_producto,
+            commands::eliminar_producto,
             // Stock
             commands::obtener_stock_por_producto,
             commands::listar_stock,
@@ -107,6 +106,14 @@ tauri::Builder::default()
             commands::obtener_accion,
             commands::historial_por_usuario,
             commands::historial_por_turno,
+            // Turnos
+            commands::abrir_turno,
+            commands::cerrar_turno,
+            commands::obtener_turno,
+            commands::obtener_turno_activo,
+            commands::obtener_turno_activo_general,
+            commands::listar_turnos,
+            commands::listar_turnos_detalle,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
