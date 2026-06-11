@@ -1,6 +1,6 @@
-<div class="rounded-xl border border-slate-200 bg-white">
+<div class="rounded-xl border border-slate-200 bg-white  dark:border-[#334156] dark:bg-[#1E293B]">
 	<div class="border-b border-slate-200 px-5 py-4">
-		<h3 class="text-sm font-semibold text-slate-900">
+		<h3 class="text-sm font-semibold text-slate-900 dark:text-white">
 			Horarios de Turno
 		</h3>
 	</div>

@@ -33,29 +33,29 @@
   }
 </script>
 
-<div class="bg-white border border-slate-200 rounded-2xl overflow-hidden">
+<div class="bg-white border border-slate-200 rounded-2xl overflow-hidden dark:bg-[#1E293B] dark:border-[#334156]">
 
-  <div class="flex items-start justify-between px-6 py-4 border-b border-slate-200">
+  <div class="flex items-start justify-between px-6 py-4 border-b border-slate-200 dark:border-[#334156]">
     <div class="flex flex-col items-start gap-0">
       <div class="flex items-center gap-2">
-        <Package class="w-5 h-5 text-slate-700" />
+        <Package class="w-5 h-5 text-slate-700 dark:text-[#39BDF8]" />
         
-        <h3 class="text-lg font-semibold text-slate-800">
+        <h3 class="text-lg font-semibold text-slate-800 dark:text-white">
           Lista de Productos
         </h3>
       </div>
 
-      <p class="text-sm text-slate-500">
+      <p class="text-sm text-slate-500 dark:text-slate-400">
         {products.length} productos encontrados
       </p>
     </div>
   </div>
 
-  <div class="overflow-x-auto px-6 py-6">
-    <div class="border border-slate-200 rounded-xl overflow-hidden">
+  <div class="overflow-x-auto px-6 py-6 dark:bg-[#1E293B]">
+    <div class="border border-slate-200 rounded-xl overflow-hidden dark:border-[#334156]">
       <table class="w-full">
 
-        <thead class="bg-[#26557c]">
+        <thead class="bg-[#26557c] dark:bg-[#334156] border-b-2 border-slate-300 dark:border-b-[#475569]">
           <tr class="text-left">
             <th class="px-6 py-4 text-sm font-medium text-[#dee6eb]">
               Producto
@@ -83,7 +83,7 @@
           </tr>
         </thead>
 
-        <tbody class="divide-y divide-slate-200">
+        <tbody class="divide-y divide-slate-200 dark:divide-[#334156]">
 
           {#if products.length === 0}
 
@@ -93,13 +93,13 @@
 
                 <div class="flex flex-col items-center justify-center">
 
-                  <Package class="mb-3 h-10 w-10 text-slate-300" />
+                  <Package class="mb-3 h-10 w-10 text-slate-300 dark:text-slate-600" />
 
-                  <h3 class="text-base font-semibold text-slate-700">
+                  <h3 class="text-base font-semibold text-slate-700 dark:text-slate-300">
                     No hay productos registrados
                   </h3>
 
-                  <p class="mt-1 text-sm text-slate-500">
+                  <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">
                     Agrega tu primer producto para comenzar
                   </p>
 
@@ -127,7 +127,7 @@
   </div>
 
   <!-- PAGINATION -->
-  <div class="px-6 py-6">
+  <div class="px-6 py-6 dark:bg-[#1E293B]">
     <Pagination
       {currentPage}
       {totalPages}

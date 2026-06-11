@@ -16,7 +16,7 @@
 	}
 </script>
 
-<div class="rounded-xl border border-slate-200 bg-white">
+<div class="rounded-xl border border-slate-200 bg-white dark:border-[#334156] dark:bg-[#1E293B]">
 	<div class="flex flex-wrap items-center gap-3 p-4">
 		<div class="flex-1 min-w-[220px]">
 			<input
@@ -24,15 +24,15 @@
 				placeholder="Buscar por acción, detalle o usuario..."
 				bind:value={search}
 				on:input={update}
-				class="w-full h-11 rounded-xl border border-slate-200 px-4 text-sm outline-none transition focus:border-cyan-600"
+				class="w-full h-11 rounded-xl border border-slate-200 px-4 text-sm outline-none transition focus:border-cyan-600 dark:border-[#334156] dark:bg-[#1E293B] dark:text-white"
 			/>
 		</div>
 
-		<div class="relative w-40">
+		<div class="relative w-40 ">
 			<select
 				bind:value={turno}
 				on:change={update}
-				class="w-full appearance-none rounded-xl border border-slate-200 bg-white px-4 py-3 pr-11 text-sm text-slate-700 outline-none transition duration-200 focus:border-[#0C4A6E] focus:ring-4 focus:ring-sky-100 focus:scale-[1.01]"
+				class="w-full appearance-none rounded-xl border border-slate-200 bg-white px-4 py-3 pr-11 text-sm text-slate-700 outline-none transition duration-200 focus:border-[#0C4A6E] focus:ring-4 focus:ring-sky-100 focus:scale-[1.01] dark:border-[#334156] dark:bg-[#1E293B] dark:text-white"
 			>
 				<option value="">Turnos</option>
 				<option value="Mañana">Mañana</option>
@@ -64,7 +64,7 @@
 			type="date"
 			bind:value={fecha}
 			on:change={update}
-			class=" appearance-none rounded-xl border border-slate-200 bg-white px-4 py-3 pr-11 text-sm text-slate-700 outline-none transition duration-200 focus:border-[#0C4A6E] focus:ring-4 focus:ring-sky-100 focus:scale-[1.01]"
+			class=" appearance-none rounded-xl border border-slate-200 bg-white px-4 py-3 pr-11 text-sm text-slate-700 outline-none transition duration-200 focus:border-[#0C4A6E] focus:ring-4 focus:ring-sky-100 focus:scale-[1.01] dark:border-[#334156] dark:bg-[#1E293B] dark:text-white"
 		/>
 	</div>
 </div>

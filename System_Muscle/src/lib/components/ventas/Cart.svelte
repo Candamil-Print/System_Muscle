@@ -129,28 +129,28 @@
 
     <div class="space-y-3 p-5">
       {#if $cart.length === 0}
-        <div class="flex items-center justify-center rounded-xl border border-dashed border-slate-300 py-10 text-sm text-slate-500">
+        <div class="flex items-center justify-center rounded-xl border border-dashed border-slate-300 dark:border-[#334156] py-10 text-sm text-slate-500 dark:text-slate-400">
           No hay productos en el carrito
         </div>
       {:else}
         {#each $cart as item, index}
-          <div class="rounded-xl bg-[#F3F4F6] p-4">
+          <div class="rounded-xl bg-[#F3F4F6] dark:bg-[#334156] p-4">
             <div class="flex items-center justify-between">
               <div>
-                <h3 class="font-medium text-slate-800">{item.nombre}</h3>
-                <p class="text-sm text-slate-500">$ {formatear(item.precio)}</p>
+                <h3 class="font-medium text-slate-800 dark:text-white">{item.nombre}</h3>
+                <p class="text-sm text-slate-500 dark:text-slate-400">$ {formatear(item.precio)}</p>
               </div>
               <div class="flex items-center gap-3">
                 <button
                   on:click={() => disminuirCantidad(index)}
-                  class="flex h-8 w-8 items-center justify-center rounded-lg border border-[#E5E7EB] bg-white hover:bg-slate-100"
+                  class="flex h-8 w-8 items-center justify-center rounded-lg border border-[#E5E7EB] dark:border-[#475569] bg-white dark:bg-[#1E293B] hover:bg-slate-100 dark:hover:bg-[#0F172A] text-slate-800 dark:text-white"
                 >
                   −
                 </button>
-                <span class="w-6 text-center font-semibold">{item.cantidad}</span>
+                <span class="w-6 text-center font-semibold text-slate-800 dark:text-white">{item.cantidad}</span>
                 <button
                   on:click={() => aumentarCantidad(index)}
-                  class="flex h-8 w-8 items-center justify-center rounded-lg border border-[#E5E7EB] bg-white hover:bg-slate-100"
+                  class="flex h-8 w-8 items-center justify-center rounded-lg border border-[#E5E7EB] dark:border-[#475569] bg-white dark:bg-[#1E293B] hover:bg-slate-100 dark:hover:bg-[#0F172A] text-slate-800 dark:text-white"
                 >
                   +
                 </button>
@@ -164,7 +164,7 @@
     <div class="border-t border-slate-200 dark:border-[#334156] p-5">
       <div class="mb-5 flex items-center justify-between">
         <span class="text-slate-600">Total</span>
-        <span class="text-3xl font-bold text-[#0C4A6E]">$ {formatear(total)}</span>
+        <span class="text-3xl font-bold text-[#0C4A6E] dark:text-[#39BDF8]">$ {formatear(total)}</span>
       </div>
 
       <div class="mb-5 space-y-3">

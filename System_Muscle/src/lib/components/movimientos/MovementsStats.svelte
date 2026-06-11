@@ -36,7 +36,7 @@
 <div class="grid grid-cols-1 gap-5 md:grid-cols-3">
 
   <!-- TOTAL MOVIMIENTOS -->
-  <div class="rounded-2xl border border-slate-200 bg-white p-5">
+  <div class="rounded-2xl border border-slate-200 bg-white p-5 dark:border-[#334156] dark:bg-[#1E293B] ">
 
     <div class="flex items-center justify-between">
 
@@ -44,11 +44,11 @@
         Total Movimientos
       </span>
 
-      <TrendingUp class="h-5 w-5 text-[#0C4A6E]" />
+      <TrendingUp class="h-5 w-5 text-[#0C4A6E] dark:text-[#39BDF8]" />
 
     </div>
 
-    <h2 class="mt-4 text-4xl font-bold text-slate-800">
+    <h2 class="mt-4 text-4xl font-bold text-slate-800 dark:text-white">
       {totalMovements}
     </h2>
 
@@ -59,7 +59,7 @@
   </div>
 
   <!-- ENTRADAS HOY -->
-  <div class="rounded-2xl border border-slate-200 bg-white p-5">
+  <div class="rounded-2xl border border-slate-200 bg-white p-5 dark:border-[#334156] dark:bg-[#1E293B]">
 
     <div class="flex items-center justify-between">
 
@@ -67,11 +67,11 @@
         Entradas Hoy
       </span>
 
-      <Package class="h-5 w-5 text-[#0C4A6E]" />
+      <Package class="h-5 w-5 text-[#0C4A6E] dark:text-[#39BDF8]" />
 
     </div>
 
-    <h2 class="mt-4 text-4xl font-bold text-slate-800">
+    <h2 class="mt-4 text-4xl font-bold text-slate-800 dark:text-white">
       {todayEntries}
     </h2>
 
@@ -82,7 +82,7 @@
   </div>
 
   <!-- UNIDADES -->
-  <div class="rounded-2xl border border-slate-200 bg-white p-5">
+  <div class="rounded-2xl border border-slate-200 bg-white p-5 dark:border-[#334156] dark:bg-[#1E293B]">
 
     <div class="flex items-center justify-between">
 
@@ -90,11 +90,11 @@
         Unidades Ingresadas
       </span>
 
-      <ArrowDownWideNarrow class="h-5 w-5 text-[#0C4A6E]" />
+      <ArrowDownWideNarrow class="h-5 w-5 text-[#0C4A6E] dark:text-[#39BDF8]" />
 
     </div>
 
-    <h2 class="mt-4 text-4xl font-bold text-[#0C4A6E]">
+    <h2 class="mt-4 text-4xl font-bold text-[#0C4A6E] dark:text-[#39BDF8]">
       {totalUnits.toLocaleString('es-CO')}
     </h2>
 

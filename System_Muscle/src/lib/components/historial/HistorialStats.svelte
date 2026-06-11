@@ -1,9 +1,7 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { obtenerStatsHistorial } from '$lib/services/api/history/history.service';
-	import TrendingUp from 'lucide-svelte/icons/trending-up';
-	import Calendar from 'lucide-svelte/icons/calendar';
-	import Clock from 'lucide-svelte/icons/clock';
+	import {  Calendar, Clock } from 'lucide-svelte';
 
 	export let filtros = {
 		fechaInicio: '',
@@ -34,16 +32,16 @@
 	}
 </script>
 
-<div class="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
-	<div class="rounded-xl border border-slate-200 bg-white p-5">
-		<div class="flex items-center justify-between">
+<div class="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4 dark:border-[#334156] dark:bg-[#1E293B]">
+	<div class="rounded-xl border border-slate-200 bg-white p-5 dark:border-[#334156] dark:bg-[#1E293B]">
+		<div class="flex items-center justify-between ">
 			<p class="text-sm font-medium text-slate-500">
 				Total Acciones
 			</p>
-			<TrendingUp class="w-5 h-5 text-slate-400" />
+			<!-- <Activity class="w-5 h-5 text-slate-400 dark:text-[#39BDF8]" /> -->
 		</div>
 
-		<p class="mt-2 text-3xl font-bold text-slate-900">
+		<p class="mt-2 text-3xl font-bold text-slate-900 dark:text-white">
 			{stats.total}
 		</p>
 
@@ -52,15 +50,15 @@
 		</p>
 	</div>
 
-	<div class="rounded-xl border border-slate-200 bg-white p-5">
+	<div class="rounded-xl border border-slate-200 bg-white dark:border-[#334156] dark:bg-[#1E293B] p-5">
 		<div class="flex items-center justify-between">
 			<p class="text-sm font-medium text-slate-500">
 				Acciones Hoy
 			</p>
-			<Calendar class="w-5 h-5 text-slate-400" />
+			<Calendar class="w-5 h-5 text-slate-400 dark:text-[#39BDF8]" />
 		</div>
 
-		<p class="mt-2 text-3xl font-bold text-slate-900">
+		<p class="mt-2 text-3xl font-bold text-slate-900 dark:text-white">
 			{stats.hoy}
 		</p>
 
@@ -69,15 +67,15 @@
 		</p>
 	</div>
 
-	<div class="rounded-xl border border-slate-200 bg-white p-5">
+	<div class="rounded-xl border border-slate-200 bg-white p-5 dark:border-[#334156] dark:bg-[#1E293B]">
 		<div class="flex items-center justify-between">
 			<p class="text-sm font-medium text-slate-500">
 				Turno Mañana
 			</p>
-			<Clock class="w-5 h-5 text-slate-400" />
+			<Clock class="w-5 h-5 text-slate-400 dark:text-[#39BDF8]" />
 		</div>
 
-		<p class="mt-2 text-3xl font-bold text-[#0C4A6E]">
+		<p class="mt-2 text-3xl font-bold text-[#0C4A6E] dark:text-[#39BDF8]">
 			{stats.manana}
 		</p>
 
@@ -86,15 +84,15 @@
 		</p>
 	</div>
 
-	<div class="rounded-xl border border-slate-200 bg-white p-5">
+	<div class="rounded-xl border border-slate-200 bg-white p-5 dark:border-[#334156] dark:bg-[#1E293B]">
 		<div class="flex items-center justify-between">
 			<p class="text-sm font-medium text-slate-500">
 				Turno Tarde
 			</p>
-			<Clock class="w-5 h-5 text-slate-400" />
+			<Clock class="w-5 h-5 text-slate-400 dark:text-[#39BDF8]" />
 		</div>
 
-		<p class="mt-2 text-3xl font-bold text-[#0C4A6E]">
+		<p class="mt-2 text-3xl font-bold text-[#0C4A6E] dark:text-[#39BDF8]">
 			{stats.tarde}
 		</p>
 

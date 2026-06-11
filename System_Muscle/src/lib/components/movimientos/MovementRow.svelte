@@ -10,12 +10,12 @@
 
 </script>
 
-<tr class="border-t border-slate-100 transition hover:bg-slate-50">
+<tr class="border-t border-slate-100 dark:border-[#334156] transition hover:bg-slate-50 dark:hover:bg-[#0F172A]">
 
   <!-- PRODUCTO -->
-  <td class="py-4">
+  <td class="px-6 py-4">
 
-    <span class="px-6 py-4 text-sm text-slate-600">
+    <span class="text-sm text-slate-600 dark:text-[#E2E8F0]">
       {movement.nombre_producto}
     </span>
 
@@ -24,7 +24,7 @@
   <!-- CANTIDAD -->
   <td class="px-6 py-4">
 
-    <span class="flex w-fit items-center gap-1 rounded-full bg-[#1c5476]/10 px-3 py-1 text-xs font-medium text-[#1c5476]">
+    <span class="flex w-fit items-center gap-1 rounded-full bg-[#1c5476]/10 dark:bg-[#0C4A6E]/20 px-3 py-1 text-xs font-medium text-[#1c5476] dark:text-[#39BDF8]">
 
       <Plus class="h-3 w-3" />
 
@@ -35,22 +35,22 @@
   </td>
 
   <!-- STOCK ANTERIOR -->
-  <td class="px-6 py-4 text-sm text-slate-600">
-    —
+  <td class="px-6 py-4 text-sm text-slate-600 dark:text-[#E2E8F0]">
+    {movement.stock_anterior}
   </td>
 
   <!-- STOCK NUEVO -->
-  <td class="px-6 py-4 text-sm text-slate-600">
+  <td class="px-6 py-4 text-sm text-slate-600 dark:text-[#E2E8F0]">
     —
   </td>
 
   <!-- USUARIO -->
-  <td class="px-6 py-4 text-sm text-slate-600">
+  <td class="px-6 py-4 text-sm text-slate-600 dark:text-[#E2E8F0]">
     {movement.nombre_usuario}
   </td>
 
   <!-- FECHA -->
-  <td class="px-6 py-4 text-sm text-slate-600">
+  <td class="px-6 py-4 text-sm text-slate-600 dark:text-[#E2E8F0]">
     {movement.fecha}
   </td>
 

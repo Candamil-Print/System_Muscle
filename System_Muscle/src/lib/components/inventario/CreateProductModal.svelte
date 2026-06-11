@@ -309,7 +309,7 @@ async function processImagePath(path: string) {
     <!-- Modal -->
     <div
       bind:this={dialogElement}
-      class="animate-in fade-in zoom-in duration-200 my-8 w-full max-w-2xl rounded-3xl border border-slate-200 bg-white shadow-2xl"
+      class="animate-in fade-in zoom-in duration-200 my-8 w-full max-w-2xl rounded-3xl border border-slate-200 bg-white shadow-2xl dark:bg-[#1E293B] dark:border-[#334156]"
       style="max-height: calc(100vh - 4rem); overflow-y: auto;"
       role="dialog"
       aria-modal="true"
@@ -318,10 +318,10 @@ async function processImagePath(path: string) {
       onkeydown={(e) => e.stopPropagation()}
     >
       <!-- Header -->
-      <div class="sticky top-0 rounded-t-3xl border-b border-slate-100 bg-white p-6">
+      <div class="sticky top-0 rounded-t-3xl border-b border-slate-100 bg-white dark:bg-[#1E293B] dark:border-[#334156] p-6">
         <div class="flex items-start justify-between">
           <div>
-            <h2 class="text-2xl font-bold text-slate-800">
+            <h2 class="text-2xl font-bold text-slate-800 dark:text-white">
               Crear Producto
             </h2>
 
@@ -332,7 +332,7 @@ async function processImagePath(path: string) {
 
           <button
             type="button"
-            class="rounded-xl p-2 text-slate-400 transition hover:bg-slate-100 hover:text-slate-700"
+            class="rounded-xl p-2 text-slate-400 transition hover:bg-slate-100 hover:text-slate-700 dark:hover:bg-[#162033]"
             onclick={handleCloseModal}
             aria-label="Cerrar"
           >
@@ -347,7 +347,7 @@ async function processImagePath(path: string) {
         <div>
           <label
             for="nombre"
-            class="mb-1 block text-sm font-semibold text-slate-700"
+            class="mb-1 block text-sm font-semibold text-slate-700 dark:text-white"
           >
             Nombre
           </label>
@@ -357,7 +357,7 @@ async function processImagePath(path: string) {
             id="nombre"
             type="text"
             placeholder="Nombre del producto"
-            class="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none transition duration-200 focus:border-[#0C4A6E] focus:ring-4 focus:ring-sky-100 focus:scale-[1.01]"
+            class="w-full rounded-xl border border-slate-200 bg-white dark:bg-[#111827] dark:border-[#334156] dark:text-[#64748B] px-4 py-3 text-sm outline-none transition duration-200 focus:border-[#0C4A6E] focus:ring-4 focus:ring-sky-100 focus:scale-[1.01] dark:focus:border-[#39BDF8] dark:focus:ring-4 dark:focus:ring-[#39BDF8]/20"
           />
         </div>
 
@@ -365,7 +365,7 @@ async function processImagePath(path: string) {
         <div>
           <label
             for="tipo"
-            class="mb-1 block text-sm font-semibold text-slate-700"
+            class="mb-1 block text-sm font-semibold text-slate-700 dark:text-white"
           >
             Tipo
           </label>
@@ -374,7 +374,7 @@ async function processImagePath(path: string) {
             <select
               bind:value={product.tipo}
               id="tipo"
-              class="w-full appearance-none rounded-xl border border-slate-200 bg-white px-4 py-3 pr-11 text-sm outline-none transition duration-200 focus:border-[#0C4A6E] focus:ring-4 focus:ring-sky-100 focus:scale-[1.01]"
+              class="w-full appearance-none rounded-xl border border-slate-200 bg-white dark:bg-[#111827] dark:border-[#334156] dark:text-[#64748B] px-4 py-3 pr-11 text-sm outline-none transition duration-200 focus:border-[#0C4A6E] focus:ring-4 focus:ring-sky-100 focus:scale-[1.01] dark:focus:border-[#39BDF8] dark:focus:ring-4 dark:focus:ring-[#39BDF8]/20 "
             >
               <option>Snacks</option>
               <option>Suplementos</option>
@@ -406,17 +406,17 @@ async function processImagePath(path: string) {
           <div>
             <label
               for="precioCosto"
-              class="mb-1 block text-sm font-semibold text-slate-700"
+              class="mb-1 block text-sm font-semibold text-slate-700 dark:text-white "
             >
               Precio Costo
             </label>
 
             <div
-              class="group flex overflow-hidden rounded-xl border border-slate-200 bg-white transition duration-200 focus-within:border-[#0C4A6E] focus-within:ring-4 focus-within:ring-sky-100 focus-within:scale-[1.01]"
+              class="group flex overflow-hidden rounded-xl border border-slate-200 bg-white dark:bg-[#111827] dark:border-[#334156] dark:text-[#64748B] transition duration-200 focus-within:border-[#0C4A6E] focus-within:ring-4 focus-within:ring-sky-100 focus-within:scale-[1.01] dark:focus-within:border-[#39BDF8] dark:focus-within:ring-4 dark:focus-within:ring-[#39BDF8]/20"
             >
               <!-- PREFIJO -->
               <div
-                class="flex items-center border-r border-slate-200 bg-slate-50 px-4 text-sm font-medium text-slate-600"
+                class="flex items-center border-r border-slate-200 bg-slate-50 px-4 text-sm font-medium text-slate-600 dark:bg-[#111827] dark:border-[#334156] dark:text-[#64748B]"
               >
                 $
               </div>
@@ -431,7 +431,7 @@ async function processImagePath(path: string) {
                 type="text"
                 inputmode="numeric"
                 placeholder="0"
-                class="w-full bg-transparent px-1 py-3 text-sm outline-none"
+                class="w-full bg-transparent px-1 py-3 text-sm outline-none dark:bg-[#111827] dark:border-[#334156] dark:text-[#64748B]"
               />
 
               <!-- BOTONES -->
@@ -459,17 +459,17 @@ async function processImagePath(path: string) {
           <div>
             <label
               for="precioSugerido"
-              class="mb-1 block text-sm font-semibold text-slate-700"
+              class="mb-1 block text-sm font-semibold text-slate-700 dark:text-white"
             >
               Precio Sugerido
             </label>
 
             <div
-              class="group flex overflow-hidden rounded-xl border border-slate-200 bg-white transition duration-200 focus-within:border-[#0C4A6E] focus-within:ring-4 focus-within:ring-sky-100 focus-within:scale-[1.01]"
+              class="group flex overflow-hidden rounded-xl border border-slate-200 bg-white transition duration-200 focus-within:border-[#0C4A6E] focus-within:ring-4 focus-within:ring-sky-100 focus-within:scale-[1.01] dark:bg-[#111827] dark:border-[#334156] dark:text-[#64748B] dark:focus-within:border-[#39BDF8] dark:focus-within:ring-4 dark:focus-within:ring-[#39BDF8]/20"
             >
               <!-- PREFIJO -->
               <div
-                class="flex items-center border-r border-slate-200 bg-slate-50 px-4 text-sm font-medium text-slate-600"
+                class="flex items-center border-r border-slate-200 bg-slate-50 px-4 text-sm font-medium text-slate-600 dark:bg-[#111827] dark:border-[#334156] dark:text-[#64748B]"
               >
                 $
               </div>
@@ -513,13 +513,13 @@ async function processImagePath(path: string) {
         <div>
           <label
             for="stockMaximo"
-            class="mb-1 block text-sm font-semibold text-slate-700"
+            class="mb-1 block text-sm font-semibold text-slate-700 dark:text-white"
           >
             Stock Máximo
           </label>
 
           <div
-            class="group flex overflow-hidden rounded-xl border border-slate-200 bg-white transition duration-200 focus-within:border-[#0C4A6E] focus-within:ring-4 focus-within:ring-sky-100 focus-within:scale-[1.01]"
+            class="group flex overflow-hidden rounded-xl border border-slate-200 bg-white transition duration-200 focus-within:border-[#0C4A6E] focus-within:ring-4 focus-within:ring-sky-100 focus-within:scale-[1.01] dark:bg-[#111827] dark:border-[#334156] dark:text-[#64748B] dark:focus-within:border-[#39BDF8] dark:focus-within:ring-4 dark:focus-within:ring-[#39BDF8]/20"
           >
             <input
               value={product.stockMaximo}
@@ -530,7 +530,7 @@ async function processImagePath(path: string) {
               type="text"
               inputmode="numeric"
               placeholder="0"
-              class="w-full bg-transparent px-4 py-3 text-sm outline-none"
+              class="w-full bg-transparent px-4 py-3 text-sm outline-none "
             />
 
             <!-- CONTROLES -->
@@ -556,7 +556,7 @@ async function processImagePath(path: string) {
 
         <!-- Upload -->
         <div>
-          <p class="mb-1 block text-sm font-semibold text-slate-700">
+          <p class="mb-1 block text-sm font-semibold text-slate-700 dark:text-white ">
             Imagen del producto
           </p>
 
@@ -565,7 +565,7 @@ async function processImagePath(path: string) {
             bind:this={fileInput}
             type="file"
             accept="image/*"
-            class="hidden"
+            class="hidden "
             onchange={handleFileChange}
           />
 
@@ -573,7 +573,7 @@ async function processImagePath(path: string) {
           <div
             role="button"
             tabindex="0"
-            class={`flex w-full cursor-pointer items-center gap-4 rounded-2xl border border-dashed p-4 transition duration-200
+            class={`flex w-full cursor-pointer items-center gap-4 rounded-2xl border border-dashed p-4 transition duration-200 dark:bg-[#111827] dark:border-[#334156] dark:text-[#64748B] dark:hover:bg-[#162033]
             ${
               isDragging
                 ? 'border-[#0C4A6E] bg-sky-50'
@@ -602,7 +602,7 @@ async function processImagePath(path: string) {
               isDragging = false;
             }}
           >
-            <div class="flex h-14 w-14 items-center justify-center overflow-hidden rounded-2xl bg-slate-200">
+            <div class="flex h-14 w-14 items-center justify-center overflow-hidden rounded-2xl bg-slate-200 dark:border-[#334156] dark:bg-[#1E293B]  ">
               {#if previewImage}
                 <img
                   src={previewImage}
@@ -614,8 +614,8 @@ async function processImagePath(path: string) {
               {/if}
             </div>
 
-            <div class="text-left">
-              <p class="text-sm font-semibold text-slate-700">
+            <div class="text-left ">
+              <p class="text-sm font-semibold text-slate-700 dark:text-white ">
                 {#if selectedImage}
                   {selectedImage.name}
                 {:else}
@@ -636,11 +636,11 @@ async function processImagePath(path: string) {
       </div>
 
       <!-- Footer -->
-      <div class="sticky bottom-0 rounded-b-3xl border-t border-slate-100 bg-white p-5">
+      <div class="sticky bottom-0 rounded-b-3xl border-t border-slate-100 bg-white dark:bg-[#1E293B] dark:border-[#334156] p-5">
         <div class="flex justify-end gap-3">
           <button
             type="button"
-            class="rounded-xl border border-slate-200 px-5 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-100"
+            class="rounded-xl border border-slate-200 px-5 py-2.5 text-sm font-medium text-slate-700 dark:border-[#334156] dark:text-white transition hover:bg-slate-100 dark:hover:bg-[#162033]"
             onclick={handleCloseModal}
           >
             Cancelar
@@ -648,7 +648,7 @@ async function processImagePath(path: string) {
 
           <button
             type="button"
-            class="rounded-xl bg-[#0C4A6E] px-5 py-2.5 text-sm font-medium text-white transition hover:bg-[#0a3a52] disabled:opacity-50"
+            class="rounded-xl bg-[#0C4A6E] px-5 py-2.5 text-sm font-medium text-white dark:text-[#39BDF8] transition hover:bg-[#0a3a52] disabled:opacity-50"
             onclick={handleCreateProduct}
             disabled={loading}
           >

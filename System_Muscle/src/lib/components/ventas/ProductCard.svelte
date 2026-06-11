@@ -12,7 +12,7 @@ interface Producto {
   categoria: string;
   precio: number;
   stock: number;
-  total: number;
+  stock_maximo: number;
   imagen: string;
 }
 
@@ -61,14 +61,14 @@ addToCart({
     }
 
   }}
-  class="cursor-pointer overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition hover:-translate-y-1 hover:shadow-lg"
+  class="cursor-pointer overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition hover:-translate-y-1 hover:shadow-lg dark:border-[#334156] dark:bg-[#1E293B]"
 >
 
 
 
   <!-- IMAGEN -->
   <div
-    class="relative aspect-square overflow-hidden bg-slate-100"
+    class="relative aspect-square overflow-hidden bg-slate-100 dark:bg-[#0F172A]"
   >
 
     {#if producto.imagen}
@@ -96,7 +96,7 @@ addToCart({
     <div class="absolute left-3 top-3">
 
       <span
-        class="rounded-full bg-white/90 px-3 py-1 text-xs font-medium text-slate-700 backdrop-blur"
+        class="rounded-full bg-white/90 px-3 py-1 text-xs font-medium text-slate-700 backdrop-blur dark:bg-[#334156]/90 dark:text-slate-300"
       >
         {producto.categoria}
       </span>
@@ -110,12 +110,12 @@ addToCart({
 
     <div>
 
-      <h3 class="font-semibold text-slate-800">
+      <h3 class="font-semibold text-slate-800 dark:text-white">
         {producto.nombre}
       </h3>
 
       <p
-        class="mt-1 text-xl font-bold text-[#0C4A6E]"
+        class="mt-1 text-xl font-bold text-[#0C4A6E] dark:text-[#39BDF8]"
       >
         $
         {formatear(producto.precio)}
@@ -126,7 +126,7 @@ addToCart({
     <div>
 
       <div
-        class="mb-2 flex items-center justify-between text-xs text-slate-500"
+        class="mb-2 flex items-center justify-between text-xs text-slate-500 dark:text-slate-400"
       >
 
         <span>
@@ -134,18 +134,18 @@ addToCart({
         </span>
 
         <span>
-          {producto.stock} / {producto.total}
+          {producto.stock} / {producto.stock_maximo}
         </span>
 
       </div>
 
       <div
-        class="h-2 overflow-hidden rounded-full bg-slate-200"
+        class="h-2 overflow-hidden rounded-full bg-slate-200 dark:bg-[#334156]"
       >
 
         <div
-          class="h-full rounded-full bg-[#0C4A6E]"
-          style={`width: ${(producto.stock / producto.total) * 100}%`}
+          class="h-full rounded-full bg-[#0C4A6E] dark:bg-[#39BDF8]"
+          style={`width: ${(producto.stock / producto.stock_maximo) * 100}%`}
         ></div>
 
       </div>

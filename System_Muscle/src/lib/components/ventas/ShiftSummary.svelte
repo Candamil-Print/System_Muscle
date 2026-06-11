@@ -85,13 +85,13 @@
   <div class="mb-5">
 
     <h3
-      class="text-lg font-semibold text-slate-800 dark:text-slate-500"
+      class="text-lg font-semibold text-slate-800 dark:text-white"
     >
       Resumen del Turno
     </h3>
 
     <p
-      class="mt-1 text-sm text-slate-500"
+      class="mt-1 text-sm text-slate-500 dark:text-slate-400"
     >
       Ventas registradas hoy
     </p>
@@ -101,7 +101,7 @@
   {#if loading}
 
     <div
-      class="py-10 text-center text-sm text-slate-500"
+      class="py-10 text-center text-sm text-slate-500 dark:text-slate-400"
     >
       Cargando resumen...
     </div>
@@ -116,7 +116,7 @@
       >
 
         <span
-          class="text-sm text-slate-500"
+          class="text-sm text-slate-500 dark:text-slate-400"
         >
           Efectivo
         </span>
@@ -136,7 +136,7 @@
       >
 
         <span
-          class="text-sm text-slate-500"
+          class="text-sm text-slate-500 dark:text-slate-400"
         >
           Transferencia
         </span>
@@ -152,7 +152,7 @@
 
       <!-- TOTAL -->
       <div
-        class="border-t border-slate-200 pt-4"
+        class="border-t border-slate-200 dark:border-[#334156] pt-4"
       >
 
         <div
@@ -160,7 +160,7 @@
         >
 
           <span
-            class="font-medium text-slate-700"
+            class="font-medium text-slate-700 dark:text-slate-300"
           >
             Total
           </span>

@@ -5,7 +5,7 @@
 
 <div class="mb-6 flex items-center justify-between">
   <div>
-    <h1 class="text-3xl font-bold text-slate-800">
+    <h1 class="text-3xl font-bold text-slate-800 dark:text-white">
       Inventario
     </h1>
 
@@ -15,7 +15,7 @@
   </div>
 
   <button
-    class="rounded-lg bg-[#0C4A6E] px-4 py-2.5 text-sm font-medium text-white hover:bg-[#0a3a52]"
+    class="rounded-lg bg-[#0C4A6E] dark:text-[#39BDF8] px-4 py-2.5 text-sm font-medium text-white hover:bg-[#0a3a52]"
     onclick={() => dispatch('create')}
   >
     + Nuevo Producto

@@ -60,7 +60,7 @@
 
   <div>
 
-    <h1 class="text-3xl font-bold text-slate-800">
+    <h1 class="text-3xl font-bold text-slate-800 dark:text-white">
       Movimientos
     </h1>
 
@@ -76,7 +76,7 @@
 
     <button
       on:click={() => showEntryModal = true}
-      class="rounded-lg bg-[#0C4A6E] px-4 py-2.5 text-sm font-medium text-white hover:bg-[#0a3a52]"
+      class="rounded-lg bg-[#0C4A6E] dark:text-[#39BDF8] px-4 py-2.5 text-sm font-medium text-white hover:bg-[#0a3a52]"
     >
       + Nuevo Movimiento
     </button>

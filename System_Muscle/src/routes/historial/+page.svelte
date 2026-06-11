@@ -116,7 +116,7 @@
 
 <Toaster position="top-center" />
 
-<div class="flex min-h-screen bg-slate-50">
+<div class="flex min-h-screen bg-slate-50 dark:bg-[#111827]">
 	<Sidebar />
 
 	<div class="ml-70 flex flex-1 flex-col">

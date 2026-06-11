@@ -14,14 +14,18 @@
   } from '$lib/services/api/inventory/inventory.types';
 
   interface Producto 
-  { nombre: string; 
+  { 
+    id_producto: number;
+    nombre: string; 
     categoria: string; 
     precio: number; 
     stock: number; 
+    stock_maximo: number;
     total: number; 
-    imagen: string; } 
+    imagen: string; 
+  } 
     
-    export let productos: Producto[] = [];
+  export let productos: Producto[] = [];
 
   let loading = false;
 
@@ -41,6 +45,7 @@
         categoria: product.tipo_producto || 'Sin categoría',
         precio: product.precio_sugerido || 0,
         stock: product.stock_actual || 0,
+        stock_maximo: product.stock_maximo || product.stock_actual || 0,
         total: (product.precio_sugerido || 0) * (product.stock_actual || 0),
         imagen: product.imagen_url || ''
       }));

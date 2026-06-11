@@ -1,5 +1,5 @@
 <div>
-    <h1 class="mb-1 text-3xl font-bold text-slate-900">
+    <h1 class="mb-1 text-3xl font-bold text-slate-900 dark:text-white">
         Historial
     </h1>
 

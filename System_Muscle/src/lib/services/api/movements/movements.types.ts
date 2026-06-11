@@ -7,6 +7,7 @@ cantidad: number;
 fecha: string;
 id_usuario: number;
 nombre_usuario: string;
+stock_anterior: number;
 }
 
 export interface NewMovement {

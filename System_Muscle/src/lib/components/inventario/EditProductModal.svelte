@@ -211,26 +211,26 @@ function handleDrop(e: DragEvent) {
 
     <!-- Modal -->
     <div
-      class="w-full max-w-lg rounded-2xl bg-white shadow-2xl"
+      class="w-full max-w-lg rounded-2xl bg-white dark:bg-[#1E293B] dark:border-[#334156] shadow-2xl"
     >
 
       <!-- HEADER -->
-      <div class="border-b border-slate-100 p-6">
+      <div class="border-b border-slate-100 dark:border-[#334156] p-6">
 
         <div class="flex items-start justify-between">
 
           <div>
-            <h2 class="text-xl font-bold text-slate-800">
+            <h2 class="text-xl font-bold text-slate-800 dark:text-white">
               Editar Producto
             </h2>
 
-            <p class="mt-1 text-sm text-slate-500">
+            <p class="mt-1 text-sm text-slate-500 dark:text-[#94A3B8]">
               Modifica los datos del producto
             </p>
           </div>
 
           <button
-            class="rounded-lg p-2 text-slate-400 transition hover:bg-slate-100"
+            class="rounded-lg p-2 text-slate-400 dark:text-[#94A3B8] transition hover:bg-slate-100 dark:hover:bg-[#162033]"
             onclick={onClose}
           >
             <X size={18} />
@@ -239,13 +239,12 @@ function handleDrop(e: DragEvent) {
         </div>
       </div>
 
- 
       <!-- BODY -->
       <div class="space-y-5 p-6">
 
         <!-- IMAGE UPLOAD -->
         <div>
-          <p class="mb-2 block text-sm font-semibold text-slate-700">
+          <p class="mb-2 block text-sm font-semibold text-slate-700 dark:text-white">
             Imagen del producto
           </p>
 
@@ -263,8 +262,8 @@ function handleDrop(e: DragEvent) {
             class={`flex w-full cursor-pointer items-center gap-4 rounded-2xl border border-dashed p-4 transition duration-200
             ${
               dragActive
-                ? 'border-[#0C4A6E] bg-sky-50'
-                : 'border-slate-300 bg-slate-50 hover:border-[#0C4A6E] hover:bg-slate-100'
+                ? 'border-[#0C4A6E] bg-sky-50 dark:bg-[#162033] dark:border-[#39BDF8]'
+                : 'border-slate-300 bg-slate-50 hover:border-[#0C4A6E] hover:bg-slate-100 dark:bg-[#111827] dark:border-[#334156] dark:hover:bg-[#162033] dark:hover:border-[#39BDF8]'
             }`}
             ondragenter={handleDragEnter}
             ondragleave={handleDragLeave}
@@ -272,7 +271,7 @@ function handleDrop(e: DragEvent) {
             ondrop={handleDrop}
             onclick={openImageSelector}
           >
-            <div class="flex h-14 w-14 items-center justify-center overflow-hidden rounded-2xl bg-slate-200">
+            <div class="flex h-14 w-14 items-center justify-center overflow-hidden rounded-2xl bg-slate-200 dark:bg-[#1E293B]">
               {#if previewImage}
                 <img
                   src={previewImage}
@@ -280,12 +279,12 @@ function handleDrop(e: DragEvent) {
                   class="h-full w-full object-cover"
                 />
               {:else}
-                <Image size={20} class="text-slate-500" />
+                <Image size={20} class="text-slate-500 dark:text-[#64748B]" />
               {/if}
             </div>
 
             <div class="flex-1 text-left">
-              <p class="text-sm font-semibold text-slate-700">
+              <p class="text-sm font-semibold text-slate-700 dark:text-white">
                 {#if selectedImage}
                   {selectedImage.name}
                 {:else}
@@ -293,7 +292,7 @@ function handleDrop(e: DragEvent) {
                 {/if}
               </p>
 
-              <p class="text-xs text-slate-500">
+              <p class="text-xs text-slate-500 dark:text-[#94A3B8]">
                 {#if selectedImage}
                   Imagen seleccionada correctamente
                 {:else}
@@ -306,27 +305,27 @@ function handleDrop(e: DragEvent) {
 
         <!-- Nombre -->
         <div>
-          <label class="mb-2 block text-sm font-semibold text-slate-700">
+          <label class="mb-2 block text-sm font-semibold text-slate-700 dark:text-white">
             Nombre
           </label>
 
           <input
             bind:value={nombre}
             type="text"
-            class="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none transition focus:border-[#0C4A6E] focus:ring-4 focus:ring-sky-100"
+            class="w-full rounded-xl border border-slate-200 bg-white dark:bg-[#111827] dark:border-[#334156] dark:text-[#64748B] px-4 py-3 text-sm outline-none transition focus:border-[#0C4A6E] focus:ring-4 focus:ring-sky-100 dark:focus:border-[#39BDF8] dark:focus:ring-4 dark:focus:ring-[#39BDF8]/20"
           />
         </div>
 
         <!-- Tipo -->
         <div>
-          <label class="mb-2 block text-sm font-semibold text-slate-700">
+          <label class="mb-2 block text-sm font-semibold text-slate-700 dark:text-white">
             Tipo
           </label>
 
           <div class="relative">
             <select
               bind:value={tipo}
-              class="w-full appearance-none rounded-xl border border-slate-200 bg-white px-4 py-3 pr-11 text-sm text-slate-700 outline-none transition duration-200 focus:border-[#0C4A6E] focus:ring-4 focus:ring-sky-100 focus:scale-[1.01]"
+              class="w-full appearance-none rounded-xl border border-slate-200 bg-white dark:bg-[#111827] dark:border-[#334156] dark:text-[#64748B] px-4 py-3 pr-11 text-sm text-slate-700 outline-none transition duration-200 focus:border-[#0C4A6E] focus:ring-4 focus:ring-sky-100 focus:scale-[1.01] dark:focus:border-[#39BDF8] dark:focus:ring-4 dark:focus:ring-[#39BDF8]/20"
             >
               <option value="SNACKS">Snacks</option>
               <option value="SUPLEMENTOS">Suplementos</option>
@@ -335,7 +334,7 @@ function handleDrop(e: DragEvent) {
 
             <ChevronDown
               size={18}
-              class="pointer-events-none absolute right-3 top-[0.9rem] text-slate-400"
+              class="pointer-events-none absolute right-3 top-[0.9rem] text-slate-400 dark:text-[#64748B]"
             />
           </div>
         </div>
@@ -344,16 +343,16 @@ function handleDrop(e: DragEvent) {
         <div class="grid grid-cols-2 gap-3">
           <!-- Precio Costo -->
           <div>
-            <label class="mb-1 block text-sm font-semibold text-slate-700">
+            <label class="mb-1 block text-sm font-semibold text-slate-700 dark:text-white">
               Precio Costo
             </label>
 
             <div
-              class="group flex overflow-hidden rounded-xl border border-slate-200 bg-white transition duration-200 focus-within:border-[#0C4A6E] focus-within:ring-4 focus-within:ring-sky-100 focus-within:scale-[1.01]"
+              class="group flex overflow-hidden rounded-xl border border-slate-200 bg-white dark:bg-[#111827] dark:border-[#334156] transition duration-200 focus-within:border-[#0C4A6E] focus-within:ring-4 focus-within:ring-sky-100 focus-within:scale-[1.01] dark:focus-within:border-[#39BDF8] dark:focus-within:ring-4 dark:focus-within:ring-[#39BDF8]/20"
             >
               <!-- PREFIJO -->
               <div
-                class="flex items-center border-r border-slate-200 bg-slate-50 px-4 text-sm font-medium text-slate-600"
+                class="flex items-center border-r border-slate-200 bg-slate-50 px-4 text-sm font-medium text-slate-600 dark:bg-[#111827] dark:border-[#334156] dark:text-[#64748B]"
               >
                 $
               </div>
@@ -365,14 +364,14 @@ function handleDrop(e: DragEvent) {
                 type="text"
                 inputmode="numeric"
                 placeholder="0"
-                class="w-full bg-transparent px-1 py-3 text-sm outline-none"
+                class="w-full bg-transparent px-1 py-3 text-sm outline-none dark:text-[#64748B]"
               />
 
               <!-- BOTONES -->
               <div class="ml-2 flex flex-col justify-center pr-2">
                 <button
                   type="button"
-                  class="flex h-5 w-5 items-center justify-center rounded-md text-slate-500 transition hover:bg-slate-100 hover:text-[#0C4A6E]"
+                  class="flex h-5 w-5 items-center justify-center rounded-md text-slate-500 transition hover:bg-slate-100 hover:text-[#0C4A6E] dark:text-[#94A3B8] dark:hover:bg-[#334156] dark:hover:text-[#0C4A6E]"
                   onclick={() => increaseValue('precioCosto')}
                 >
                   <ChevronUp size={12} />
@@ -380,7 +379,7 @@ function handleDrop(e: DragEvent) {
 
                 <button
                   type="button"
-                  class="flex h-5 w-5 items-center justify-center rounded-md text-slate-500 transition hover:bg-slate-100 hover:text-red-500"
+                  class="flex h-5 w-5 items-center justify-center rounded-md text-slate-500 transition hover:bg-slate-100 hover:text-red-500 dark:text-[#94A3B8] dark:hover:bg-[#334156] dark:hover:text-red-400"
                   onclick={() => decreaseValue('precioCosto')}
                 >
                   <ChevronDown size={12} />
@@ -391,16 +390,16 @@ function handleDrop(e: DragEvent) {
 
           <!-- Precio Sugerido -->
           <div>
-            <label class="mb-1 block text-sm font-semibold text-slate-700">
+            <label class="mb-1 block text-sm font-semibold text-slate-700 dark:text-white">
               Precio Sugerido
             </label>
 
             <div
-              class="group flex overflow-hidden rounded-xl border border-slate-200 bg-white transition duration-200 focus-within:border-[#0C4A6E] focus-within:ring-4 focus-within:ring-sky-100 focus-within:scale-[1.01]"
+              class="group flex overflow-hidden rounded-xl border border-slate-200 bg-white dark:bg-[#111827] dark:border-[#334156] transition duration-200 focus-within:border-[#0C4A6E] focus-within:ring-4 focus-within:ring-sky-100 focus-within:scale-[1.01] dark:focus-within:border-[#39BDF8] dark:focus-within:ring-4 dark:focus-within:ring-[#39BDF8]/20"
             >
               <!-- PREFIJO -->
               <div
-                class="flex items-center border-r border-slate-200 bg-slate-50 px-4 text-sm font-medium text-slate-600"
+                class="flex items-center border-r border-slate-200 bg-slate-50 px-4 text-sm font-medium text-slate-600 dark:bg-[#111827] dark:border-[#334156] dark:text-[#64748B]"
               >
                 $
               </div>
@@ -412,14 +411,14 @@ function handleDrop(e: DragEvent) {
                 type="text"
                 inputmode="numeric"
                 placeholder="0"
-                class="w-full bg-transparent px-1 py-3 text-sm outline-none"
+                class="w-full bg-transparent px-1 py-3 text-sm outline-none dark:text-[#64748B]"
               />
 
               <!-- BOTONES -->
               <div class="ml-2 flex flex-col justify-center pr-2">
                 <button
                   type="button"
-                  class="flex h-5 w-5 items-center justify-center rounded-md text-slate-500 transition hover:bg-slate-100 hover:text-[#0C4A6E]"
+                  class="flex h-5 w-5 items-center justify-center rounded-md text-slate-500 transition hover:bg-slate-100 hover:text-[#0C4A6E] dark:text-[#94A3B8] dark:hover:bg-[#334156] dark:hover:text-[#0C4A6E]"
                   onclick={() => increaseValue('precioSugerido')}
                 >
                   <ChevronUp size={12} />
@@ -427,7 +426,7 @@ function handleDrop(e: DragEvent) {
 
                 <button
                   type="button"
-                  class="flex h-5 w-5 items-center justify-center rounded-md text-slate-500 transition hover:bg-slate-100 hover:text-red-500"
+                  class="flex h-5 w-5 items-center justify-center rounded-md text-slate-500 transition hover:bg-slate-100 hover:text-red-500 dark:text-[#94A3B8] dark:hover:bg-[#334156] dark:hover:text-red-400"
                   onclick={() => decreaseValue('precioSugerido')}
                 >
                   <ChevronDown size={12} />
@@ -439,12 +438,12 @@ function handleDrop(e: DragEvent) {
 
         <!-- Stock Máximo -->
         <div>
-          <label class="mb-2 block text-sm font-semibold text-slate-700">
+          <label class="mb-2 block text-sm font-semibold text-slate-700 dark:text-white">
             Stock Máximo
           </label>
 
           <div
-            class="group flex overflow-hidden rounded-xl border border-slate-200 bg-white transition duration-200 focus-within:border-[#0C4A6E] focus-within:ring-4 focus-within:ring-sky-100 focus-within:scale-[1.01]"
+            class="group flex overflow-hidden rounded-xl border border-slate-200 bg-white dark:bg-[#111827] dark:border-[#334156] transition duration-200 focus-within:border-[#0C4A6E] focus-within:ring-4 focus-within:ring-sky-100 focus-within:scale-[1.01] dark:focus-within:border-[#39BDF8] dark:focus-within:ring-4 dark:focus-within:ring-[#39BDF8]/20"
           >
             <input
               value={stock}
@@ -452,14 +451,14 @@ function handleDrop(e: DragEvent) {
               type="text"
               inputmode="numeric"
               placeholder="0"
-              class="w-full bg-transparent px-4 py-3 text-sm outline-none"
+              class="w-full bg-transparent px-4 py-3 text-sm outline-none dark:text-[#64748B]"
             />
 
             <!-- BOTONES -->
             <div class="flex flex-col justify-center pr-2">
               <button
                 type="button"
-                class="flex h-5 w-5 items-center justify-center rounded-md text-slate-500 transition hover:bg-slate-100 hover:text-[#0C4A6E]"
+                class="flex h-5 w-5 items-center justify-center rounded-md text-slate-500 transition hover:bg-slate-100 hover:text-[#0C4A6E] dark:text-[#94A3B8] dark:hover:bg-[#334156] dark:hover:text-[#0C4A6E]"
                 onclick={() => increaseValue('stock')}
               >
                 <ChevronUp size={12} />
@@ -467,7 +466,7 @@ function handleDrop(e: DragEvent) {
 
               <button
                 type="button"
-                class="flex h-5 w-5 items-center justify-center rounded-md text-slate-500 transition hover:bg-slate-100 hover:text-red-500"
+                class="flex h-5 w-5 items-center justify-center rounded-md text-slate-500 transition hover:bg-slate-100 hover:text-red-500 dark:text-[#94A3B8] dark:hover:bg-[#334156] dark:hover:text-red-400"
                 onclick={() => decreaseValue('stock')}
               >
                 <ChevronDown size={12} />
@@ -478,20 +477,18 @@ function handleDrop(e: DragEvent) {
 
       </div>
 
-      
-
       <!-- FOOTER -->
-      <div class="flex justify-end gap-3 border-t border-slate-100 p-6">
+      <div class="flex justify-end gap-3 border-t border-slate-100 dark:border-[#334156] p-6">
 
         <button
-          class="rounded-xl border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-100"
+          class="rounded-xl border border-slate-200 dark:border-[#334156] dark:text-white px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-100 dark:hover:bg-[#162033]"
           onclick={onClose}
         >
           Cancelar
         </button>
 
         <button
-          class="rounded-xl bg-[#0C4A6E] px-4 py-2 text-sm font-medium text-white transition hover:bg-[#0a3a52] disabled:opacity-50"
+          class="rounded-xl bg-[#0C4A6E] dark:bg-[#0C4A6E] px-4 py-2 text-sm font-medium text-white dark:text-[#39BDF8] transition hover:bg-[#0a3a52] dark:hover:bg-[#0a3a52] disabled:opacity-50"
           onclick={handleUpdate}
           disabled={loading}
         >
