@@ -93,6 +93,7 @@ pub use reportes::logic::{
     ventas_por_metodo_pago_logic,
     reporte_cajas_rango_logic,
     dashboard_resumen_logic,
+    reporte_margen_ganancia_logic,
 };
 
 // Modulo de caja
@@ -134,6 +135,8 @@ pub use turnos::logic::{
     listar_turnos_detalle_logic,
     turnos_por_usuario_logic,
     turnos_por_estado_logic,
+    obtener_tipo_turno_actual_logic,
+    abrir_turno_automatico_logic,
 };
 
 // Comandos de Tauri
@@ -731,6 +734,17 @@ pub fn dashboard_resumen(
     dashboard_resumen_logic(&conn)
 }
 
+#[tauri::command]
+pub fn reporte_margen_ganancia(
+    state: State<'_, DbState>,
+    fecha_inicio: String,
+    fecha_fin: String,
+) -> Result<crate::models::reportes::reporte::ReporteMargenGanancia, String> {
+    let conn = state.conn.lock().unwrap();
+    reporte_margen_ganancia_logic(&conn, &fecha_inicio, &fecha_fin)
+}
+
+
 // Comandos de turnos
 #[tauri::command]
 pub fn abrir_turno(
@@ -792,6 +806,25 @@ pub fn listar_turnos_detalle(
 ) -> Result<Vec<TurnoDetalle>, String> {
     let conn = state.conn.lock().unwrap();
     listar_turnos_detalle_logic(&conn, &filtro)
+}
+
+// Comando para obtener el tipo de turno actual
+#[tauri::command]
+pub fn obtener_tipo_turno_actual(
+    state: State<'_, DbState>,
+) -> Result<i32, String> {
+    let conn = state.conn.lock().unwrap();
+    turnos::logic::obtener_tipo_turno_actual_logic(&conn)
+}
+
+// Comando para abrir turno automático
+#[tauri::command]
+pub fn abrir_turno_automatico(
+    state: State<'_, DbState>,
+    id_usuario: i32,
+) -> Result<i32, String> {
+    let conn = state.conn.lock().unwrap();
+    turnos::logic::abrir_turno_automatico_logic(&conn, id_usuario)
 }
 // Comandos de reportes de entradas
 pub mod reportes_entrada;
