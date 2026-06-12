@@ -1,7 +1,7 @@
 use rusqlite::Connection;
 use crate::models::reportes::reporte::{
-    DashboardResumen, ProductoMasVendido, ReporteCaja, ReporteEntradasProducto,
-    ReporteInventario, ReporteStockBajo, ResumenVentasDiario, ResumenVentasRango,
+    DashboardResumen, DetalleMargenProducto, ProductoMasVendido, ReporteCaja, ReporteEntradasProducto,
+    ReporteInventario, ReporteMargenGanancia, ReporteStockBajo, ResumenVentasDiario, ResumenVentasRango,
     VentasPorMetodoPago, VentasPorUsuario,
 };
 
@@ -445,3 +445,95 @@ pub fn dashboard_resumen_logic(conn: &Connection) -> Result<DashboardResumen, St
         entradas_hoy,
     })
 }
+
+/// Reporte del margen de ganancia en un rango de fechas
+pub fn reporte_margen_ganancia_logic(
+    conn: &Connection,
+    fecha_inicio: &str,
+    fecha_fin: &str,
+) -> Result<ReporteMargenGanancia, String> {
+    validar_rango_fechas(fecha_inicio, fecha_fin)?;
+
+    // 1. Obtener totales consolidados
+    let (total_ventas, total_costo): (f64, f64) = conn.query_row(
+        r#"SELECT 
+              COALESCE(SUM(dv.subtotal), 0.0) AS total_ventas,
+              COALESCE(SUM(dv.cantidad * p.precio_costo), 0.0) AS total_costo
+           FROM detalle_venta dv
+           INNER JOIN ventas v ON dv.id_venta = v.id_venta
+           INNER JOIN productos p ON dv.id_producto = p.id_producto
+           WHERE DATE(v.fecha) BETWEEN DATE(?1) AND DATE(?2)"#,
+        rusqlite::params![fecha_inicio, fecha_fin],
+        |row| {
+            Ok((row.get(0)?, row.get(1)?))
+        },
+    )
+    .map_err(|e| e.to_string())?;
+
+    let ganancia_neta = total_ventas - total_costo;
+    let margen_porcentaje = if total_ventas > 0.0 {
+        (ganancia_neta / total_ventas) * 100.0
+    } else {
+        0.0
+    };
+
+    // 2. Obtener desglose por producto
+    let mut stmt = conn
+        .prepare(
+            r#"SELECT 
+                  p.id_producto,
+                  p.nombre,
+                  SUM(dv.cantidad) AS cantidad_vendida,
+                  SUM(dv.subtotal) AS total_ventas_prod,
+                  SUM(dv.cantidad * p.precio_costo) AS total_costo_prod
+               FROM detalle_venta dv
+               INNER JOIN ventas v ON dv.id_venta = v.id_venta
+               INNER JOIN productos p ON dv.id_producto = p.id_producto
+               WHERE DATE(v.fecha) BETWEEN DATE(?1) AND DATE(?2)
+               GROUP BY p.id_producto, p.nombre
+               ORDER BY total_ventas_prod DESC"#,
+        )
+        .map_err(|e| e.to_string())?;
+
+    let rows = stmt
+        .query_map(rusqlite::params![fecha_inicio, fecha_fin], |row| {
+            let id_producto: i32 = row.get(0)?;
+            let nombre_producto: String = row.get(1)?;
+            let cantidad_vendida: i32 = row.get(2)?;
+            let total_ventas_prod: f64 = row.get(3)?;
+            let total_costo_prod: f64 = row.get(4)?;
+            let ganancia_neta_prod = total_ventas_prod - total_costo_prod;
+            let margen_porcentaje_prod = if total_ventas_prod > 0.0 {
+                (ganancia_neta_prod / total_ventas_prod) * 100.0
+            } else {
+                0.0
+            };
+
+            Ok(DetalleMargenProducto {
+                id_producto,
+                nombre_producto,
+                cantidad_vendida,
+                total_ventas: total_ventas_prod,
+                total_costo: total_costo_prod,
+                ganancia_neta: ganancia_neta_prod,
+                margen_porcentaje: margen_porcentaje_prod,
+            })
+        })
+        .map_err(|e| e.to_string())?;
+
+    let mut productos = Vec::new();
+    for item in rows {
+        productos.push(item.map_err(|e| e.to_string())?);
+    }
+
+    Ok(ReporteMargenGanancia {
+        fecha_inicio: fecha_inicio.to_string(),
+        fecha_fin: fecha_fin.to_string(),
+        total_ventas,
+        total_costo,
+        ganancia_neta,
+        margen_porcentaje,
+        productos,
+    })
+}
+

@@ -90,6 +90,7 @@ pub fn run() {
             commands::ventas_por_metodo_pago_reporte,
             commands::reporte_cajas_rango,
             commands::dashboard_resumen,
+            commands::reporte_margen_ganancia,
             // Caja
             commands::abrir_caja,
             commands::cerrar_caja,

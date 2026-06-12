@@ -107,3 +107,28 @@ pub struct DashboardResumen {
     pub notificaciones_pendientes: i32,
     pub entradas_hoy: i32,
 }
+
+/// Detalle del margen de ganancia por producto
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct DetalleMargenProducto {
+    pub id_producto: i32,
+    pub nombre_producto: String,
+    pub cantidad_vendida: i32,
+    pub total_ventas: f64,
+    pub total_costo: f64,
+    pub ganancia_neta: f64,
+    pub margen_porcentaje: f64,
+}
+
+/// Reporte consolidado de margen de ganancia
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct ReporteMargenGanancia {
+    pub fecha_inicio: String,
+    pub fecha_fin: String,
+    pub total_ventas: f64,
+    pub total_costo: f64,
+    pub ganancia_neta: f64,
+    pub margen_porcentaje: f64,
+    pub productos: Vec<DetalleMargenProducto>,
+}
+

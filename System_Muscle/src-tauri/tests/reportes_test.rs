@@ -197,3 +197,94 @@ fn test_rango_fechas_invalido() {
     let resultado = resumen_ventas_rango_logic(&conn, "", "2026-01-01");
     assert!(resultado.is_err());
 }
+
+#[test]
+fn test_reporte_margen_ganancia() {
+    println!("\n📊 TEST: Reporte Margen Ganancia");
+    let conn = get_db_connection().unwrap();
+    let id_caja = crear_caja_abierta(&conn);
+    let nombre_prod_1 = nombre_unico("ReporteTest Margen1");
+    let nombre_prod_2 = nombre_unico("ReporteTest Margen2");
+    
+    // El helper crea productos con precio_costo: 5000.0 y precio_sugerido: 8000.0
+    let id_prod_1 = crear_producto_con_stock(&conn, &nombre_prod_1, 20);
+    let id_prod_2 = crear_producto_con_stock(&conn, &nombre_prod_2, 20);
+
+    // Venta de producto 1: 5 unidades a 10000.0 (Venta = 50000.0, Costo = 25000.0, Ganancia = 25000.0)
+    registrar_venta_logic(
+        &conn,
+        &NuevaVenta {
+            id_usuario: 1,
+            id_caja,
+            id_turno: None,
+            lineas: vec![LineaVenta {
+                id_producto: id_prod_1,
+                cantidad: 5,
+                precio_unitario: 10000.0,
+                metodo_pago: 1,
+            }],
+        },
+    )
+    .unwrap();
+
+    // Venta de producto 2: 2 unidades a 6000.0 (Venta = 12000.0, Costo = 10000.0, Ganancia = 2000.0)
+    registrar_venta_logic(
+        &conn,
+        &NuevaVenta {
+            id_usuario: 1,
+            id_caja,
+            id_turno: None,
+            lineas: vec![LineaVenta {
+                id_producto: id_prod_2,
+                cantidad: 2,
+                precio_unitario: 6000.0,
+                metodo_pago: 2,
+            }],
+        },
+    )
+    .unwrap();
+
+    let hoy = chrono::Local::now().format("%Y-%m-%d").to_string();
+    let reporte = reporte_margen_ganancia_logic(&conn, &hoy, &hoy).unwrap();
+
+    // Verificaciones consolidadas
+    // total_ventas = 50000.0 + 12000.0 = 62000.0
+    // total_costo = 25000.0 + 10000.0 = 35000.0
+    // ganancia_neta = 27000.0
+    // margen_porcentaje = (27000.0 / 62000.0) * 100.0 = 43.548...%
+    assert!(reporte.total_ventas >= 62000.0);
+    assert!(reporte.total_costo >= 35000.0);
+    assert!(reporte.ganancia_neta >= 27000.0);
+    assert!(reporte.margen_porcentaje > 43.0 && reporte.margen_porcentaje < 44.0);
+
+    // Verificaciones por producto
+    let p1_res = reporte.productos.iter().find(|p| p.id_producto == id_prod_1).unwrap();
+    assert_eq!(p1_res.cantidad_vendida, 5);
+    assert_eq!(p1_res.total_ventas, 50000.0);
+    assert_eq!(p1_res.total_costo, 25000.0);
+    assert_eq!(p1_res.ganancia_neta, 25000.0);
+    assert_eq!(p1_res.margen_porcentaje, 50.0);
+
+    let p2_res = reporte.productos.iter().find(|p| p.id_producto == id_prod_2).unwrap();
+    assert_eq!(p2_res.cantidad_vendida, 2);
+    assert_eq!(p2_res.total_ventas, 12000.0);
+    assert_eq!(p2_res.total_costo, 10000.0);
+    assert_eq!(p2_res.ganancia_neta, 2000.0);
+    assert!((p2_res.margen_porcentaje - 16.666).abs() < 0.1);
+
+    // Verificar reporte vacío (fecha lejana)
+    let reporte_vacio = reporte_margen_ganancia_logic(&conn, "1990-01-01", "1990-01-01").unwrap();
+    assert_eq!(reporte_vacio.total_ventas, 0.0);
+    assert_eq!(reporte_vacio.total_costo, 0.0);
+    assert_eq!(reporte_vacio.ganancia_neta, 0.0);
+    assert_eq!(reporte_vacio.margen_porcentaje, 0.0);
+    assert!(reporte_vacio.productos.is_empty());
+
+    println!("   ✅ Reporte de margen de ganancia calculado correctamente");
+
+    // Limpieza
+    limpiar_producto(&conn, id_prod_1);
+    limpiar_producto(&conn, id_prod_2);
+    limpiar_caja(&conn, id_caja);
+}
+

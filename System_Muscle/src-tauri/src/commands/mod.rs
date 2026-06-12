@@ -93,6 +93,7 @@ pub use reportes::logic::{
     ventas_por_metodo_pago_logic,
     reporte_cajas_rango_logic,
     dashboard_resumen_logic,
+    reporte_margen_ganancia_logic,
 };
 
 // Modulo de caja
@@ -732,6 +733,17 @@ pub fn dashboard_resumen(
     let conn = state.conn.lock().unwrap();
     dashboard_resumen_logic(&conn)
 }
+
+#[tauri::command]
+pub fn reporte_margen_ganancia(
+    state: State<'_, DbState>,
+    fecha_inicio: String,
+    fecha_fin: String,
+) -> Result<crate::models::reportes::reporte::ReporteMargenGanancia, String> {
+    let conn = state.conn.lock().unwrap();
+    reporte_margen_ganancia_logic(&conn, &fecha_inicio, &fecha_fin)
+}
+
 
 // Comandos de turnos
 #[tauri::command]
