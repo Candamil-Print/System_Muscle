@@ -41,7 +41,7 @@
 
   <!-- STOCK NUEVO -->
   <td class="px-6 py-4 text-sm text-slate-600 dark:text-[#E2E8F0]">
-    —
+    {movement.stock_nuevo}
   </td>
 
   <!-- USUARIO -->

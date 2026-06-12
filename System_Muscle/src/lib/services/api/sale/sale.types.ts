@@ -1,15 +1,14 @@
 export interface ProductoVenta {
 
   id_producto: number;
-
   nombre: string;
-
   categoria: string;
-
+  precio: number;
   precio_venta: number;
-
+  stock: number;
   stock_actual: number;
-
+  stock_maximo: number;
+  total: number;
   imagen: string;
 
 }

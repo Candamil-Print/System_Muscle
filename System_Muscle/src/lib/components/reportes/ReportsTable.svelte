@@ -7,6 +7,9 @@
   import Download from 'lucide-svelte/icons/download';
   import Pagination from '../movimientos/Pagination.svelte';
 
+  import jsPDF from 'jspdf';
+  import autoTable from 'jspdf-autotable';
+
   import {
     obtenerProductosMasVendidos,
     obtenerVentasPorUsuario,
@@ -60,43 +63,247 @@
     };
   }
 
-  function descargarCSV() {
-    if (sales.length === 0) {
-      alert('No hay datos para descargar');
-      return;
-    }
+function descargarPDF() {
+  if (sales.length === 0) {
+    alert('No hay datos para descargar');
+    return;
+  }
 
-    // Crear headers del CSV
-    const headers = ['Producto', 'Precio', 'Método', 'Vendedor', 'Fecha y Hora'];
-    
-    // Crear filas del CSV
-    const rows = sales.map(sale => [
+  const doc = new jsPDF('p', 'mm', 'a4');
+
+  const fechaGeneracion = new Date().toLocaleString('es-ES', {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit'
+  });
+
+  const totalVentas = sales.reduce(
+    (acc, sale) => acc + Number(sale.precio || 0),
+    0
+  );
+
+  // ======================================
+  // ENCABEZADO
+  // ======================================
+
+  doc.setFillColor(38, 85, 124);
+  doc.rect(0, 0, 210, 30, 'F');
+
+  doc.setTextColor(255, 255, 255);
+
+  doc.setFontSize(18);
+  doc.setFont('helvetica', 'bold');
+
+  doc.text(
+    'REPORTE DE VENTAS',
+    105,
+    12,
+    { align: 'center' }
+  );
+
+  doc.setFontSize(10);
+
+  doc.text(
+    `Desde: ${filtros.fechaInicio || 'N/A'}   |   Hasta: ${filtros.fechaFin || 'N/A'}`,
+    105,
+    21,
+    { align: 'center' }
+  );
+
+  // ======================================
+  // DATOS DEL REPORTE
+  // ======================================
+
+  doc.setTextColor(0);
+
+  doc.setFontSize(12);
+  doc.setFont('helvetica', 'bold');
+
+  doc.text('Resumen Ejecutivo', 14, 42);
+
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(10);
+
+  doc.text(
+    `Registros encontrados: ${sales.length}`,
+    14,
+    50
+  );
+
+  doc.text(
+    `Método de pago: ${
+      filtros.metodoPago === 'todos'
+        ? 'Todos'
+        : filtros.metodoPago
+    }`,
+    14,
+    56
+  );
+
+  // ======================================
+  // TABLA
+  // ======================================
+
+  autoTable(doc, {
+    startY: 65,
+
+    head: [
+      [
+        'Producto',
+        'Precio',
+        'Método',
+        'Vendedor',
+        'Fecha'
+      ]
+    ],
+
+    body: sales.map((sale) => [
       sale.producto,
-      `$${sale.precio.toLocaleString('es-ES')}`,
+      `$${sale.precio.toLocaleString('es-CO')}`,
       sale.metodo,
       sale.vendedor,
       sale.fecha
-    ]);
+    ]),
 
-    // Combinar headers y rows
-    const csvContent = [
-      headers.join(','),
-      ...rows.map(row => row.map(cell => `"${cell}"`).join(','))
-    ].join('\n');
+    theme: 'grid',
 
-    // Crear blob y descargar
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement('a');
-    const url = URL.createObjectURL(blob);
-    
-    link.setAttribute('href', url);
-    link.setAttribute('download', `reporte-ventas-${new Date().toISOString().split('T')[0]}.csv`);
-    link.style.visibility = 'hidden';
-    
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    headStyles: {
+      fillColor: [38, 85, 124],
+      textColor: [255, 255, 255],
+      fontStyle: 'bold',
+      halign: 'center'
+    },
+
+    alternateRowStyles: {
+      fillColor: [245, 247, 250]
+    },
+
+    styles: {
+      fontSize: 9,
+      cellPadding: 3
+    },
+
+    columnStyles: {
+      1: {
+        halign: 'right'
+      }
+    }
+  });
+
+  // ======================================
+  // RESUMEN FINAL
+  // ======================================
+
+  const finalY =
+    (doc as any).lastAutoTable.finalY || 80;
+
+  doc.setDrawColor(220);
+  doc.line(
+    14,
+    finalY + 10,
+    196,
+    finalY + 10
+  );
+
+  doc.setFontSize(13);
+  doc.setFont('helvetica', 'bold');
+  doc.setTextColor(38, 85, 124);
+
+  doc.text(
+    'Resumen General',
+    14,
+    finalY + 22
+  );
+
+  // Caja resumen
+
+  doc.setFillColor(245, 248, 250);
+
+  doc.roundedRect(
+    14,
+    finalY + 28,
+    182,
+    28,
+    3,
+    3,
+    'F'
+  );
+
+  doc.setFontSize(10);
+  doc.setTextColor(80);
+  doc.setFont('helvetica', 'normal');
+
+  doc.text(
+    `Cantidad de registros: ${sales.length}`,
+    20,
+    finalY + 40
+  );
+
+  doc.setFontSize(15);
+  doc.setFont('helvetica', 'bold');
+  doc.setTextColor(38, 85, 124);
+
+  doc.text(
+    `TOTAL VENDIDO: $${totalVentas.toLocaleString('es-CO')}`,
+    20,
+    finalY + 50
+  );
+
+  // ======================================
+  // FECHA GENERACIÓN
+  // ======================================
+
+  doc.setFontSize(9);
+  doc.setTextColor(120);
+
+  doc.text(
+    `Reporte generado el ${fechaGeneracion}`,
+    14,
+    finalY + 68
+  );
+
+  // ======================================
+  // NUMERACIÓN DE PÁGINAS
+  // ======================================
+
+  const pageCount = doc.getNumberOfPages();
+
+  for (let i = 1; i <= pageCount; i++) {
+    doc.setPage(i);
+
+    const pageWidth =
+      doc.internal.pageSize.getWidth();
+
+    const pageHeight =
+      doc.internal.pageSize.getHeight();
+
+    doc.setFontSize(8);
+    doc.setTextColor(120);
+
+    doc.text(
+      `Generado: ${fechaGeneracion}`,
+      14,
+      pageHeight - 8
+    );
+
+    doc.text(
+      `Página ${i} de ${pageCount}`,
+      pageWidth - 14,
+      pageHeight - 8,
+      { align: 'right' }
+    );
   }
+
+  // ======================================
+
+  doc.save(
+    `reporte-ventas-${new Date()
+      .toISOString()
+      .split('T')[0]}.pdf`
+  );
+}
 
   export async function actualizarTabla(
     fechaInicio: string,
@@ -212,7 +419,7 @@
     </div>
 
     <button
-      on:click={descargarCSV}
+      on:click={descargarPDF}
       disabled={loading || sales.length === 0}
       class="h-11 w-11 rounded-xl border border-slate-200 flex items-center justify-center hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
       title="Descargar reporte"
@@ -289,7 +496,7 @@
                   </td>
 
                   <td class="px-6 py-5">
-                    <div class="inline-flex items-center gap-2 px-3 py-2 rounded-lg border {metodoEstilo.bg} {metodoEstilo.border}">
+                    <div class="inline-flex items-center gap-2  rounded-full  bg-[#1c5476]/10 dark:bg-[#0C4A6E]/20 px-3 py-1 text-xs font-medium text-[#1c5476] dark:text-[#39BDF8] ">
                       {#if metodoEstilo.icon}
                         <svelte:component this={metodoEstilo.icon} class="w-4 h-4 {metodoEstilo.text}" />
                       {/if}

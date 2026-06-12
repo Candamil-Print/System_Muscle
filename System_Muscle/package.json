@@ -18,6 +18,8 @@
     "@tauri-apps/plugin-opener": "^2",
     "chart.js": "^4.5.1",
     "chartjs-adapter-date-fns": "^3.0.0",
+    "jspdf": "^4.2.1",
+    "jspdf-autotable": "^5.0.8",
     "lucide-svelte": "^1.0.1",
     "recharts": "^3.8.1",
     "svelte-sonner": "^1.1.1"

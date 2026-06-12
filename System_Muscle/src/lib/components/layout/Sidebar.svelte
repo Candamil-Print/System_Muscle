@@ -1,6 +1,9 @@
 <script lang="ts">
     import { page } from '$app/stores';
     import { onMount } from 'svelte';
+    import { goto } from '$app/navigation';
+    import { invoke } from '@tauri-apps/api/core';
+    import { toast } from 'svelte-sonner';
 
     let usuario = {
         nombre_completo: '',
@@ -79,6 +82,52 @@ function obtenerIniciales(nombre: string) {
             href: '/users'
         }
     ];
+
+    async function cerrarSesion() {
+	try {
+		const sesion = localStorage.getItem('sesion');
+
+		if (sesion) {
+			const data = JSON.parse(sesion);
+
+			// Buscar turno activo del usuario
+			const turnoActivo = await invoke<any>(
+				'obtener_turno_activo',
+				{
+					idUsuario: data.id_usuario
+				}
+			);
+
+			// Si existe un turno abierto, cerrarlo
+			if (turnoActivo) {
+				await invoke(
+					'cerrar_turno',
+					{
+						idTurno: turnoActivo.id_turno
+					}
+				);
+			}
+		}
+
+		localStorage.removeItem('sesion');
+
+		toast.success(
+			'Sesión cerrada correctamente'
+		);
+
+		await goto('/');
+
+	} catch (error) {
+		console.error(
+			'Error al cerrar sesión:',
+			error
+		);
+
+		toast.error(
+			'No fue posible cerrar la sesión'
+		);
+	}
+}
 </script>
 
 <aside
@@ -140,12 +189,13 @@ function obtenerIniciales(nombre: string) {
             </div>
         </div>
 
-        <button
-            class="flex w-full items-center gap-3 rounded-lg px-4 py-3 text-sm text-zinc-600 transition-all hover:bg-zinc-100 dark:text-zinc-300 dark:hover:bg-zinc-800"
-        >
-            <LogOut size={20} />
+<button
+	on:click={cerrarSesion}
+	class="flex w-full items-center gap-3 rounded-lg px-4 py-3 text-sm text-zinc-600 transition-all hover:bg-zinc-100 dark:text-zinc-300 dark:hover:bg-zinc-800"
+>
+	<LogOut size={20} />
 
-            Cerrar sesión
-        </button>
+	Cerrar sesión
+</button>
     </div>
 </aside>

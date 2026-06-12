@@ -32,16 +32,21 @@
     try {
       loading = true;
       error = '';
+      
+console.log('FECHA INICIO:', fechaInicio);
+console.log('FECHA FIN:', fechaFin);
 
       const [
         ventasDiarias,
         productosMasVendidos,
         ventasPorUsuario
+        
       ] = await Promise.all([
         obtenerResumenVentasDiarioRango(
           fechaInicio,
           fechaFin
         ),
+        
 
         obtenerProductosMasVendidos(
           fechaInicio,
@@ -53,14 +58,20 @@
           fechaInicio,
           fechaFin
         )
-      ]);
+      ]); console.log('======================');
+console.log('VENTAS DIARIAS');
+console.log(ventasDiarias);
+console.log('TOTAL REGISTROS:', ventasDiarias.length);
 
-      // Gráfico 1
+      // Gráfico 1 - Ventas por Día (Line)
       salesByDay = {
         labels: ventasDiarias.map(v =>
           new Date(v.fecha).toLocaleDateString(
             'es-ES',
-            { weekday: 'short' }
+            {
+              day: '2-digit',
+              month: 'short'
+            }
           )
         ),
 
@@ -70,16 +81,22 @@
             data: ventasDiarias.map(
               v => v.total_general
             ),
-            borderColor: '#0C4A6E',
+            borderColor: '#0c4a6e',
             backgroundColor:
-              'rgba(12,74,110,.15)',
+              'rgba(12,74,110,.1)',
+            borderWidth: 2,
             fill: true,
-            tension: 0.4
+            tension: 0.4,
+            pointBackgroundColor: '#0c4a6e',
+            pointBorderColor: '#ffffff',
+            pointBorderWidth: 2,
+            pointRadius: 5,
+            pointHoverRadius: 7
           }
         ]
       };
 
-      // Gráfico 2
+      // Gráfico 2 - Margen de Ganancias (Bar vertical)
       profitMargin = {
         labels: productosMasVendidos.map(
           p => p.nombre_producto
@@ -87,16 +104,24 @@
 
         datasets: [
           {
-            label: 'Ingresos por Producto',
+            label: 'Margen de Ganancias (%)',
             data: productosMasVendidos.map(
-              p => p.total_ventas
+              p => (p.margen_ganancia || 30)
             ),
-            backgroundColor: '#0C4A6E'
+            backgroundColor: [
+              '#0c4a6e',
+              '#1565a0',
+              '#1e7ab8',
+              '#2d8ad0',
+              '#3d9ae8'
+            ],
+            borderRadius: 8,
+            borderSkipped: false
           }
         ]
       };
 
-      // Gráfico 3
+      // Gráfico 3 - Top 5 Productos (Bar horizontal)
       topProducts = {
         labels: productosMasVendidos.map(
           p => p.nombre_producto
@@ -108,12 +133,20 @@
             data: productosMasVendidos.map(
               p => p.cantidad_vendida
             ),
-            backgroundColor: '#0284C7'
+            backgroundColor: [
+              '#0c4a6e',
+              '#1565a0',
+              '#1e7ab8',
+              '#2d8ad0',
+              '#3d9ae8'
+            ],
+            borderRadius: 8,
+            borderSkipped: false
           }
         ]
       };
 
-      // Gráfico 4
+      // Gráfico 4 - Ventas por Vendedor (Bar)
       salesBySeller = {
         labels: ventasPorUsuario.map(
           u => u.nombre_usuario
@@ -121,17 +154,17 @@
 
         datasets: [
           {
+            label: 'Total Vendido',
             data: ventasPorUsuario.map(
               u => u.total_vendido
             ),
-
             backgroundColor: [
-              '#0C4A6E',
-              '#0284C7',
-              '#38BDF8',
-              '#7DD3FC',
-              '#BAE6FD'
-            ]
+              '#0c4a6e',
+              '#1565a0',
+              '#1e7ab8'
+            ],
+            borderRadius: 8,
+            borderSkipped: false
           }
         ]
       };
@@ -207,20 +240,21 @@
     />
 
     <ReportsChartCard
-      title="Ingresos por Producto"
+      title="Reporte de Margen de Ganancias"
       type="bar"
       data={profitMargin}
     />
 
     <ReportsChartCard
-      title="Top Productos"
+      title="Top 5 Productos Vendidos"
       type="bar"
       data={topProducts}
+      horizontal={true}
     />
 
     <ReportsChartCard
       title="Ventas por Vendedor"
-      type="pie"
+      type="bar"
       data={salesBySeller}
     />
 

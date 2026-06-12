@@ -12,6 +12,8 @@
 		obtenerReporteCajas
 	} from '$lib/services/api/reports';
 
+	
+
 	interface Stat {
 		icon: 'DollarSign' | 'Moon' | 'ArrowRightLeft' | 'Info' | 'Briefcase';
 		title: string;
@@ -58,6 +60,10 @@
 				0
 			);
 
+			const cajaTotal =
+			resumen.total_efectivo +
+			resumen.total_transferencia;
+
 			stats = [
 				{
 					icon: 'Briefcase',
@@ -87,7 +93,7 @@
 				{
 					icon: 'DollarSign',
 					title: 'CAJA TOTAL',
-					value: `$ ${(cajaFinal + resumen.total_transferencia).toLocaleString('es-CO')}`
+					value: `$ ${cajaTotal.toLocaleString('es-CO')}`
 				}
 			];
 		} catch (error) {

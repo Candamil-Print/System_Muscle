@@ -10,6 +10,9 @@
   import SummaryCard from '$lib/components/ventas/SummaryCard.svelte';
   import ShiftSummary from '$lib/components/ventas/ShiftSummary.svelte';
 
+  let busqueda = '';
+  let categoria = 'Todos';
+
   // API
   import {
     listarProductos
@@ -24,17 +27,27 @@
     ProductoVenta
   } from '$lib/services/api/sale';
 
-  interface Producto {
-    nombre: string;
-    categoria: string;
-    precio: number;
-    stock: number;
-    total: number;
-    imagen: string;
-  }
+  let productos: ProductoVenta[] = [];
 
-  // PRODUCTOS
-  let productos: Producto[] = [];
+  $: categorias = [
+  'Todos',
+  ...new Set(
+    productos.map((p) => p.categoria)
+  )
+];
+
+  $: productosFiltrados = productos.filter((producto) => {
+  const coincideBusqueda =
+    producto.nombre
+      .toLowerCase()
+      .includes(busqueda.toLowerCase());
+
+  const coincideCategoria =
+    categoria === 'Todos' ||
+    producto.categoria === categoria;
+
+  return coincideBusqueda && coincideCategoria;
+});
 
   // LOADING
   let loading = false;
@@ -55,11 +68,25 @@
 
       productos = response.map((product) => ({
         id_producto: product.id_producto,
+
         nombre: product.nombre,
+
         categoria: product.tipo_producto || 'Sin categoría',
+
         precio: product.precio_sugerido || 0,
+
+        precio_venta: product.precio_sugerido || 0,
+
         stock: product.stock_actual || 0,
-        total: (product.precio_sugerido || 0) * (product.stock_actual || 0),
+
+        stock_actual: product.stock_actual || 0,
+
+        stock_maximo: product.stock_maximo || 0,
+
+        total:
+          (product.precio_sugerido || 0) *
+          (product.stock_actual || 0),
+
         imagen: product.imagen_url || ''
       }));
 
@@ -120,25 +147,33 @@
       <div class="grid gap-6 xl:grid-cols-[2fr_1fr]">
 
         <!-- PRODUCTOS -->
-        <section class="space-y-6">
+<section class="space-y-6">
 
-          <SalesFilters />
+  <SalesFilters
+    {categorias}
+    on:change={(e) => {
+      busqueda = e.detail.busqueda;
+      categoria = e.detail.categoria;
+    }}
+  />
 
-          {#if loading}
+  {#if loading}
 
-            <div
-              class="flex items-center justify-center rounded-2xl border border-slate-200 bg-white py-20 text-slate-500"
-            >
-              Cargando productos...
-            </div>
+    <div
+      class="flex items-center justify-center rounded-2xl border border-slate-200 bg-white py-20 text-slate-500"
+    >
+      Cargando productos...
+    </div>
 
-          {:else}
+  {:else}
 
-            <ProductsGrid {productos} />
+    <ProductsGrid
+      productos={productosFiltrados}
+    />
 
-          {/if}
+  {/if}
 
-        </section>
+</section>
 
         <!-- SIDEBAR -->
         <div class="space-y-6">
@@ -157,4 +192,5 @@
   </div>
 
 </div>
-```
+
+

@@ -1,66 +1,12 @@
 <script lang="ts">
-  import { onMount } from 'svelte';
-
   import ProductCard from './ProductCard.svelte';
 
-  // IMPORTAR API
-  import {
-    listarProductos
-  } from '$lib/services/api/inventory';
+  import type { ProductoVenta } from '$lib/services/api/sale/sale.types';
 
-  // IMPORTAR TYPES
-  import type {
-    ProductoConStock
-  } from '$lib/services/api/inventory/inventory.types';
-
-  interface Producto 
-  { 
-    id_producto: number;
-    nombre: string; 
-    categoria: string; 
-    precio: number; 
-    stock: number; 
-    stock_maximo: number;
-    total: number; 
-    imagen: string; 
-  } 
-    
-  export let productos: Producto[] = [];
+  export let productos: ProductoVenta[] = [];
 
   let loading = false;
 
-  // CARGAR PRODUCTOS
-  onMount(async () => {
-
-    try {
-
-      loading = true;
-
-      const response: ProductoConStock[] =
-        await listarProductos();
-
-      productos = response.map((product) => ({
-        id_producto: product.id_producto,
-        nombre: product.nombre,
-        categoria: product.tipo_producto || 'Sin categoría',
-        precio: product.precio_sugerido || 0,
-        stock: product.stock_actual || 0,
-        stock_maximo: product.stock_maximo || product.stock_actual || 0,
-        total: (product.precio_sugerido || 0) * (product.stock_actual || 0),
-        imagen: product.imagen_url || ''
-      }));
-
-    } catch (error) {
-
-      console.error(error);
-
-    } finally {
-
-      loading = false;
-
-    }
-
-  });
 </script>
 
 <!-- LOADING -->
@@ -88,8 +34,8 @@
     <!-- GRID -->
     <div class="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
 
-      {#each productos as producto} 
-        <ProductCard {producto} /> 
+      {#each productos as producto (producto.id_producto)}
+        <ProductCard {producto} />
       {/each}
 
     </div>

@@ -14,6 +14,8 @@
 	import { onMount } from 'svelte';
 
 	import type { Notificacion } from '$lib/services/api/notifications';
+	import type { TipoTurno } from '$lib/services/api/shifts/shifts.types';
+	import type { Turno } from '$lib/stores/shifts/turnoStore';
 
 	import {
 		listarNotificaciones,
@@ -21,31 +23,26 @@
 		marcarTodasLeidas,
 		limpiarNotificaciones
 	} from '$lib/services/api/notifications';
+	import { obtenerTiposTurno } from '$lib/services/api/shifts/shifts.service';
 	
 	let openTurnos = false;
-	let turnoActual: any = null;
+	let turnoActual: Turno | null = null;
 	let openNotificaciones = false;
 	let currentTheme: 'light' | 'dark' = 'light';
 
 	let notificaciones: Notificacion[] = [];
 	let totalNotificaciones = 0;
 
+	let tiposTurno: TipoTurno[] = [];
 
-	// Tipos de turno disponibles (hardcodeados por ahora)
-	const tiposTurno = [
-		{ id_tipo_turno: 1, nombre: 'MAÑANA', horario: '05:00 - 13:00' },
-		{ id_tipo_turno: 2, nombre: 'TARDE_LJ', horario: '13:00 - 22:00' },
-		{ id_tipo_turno: 3, nombre: 'TARDE_V', horario: '13:00 - 21:00' },
-		{ id_tipo_turno: 4, nombre: 'UNICO_SF', horario: '08:00 - 15:00' }
-	];
-	
+
 	// Suscribirse al store del tema
 	theme.subscribe(value => {
 		currentTheme = value;
 	});
 
 	// Suscribirse al store
-	turnoStore.subscribe(turno => {
+	turnoStore.subscribe((turno: Turno | null) => {
 		turnoActual = turno;
 		console.log('Turno actual en store:', turnoActual);
 	});
@@ -54,22 +51,38 @@
 		await turnoStore.inicializar();
 
 		try {
+			tiposTurno = await obtenerTiposTurno();
 			notificaciones = await listarNotificaciones(true);
 			totalNotificaciones = await contarNotificacionesNoLeidas();
 		} catch (error) {
-			console.error('Error cargando notificaciones:', error);
+			console.error('Error cargando datos:', error);
 		}
 	});
 	
-	async function seleccionarTurno(idTipoTurno: number, nombre: string, horario: string) {
-		try {
-			await turnoStore.seleccionarTurno(idTipoTurno, nombre, horario);
-			openTurnos = false;
-		} catch (error) {
-			console.error('Error al abrir turno:', error);
-			alert('No se pudo abrir el turno. Verifica que no haya otro turno activo.');
-		}
+	async function seleccionarTurno(
+	idTipoTurno: number,
+	nombre: string,
+	horario: string
+): Promise<void> {
+	try {
+		await turnoStore.seleccionarTurno(
+			idTipoTurno,
+			nombre,
+			horario
+		);
+
+		openTurnos = false;
+	} catch (error) {
+		console.error(
+			'Error al abrir turno:',
+			error
+		);
+
+		alert(
+			'No se pudo abrir el turno. Verifica que no haya otro turno activo.'
+		);
 	}
+}
 
 	async function marcarComoLeidas() {
 		try {
@@ -153,17 +166,29 @@
 					</div>
 
 					{#each tiposTurno as turno}
-						<button
-							on:click={() => seleccionarTurno(turno.id_tipo_turno, turno.nombre, turno.horario)}
-							class="flex w-full flex-col items-start px-4 py-3 text-left transition hover:bg-zinc-50 dark:hover:bg-slate-800"
-						>
-							<span class="font-medium dark:text-white">
-								{turno.nombre}
-							</span>
-							<span class="text-xs text-zinc-500">
-								{turno.horario}
-							</span>
-						</button>
+							<button
+								on:click={() =>
+									seleccionarTurno(
+										turno.id_tipo_turno,
+										turno.nombre,
+										`${turno.hora_inicio} - ${turno.hora_fin}`
+									)}
+								class="flex w-full flex-col items-start px-4 py-3 text-left transition hover:bg-zinc-50 dark:hover:bg-slate-800"
+							>
+								<span class="font-medium dark:text-white">
+									{turno.nombre}
+								</span>
+
+								<span class="text-xs text-zinc-500">
+									{turno.hora_inicio} - {turno.hora_fin}
+								</span>
+
+								{#if turno.dias_aplicacion}
+									<span class="mt-1 text-[10px] text-zinc-400">
+										{turno.dias_aplicacion}
+									</span>
+								{/if}
+							</button>
 					{/each}
 				</div>
 			{/if}

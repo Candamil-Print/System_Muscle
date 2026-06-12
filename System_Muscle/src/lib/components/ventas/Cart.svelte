@@ -2,7 +2,7 @@
   import ConfirmSaleModal from './ConfirmSaleModal.svelte';
   import SaleSuccessModal from './SaleSuccessModal.svelte';
   import { registrarVenta } from '$lib/services/api/sale';
-  import { obtenerCajaActiva } from '$lib/services/api/shifts';
+  import { obtenerCajaActiva, abrirCaja } from '$lib/services/api/shifts';
   import { turnoStore } from '$lib/stores/shifts/turnoStore';
   import {
     ShoppingCart,
@@ -20,6 +20,7 @@
   let cajaActiva: any = null;
   let errorCaja = '';
   let procesando = false;
+  let abriendo = false;
   let turnoActual: { id_turno: number; nombre: string; horario: string } | null = null;
 
   // Suscribirse al store del turno
@@ -51,9 +52,43 @@
     }
   }
 
+  async function abrirCajaParaVenta() {
+    try {
+      abriendo = true;
+      errorCaja = '';
+      
+      // Abre una nueva caja
+      const resultado = await abrirCaja(turnoActual.id_turno);
+      console.log('Caja abierta:', resultado);
+      
+      // Recarga la caja activa
+      await cargarCajaActiva();
+      
+    } catch (error) {
+      console.error('Error al abrir caja:', error);
+      errorCaja = `Error: ${(error as Error).message}`;
+    } finally {
+      abriendo = false;
+    }
+  }
+
   import { onMount } from 'svelte';
-  onMount(() => {
-    cargarCajaActiva();
+  onMount(async () => {
+    try {
+      await turnoStore.inicializar();
+    } catch (error: any) {
+      // Si el error es "ya tiene un turno abierto", obtén el turno activo
+      if (error.message?.includes('ya tiene un turno abierto')) {
+        console.log('Turno previo detectado, cargando...');
+      }
+    }
+    await cargarCajaActiva();
+    
+    // Si no hay caja, intenta abrir una
+    if (!cajaActiva) {
+      console.log('Sin caja, abriendo automáticamente...');
+      await abrirCajaParaVenta();
+    }
   });
 
   function aumentarCantidad(index: number) {
@@ -115,6 +150,15 @@
       procesando = false;
     }
   }
+
+  // Obtén el turno activo
+  const turnoGuardado = JSON.parse(localStorage.getItem('turnoSeleccionado'));
+  console.log('Turno guardado:', turnoGuardado);
+
+  // Copia esto en la consola del navegador
+  console.log('Caja activa:', localStorage.getItem('cajaActiva'));
+  console.log('Turno actual:', localStorage.getItem('turnoActual'));
+  console.log('Carrito:', JSON.parse(localStorage.getItem('cart') ?? '[]').length);
 </script>
 
 <aside class="space-y-6">
