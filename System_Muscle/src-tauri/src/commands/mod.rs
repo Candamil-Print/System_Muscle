@@ -134,6 +134,8 @@ pub use turnos::logic::{
     listar_turnos_detalle_logic,
     turnos_por_usuario_logic,
     turnos_por_estado_logic,
+    obtener_tipo_turno_actual_logic,
+    abrir_turno_automatico_logic,
 };
 
 // Comandos de Tauri
@@ -792,6 +794,25 @@ pub fn listar_turnos_detalle(
 ) -> Result<Vec<TurnoDetalle>, String> {
     let conn = state.conn.lock().unwrap();
     listar_turnos_detalle_logic(&conn, &filtro)
+}
+
+// Comando para obtener el tipo de turno actual
+#[tauri::command]
+pub fn obtener_tipo_turno_actual(
+    state: State<'_, DbState>,
+) -> Result<i32, String> {
+    let conn = state.conn.lock().unwrap();
+    turnos::logic::obtener_tipo_turno_actual_logic(&conn)
+}
+
+// Comando para abrir turno automático
+#[tauri::command]
+pub fn abrir_turno_automatico(
+    state: State<'_, DbState>,
+    id_usuario: i32,
+) -> Result<i32, String> {
+    let conn = state.conn.lock().unwrap();
+    turnos::logic::abrir_turno_automatico_logic(&conn, id_usuario)
 }
 // Comandos de reportes de entradas
 pub mod reportes_entrada;
