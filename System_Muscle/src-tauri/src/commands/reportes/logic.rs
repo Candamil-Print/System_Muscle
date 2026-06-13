@@ -2,7 +2,7 @@ use rusqlite::Connection;
 use crate::models::reportes::reporte::{
     DashboardResumen, DetalleMargenProducto, ProductoMasVendido, ReporteCaja, ReporteEntradasProducto,
     ReporteInventario, ReporteMargenGanancia, ReporteStockBajo, ResumenVentasDiario, ResumenVentasRango,
-    VentasPorMetodoPago, VentasPorUsuario,
+    VentasPorMetodoPago, VentasPorUsuario, VentasPorTurno, VentaDetallePorTurno,
 };
 
 fn validar_rango_fechas(fecha_inicio: &str, fecha_fin: &str) -> Result<(), String> {
@@ -537,3 +537,128 @@ pub fn reporte_margen_ganancia_logic(
     })
 }
 
+// ==============================================
+// VENTAS POR TURNO
+// ==============================================
+
+/// Resumen de ventas agrupado por turno
+pub fn ventas_por_turno_logic(conn: &Connection, solo_abiertos: bool) -> Result<Vec<VentasPorTurno>, String> {
+    let estado_filtro = if solo_abiertos {
+        "AND t.estado = 'ABIERTO'"
+    } else {
+        ""
+    };
+    
+    let query = format!(
+        r#"
+        SELECT 
+            t.id_turno,
+            tt.nombre as tipo_turno,
+            u.nombre_completo as usuario,
+            t.fecha_inicio,
+            t.fecha_fin,
+            COALESCE(SUM(dv.subtotal), 0) as total_ventas,
+            COALESCE(SUM(CASE WHEN mp.nombre = 'EFECTIVO' THEN dv.subtotal ELSE 0 END), 0) as total_efectivo,
+            COALESCE(SUM(CASE WHEN mp.nombre = 'TRANSFERENCIA' THEN dv.subtotal ELSE 0 END), 0) as total_transferencia,
+            COUNT(DISTINCT v.id_venta) as numero_ventas,
+            COUNT(DISTINCT dv.id_detalle) as numero_productos_vendidos
+        FROM turnos t
+        LEFT JOIN tipos_turno tt ON t.id_tipo_turno = tt.id_tipo_turno
+        LEFT JOIN usuarios u ON t.id_usuario = u.id_usuario
+        LEFT JOIN ventas v ON v.id_turno = t.id_turno
+        LEFT JOIN detalle_venta dv ON dv.id_venta = v.id_venta
+        LEFT JOIN metodos_pago mp ON dv.metodo_pago = mp.id_metodo
+        WHERE 1=1 {}
+        GROUP BY t.id_turno
+        ORDER BY t.fecha_inicio DESC
+        "#,
+        estado_filtro
+    );
+    
+    let mut stmt = conn.prepare(&query).map_err(|e| e.to_string())?;
+    let rows = stmt.query_map([], |row| {
+        Ok(VentasPorTurno {
+            id_turno: row.get(0)?,
+            tipo_turno: row.get(1)?,
+            usuario: row.get(2)?,
+            fecha_inicio: row.get(3)?,
+            fecha_fin: row.get(4)?,
+            total_ventas: row.get(5)?,
+            total_efectivo: row.get(6)?,
+            total_transferencia: row.get(7)?,
+            numero_ventas: row.get(8)?,
+            numero_productos_vendidos: row.get(9)?,
+        })
+    }).map_err(|e| e.to_string())?;
+    
+    let mut resultados = Vec::new();
+    for row in rows {
+        resultados.push(row.map_err(|e| e.to_string())?);
+    }
+    
+    Ok(resultados)
+}
+
+/// Detalle de ventas de un turno específico
+pub fn ventas_por_turno_detalle_logic(conn: &Connection, id_turno: i32) -> Result<Vec<VentaDetallePorTurno>, String> {
+    let mut stmt = conn.prepare(
+        r#"
+        SELECT 
+            v.id_venta,
+            v.fecha,
+            u.nombre_completo as vendedor,
+            p.nombre as producto,
+            dv.cantidad,
+            dv.precio_unitario,
+            dv.subtotal,
+            mp.nombre as metodo_pago,
+            c.id_caja,
+            c.monto_apertura as caja_inicial
+        FROM ventas v
+        INNER JOIN turnos t ON v.id_turno = t.id_turno
+        INNER JOIN usuarios u ON v.id_usuario = u.id_usuario
+        INNER JOIN detalle_venta dv ON v.id_venta = dv.id_venta
+        INNER JOIN productos p ON dv.id_producto = p.id_producto
+        INNER JOIN metodos_pago mp ON dv.metodo_pago = mp.id_metodo
+        INNER JOIN caja c ON v.id_caja = c.id_caja
+        WHERE v.id_turno = ?1
+        ORDER BY v.fecha DESC
+        "#
+    ).map_err(|e| e.to_string())?;
+    
+    let rows = stmt.query_map([id_turno], |row| {
+        Ok(VentaDetallePorTurno {
+            id_venta: row.get(0)?,
+            fecha: row.get(1)?,
+            vendedor: row.get(2)?,
+            producto: row.get(3)?,
+            cantidad: row.get(4)?,
+            precio_unitario: row.get(5)?,
+            subtotal: row.get(6)?,
+            metodo_pago: row.get(7)?,
+            id_caja: row.get(8)?,
+            caja_inicial: row.get(9)?,
+        })
+    }).map_err(|e| e.to_string())?;
+    
+    let mut resultados = Vec::new();
+    for row in rows {
+        resultados.push(row.map_err(|e| e.to_string())?);
+    }
+    
+    Ok(resultados)
+}
+
+/// Obtener las ventas del turno actual (el que está abierto)
+pub fn ventas_del_turno_actual_logic(conn: &Connection) -> Result<Vec<VentasPorTurno>, String> {
+    // Primero obtener el turno activo
+    let turno_activo = crate::commands::turnos::logic::obtener_turno_activo_general_logic(conn)?;
+    
+    if let Some(turno) = turno_activo {
+        // Si hay turno activo, obtener sus ventas
+        ventas_por_turno_logic(conn, false)
+            .map(|ventas| ventas.into_iter().filter(|v| v.id_turno == turno.id_turno).collect())
+    } else {
+        Ok(Vec::new())
+    }
+}

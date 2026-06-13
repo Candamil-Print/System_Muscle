@@ -91,6 +91,9 @@ pub fn run() {
             commands::reporte_cajas_rango,
             commands::dashboard_resumen,
             commands::reporte_margen_ganancia,
+            commands::ventas_por_turno,
+            commands::ventas_por_turno_detalle,
+            commands::ventas_del_turno_actual,
             // Caja
             commands::abrir_caja,
             commands::cerrar_caja,

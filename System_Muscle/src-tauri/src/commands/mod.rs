@@ -94,6 +94,9 @@ pub use reportes::logic::{
     reporte_cajas_rango_logic,
     dashboard_resumen_logic,
     reporte_margen_ganancia_logic,
+    ventas_por_turno_logic,
+    ventas_por_turno_detalle_logic,
+    ventas_del_turno_actual_logic,
 };
 
 // Modulo de caja
@@ -742,6 +745,32 @@ pub fn reporte_margen_ganancia(
 ) -> Result<crate::models::reportes::reporte::ReporteMargenGanancia, String> {
     let conn = state.conn.lock().unwrap();
     reporte_margen_ganancia_logic(&conn, &fecha_inicio, &fecha_fin)
+}
+
+#[tauri::command]
+pub fn ventas_por_turno(
+    state: State<'_, DbState>,
+    solo_abiertos: bool,
+) -> Result<Vec<crate::models::reportes::reporte::VentasPorTurno>, String> {
+    let conn = state.conn.lock().unwrap();
+    reportes::logic::ventas_por_turno_logic(&conn, solo_abiertos)
+}
+
+#[tauri::command]
+pub fn ventas_por_turno_detalle(
+    state: State<'_, DbState>,
+    id_turno: i32,
+) -> Result<Vec<crate::models::reportes::reporte::VentaDetallePorTurno>, String> {
+    let conn = state.conn.lock().unwrap();
+    reportes::logic::ventas_por_turno_detalle_logic(&conn, id_turno)
+}
+
+#[tauri::command]
+pub fn ventas_del_turno_actual(
+    state: State<'_, DbState>,
+) -> Result<Vec<crate::models::reportes::reporte::VentasPorTurno>, String> {
+    let conn = state.conn.lock().unwrap();
+    reportes::logic::ventas_del_turno_actual_logic(&conn)
 }
 
 
