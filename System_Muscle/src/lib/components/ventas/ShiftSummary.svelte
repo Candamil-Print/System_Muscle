@@ -2,6 +2,14 @@
 
   import { onMount } from 'svelte';
 
+  import { turnoStore } from '$lib/stores/shifts/turnoStore';
+
+  let turnoActual: any = null;
+
+  turnoStore.subscribe((turno) => {
+    turnoActual = turno;
+  });
+
   // API
   import {
     ventasPorUsuario
@@ -42,7 +50,11 @@
 
       loading = true;
 
-      ventas = await ventasPorUsuario(1);
+      if (!turnoActual) return;
+
+      ventas = await ventasPorTurno(
+        turnoActual.id_turno
+      );
 
       // TOTAL GENERAL
       total = ventas.reduce(

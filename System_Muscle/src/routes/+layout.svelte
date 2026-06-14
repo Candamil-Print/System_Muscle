@@ -1,6 +1,8 @@
 <script lang="ts">
 	import '../app.css';
 
+	import 'flatpickr/dist/flatpickr.min.css';
+
 	import { browser } from '$app/environment';
 	import { onMount } from 'svelte';
 

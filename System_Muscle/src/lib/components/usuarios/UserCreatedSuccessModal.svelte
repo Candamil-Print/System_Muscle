@@ -16,13 +16,13 @@
 		class="fixed inset-0 z-[99999] flex items-center justify-center p-4"
 	>
 		<div
-	        class="relative w-full max-w-md rounded-2xl bg-white px-6 pb-6 pt-12 text-center shadow-2xl"
+	        class="relative w-full max-w-md rounded-2xl bg-white dark:border-[#334156] dark:bg-[#1E293B] px-6 pb-6 pt-12 text-center shadow-2xl"
         >
             <!-- BOTÓN CERRAR -->
             <button
                 type="button"
                 on:click={onClose}
-                class="absolute right-4 top-4 rounded-xl p-2 text-slate-400 transition hover:bg-slate-100 hover:text-slate-700"
+                class="absolute right-4 top-4 rounded-xl p-2 text-slate-400 transition hover:bg-slate-100 hover:text-slate-700 dark:hover:bg-[#162033]"
             >
                 <X size={20} />
             </button>
@@ -30,22 +30,22 @@
             <div class="mb-4 flex justify-center">
                 <CheckCircle2
                     size={70}
-                    class="text-[#0C4A6E]"
+                    class="text-[#0C4A6E] dark:text-[#39BDF8]"
                     strokeWidth={2}
                 />
             </div>
 
-            <h2 class="mb-2 text-2xl font-bold text-slate-900">
+            <h2 class="mb-2 text-2xl font-bold text-slate-900 dark:text-white">
                 ¡Usuario creado!
             </h2>
 
-            <p class="mb-6 text-sm text-slate-500">
+            <p class="mb-6 text-sm text-slate-500 dark:text-slate-400">
                 El usuario ha sido registrado correctamente en el sistema.
             </p>
 
             <button
                 on:click={onClose}
-                class="w-full rounded-xl bg-[#0C4A6E] px-5 py-3 text-sm font-medium text-white transition hover:bg-[#0a3a52]"
+                class="w-full rounded-xl bg-[#0C4A6E] px-5 py-3 text-sm font-medium text-white transition  hover:bg-[#0a3a52] dark:text-[#39BDF8]"
             >
                 Continuar
             </button>

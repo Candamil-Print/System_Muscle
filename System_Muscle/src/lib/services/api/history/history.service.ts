@@ -9,6 +9,24 @@ import type {
     TipoTurno
 } from "./history.types";
 
+function nombreTurnoLegible(nombre: string | undefined): string {
+	switch (nombre?.toUpperCase()) {
+		case 'TARDE_LJ':
+			return 'Turno: Tarde Lunes - Jueves';
+
+		case 'MAÑANA':
+			return 'Turno: Mañana';
+
+		case 'TARDE_V':
+			return 'Turno: Tarde Viernes';
+
+		case 'UNICO_SF':
+			return 'Turno: Único Sábado - Domingo - Festivo';
+
+		default:
+			return 'Sin turno';
+	}
+}
 
 
 export async function listarHistorialConDetalle(
@@ -17,6 +35,8 @@ export async function listarHistorialConDetalle(
 	try {
 		// 1. Obtener el historial básico
 		const historialBasico = await invoke<HistorialAccionBasico[]>("listar_historial", { filtro });
+
+		console.log("HISTORIAL BÁSICO:", historialBasico);
 		
 		if (historialBasico.length === 0) return [];
 		
@@ -26,6 +46,7 @@ export async function listarHistorialConDetalle(
 			invoke<Usuario>("obtener_usuario", { id }).catch(() => null)
 		);
 		const usuariosResult = await Promise.all(usuariosPromises);
+		console.log("USUARIOS:", usuariosResult);
 		const usuariosMap = new Map<number, string>();
 		usuariosResult.forEach(usuario => {
 			if (usuario) usuariosMap.set(usuario.id_usuario, usuario.nombre_completo);
@@ -37,16 +58,24 @@ export async function listarHistorialConDetalle(
 			invoke<Turno>("obtener_turno", { id }).catch(() => null)
 		);
 		const turnosResult = await Promise.all(turnosPromises);
+		 console.log("IDS TURNOS:", idsTurnos);
 		
-		// 4. Obtener tipos de turno
+		// 4. Mapa fijo de tipos de turno
+		const tiposMap = new Map<number, string>([
+			[1, "MAÑANA"],
+			[2, "TARDE_LJ"],
+			[3, "TARDE_V"],
+			[4, "UNICO_SF"]
+		]);
+
 		const tiposTurnoMap = new Map<number, string>();
+
 		for (const turno of turnosResult) {
 			if (turno) {
-				const tipoTurno = await invoke<TipoTurno>("obtener_tipo_turno", { id: turno.id_tipo_turno })
-					.catch(() => null);
-				if (tipoTurno) {
-					tiposTurnoMap.set(turno.id_turno, tipoTurno.nombre);
-				}
+				tiposTurnoMap.set(
+					turno.id_turno,
+					tiposMap.get(turno.id_tipo_turno) ?? "Desconocido"
+				);
 			}
 		}
 		
@@ -60,9 +89,40 @@ export async function listarHistorialConDetalle(
 			descripcion: h.descripcion,
 			fecha: h.fecha,
 			hora: h.hora,
-			turno: tiposTurnoMap.get(h.id_turno) || (h.id_turno === 0 ? "Sin turno" : `Turno ${h.id_turno}`)
-		}));
-		
+			turno:
+				h.id_turno == null
+					? "Sin turno"
+					 : nombreTurnoLegible(
+							tiposTurnoMap.get(h.id_turno)
+						)
+			}));
+
+
+		console.log(
+		"Historial básico:",
+		historialBasico.map(h => ({
+			id_historial: h.id_historial,
+			id_turno: h.id_turno,
+			accion: h.accion
+		}))
+		);
+
+		console.log("Turnos obtenidos:", turnosResult);
+
+		console.log(
+		"Mapa tiposTurno:",
+		Array.from(tiposTurnoMap.entries())
+		);
+
+		console.log(
+		"Turnos finales:",
+		resultado.map(r => ({
+			id_historial: r.id_historial,
+			turno: r.turno
+		}))
+		);
+
+
 		return resultado;
 	} catch (error) {
 		console.error("Error al obtener historial con detalle:", error);

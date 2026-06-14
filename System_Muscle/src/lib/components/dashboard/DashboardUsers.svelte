@@ -39,7 +39,7 @@
 		title="Usuarios Activos"
 		value={String(usuariosActivos)}
 		description="usuarios habilitados"
-		valueColor="text-[#0C4A6E]"
+		valueColor="text-[#0C4A6E] dark:text-[#39BDF8]"
 	/>
 
 </div>

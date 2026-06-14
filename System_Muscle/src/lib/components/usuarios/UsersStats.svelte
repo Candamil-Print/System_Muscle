@@ -19,7 +19,7 @@
 >
 
   <div
-    class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm"
+    class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:bg-[#1E293B] dark:border-[#334156]"
   >
 
 
@@ -35,13 +35,13 @@
 
   <Users
     size={20}
-    class="text-[#0C4A6E]"
+    class="text-[#0C4A6E] dark:text-[#39BDF8]"
   />
 
 </div>
 
 <p
-  class="text-3xl font-bold text-slate-800"
+  class="text-3xl font-bold text-slate-800 dark:text-white"
 >
   {total}
 </p>
@@ -56,7 +56,7 @@
   </div>
 
   <div
-    class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm"
+    class="rounded-2xl border border-slate-200 bg-white dark:bg-[#1E293B] dark:border-[#334156] p-5 shadow-sm"
   >
 
 
@@ -72,13 +72,13 @@
 
   <UserCheck
     size={20}
-    class="text-[#0C4A6E]"
+    class="text-[#0C4A6E] dark:text-[#39BDF8]"
   />
 
 </div>
 
 <p
-  class="text-3xl font-bold text-[#0C4A6E]"
+  class="text-3xl font-bold text-[#0C4A6E] dark:text-[#39BDF8]"
 >
   {activos}
 </p>
@@ -93,7 +93,7 @@
   </div>
 
   <div
-    class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm"
+    class="rounded-2xl border border-slate-200 bg-white dark:bg-[#1E293B] dark:border-[#334156] p-5 shadow-sm"
   >
 
 
@@ -109,13 +109,13 @@
 
   <Shield
     size={20}
-    class="text-[#0C4A6E]"
+    class="text-[#0C4A6E] dark:text-[#39BDF8]"
   />
 
 </div>
 
 <p
-  class="text-3xl font-bold text-slate-800"
+  class="text-3xl font-bold text-slate-800 dark:text-white"
 >
   {administradores}
 </p>
@@ -130,7 +130,7 @@
   </div>
 
   <div
-    class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm"
+    class="rounded-2xl border border-slate-200 bg-white dark:bg-[#1E293B] dark:border-[#334156] p-5 shadow-sm"
   >
 
 
@@ -146,13 +146,13 @@
 
   <User
     size={20}
-    class="text-[#0C4A6E]"
+    class="text-[#0C4A6E] dark:text-[#39BDF8]"
   />
 
 </div>
 
 <p
-  class="text-3xl font-bold text-slate-800"
+  class="text-3xl font-bold text-slate-800 dark:text-white"
 >
   {recepcionistas}
 </p>

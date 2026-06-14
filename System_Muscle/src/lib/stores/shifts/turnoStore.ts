@@ -30,9 +30,9 @@ async function cargarTurnoUsuario(): Promise<Turno | null> {
             id_tipo_turno: turnoActivo.id_tipo_turno,
             nombre: tipo?.nombre ?? 'Desconocido',
             horario: tipo
-                ? `${tipo.hora_inicio} - ${tipo.hora_fin}`
-                : '00:00 - 00:00'
-        };
+              ? `${formatearHora12h(tipo.hora_inicio)} - ${formatearHora12h(tipo.hora_fin)}`
+              : '--'
+          };
     } catch (error) {
         console.error(
             'Error cargando turno activo:',
@@ -41,6 +41,34 @@ async function cargarTurnoUsuario(): Promise<Turno | null> {
 
         return null;
     }
+}
+
+function obtenerTurnoSegunHora(tiposTurno: any[]) {
+    const ahora = new Date();
+
+    const horaActual =
+        ahora.getHours().toString().padStart(2, '0') +
+        ':' +
+        ahora.getMinutes().toString().padStart(2, '0');
+
+    return tiposTurno.find((turno) => {
+        return (
+            horaActual >= turno.hora_inicio &&
+            horaActual <= turno.hora_fin
+        );
+    });
+}
+
+function formatearHora12h(hora: string): string {
+	const [h, m] = hora.split(':');
+
+	let horaNum = parseInt(h);
+
+	const periodo = horaNum >= 12 ? 'PM' : 'AM';
+
+	horaNum = horaNum % 12 || 12;
+
+	return `${horaNum}:${m} ${periodo}`;
 }
 
 function createTurnoStore() {
@@ -61,17 +89,57 @@ function createTurnoStore() {
         async inicializar(): Promise<void> {
             const turno = await cargarTurnoUsuario();
 
+            // Si ya existe turno abierto
             if (turno) {
                 turnoActual = turno;
+
                 set(turno);
+
                 if (typeof localStorage !== 'undefined') {
                     localStorage.setItem(
                         'turnoSeleccionado',
                         JSON.stringify(turno)
                     );
                 }
-            } else {
-                console.log('Sin turno activo, esperando selección');
+
+                return;
+            }
+
+            // NO hay turno abierto
+            try {
+                const tiposTurno = await obtenerTiposTurno();
+
+                const turnoAutomatico =
+                    obtenerTurnoSegunHora(tiposTurno);
+
+                if (!turnoAutomatico) {
+                    console.log(
+                        'No existe un turno configurado para esta hora'
+                    );
+
+                    set(null);
+
+                    return;
+                }
+
+                console.log(
+                    'Turno detectado automáticamente:',
+                    turnoAutomatico
+                );
+
+                await this.seleccionarTurno(
+                    turnoAutomatico.id_tipo_turno,
+                    turnoAutomatico.nombre,
+                    `${turnoAutomatico.hora_inicio} - ${turnoAutomatico.hora_fin}`
+                );
+
+            } catch (error) {
+
+                console.error(
+                    'Error detectando turno automático:',
+                    error
+                );
+
                 set(null);
             }
         },

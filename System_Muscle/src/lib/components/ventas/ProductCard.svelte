@@ -6,17 +6,9 @@
     addToCart
   } from '$lib/stores/sales/cart';
 
-interface Producto {
-  id_producto: number;
-  nombre: string;
-  categoria: string;
-  precio: number;
-  stock: number;
-  stock_maximo: number;
-  imagen: string;
-}
+  import type { ProductoVenta } from '$lib/services/api/sale/sale.types';
 
-  export let producto: Producto;
+  export let producto: ProductoVenta;
 
   const formatear = (
     valor: number

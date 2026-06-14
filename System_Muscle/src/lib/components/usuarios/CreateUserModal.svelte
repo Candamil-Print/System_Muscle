@@ -16,7 +16,7 @@
     let telefonoVisual = '';
 
 	export let open = false;
-    let loading = false;
+    let loading = false; 
 
 	const dispatch = createEventDispatcher();
 
@@ -224,17 +224,17 @@
 	>
 
 		<div
-			class="animate-in fade-in zoom-in duration-200 relative w-full max-w-xl rounded-3xl border border-slate-200 bg-white shadow-2xl"
+			class="animate-in fade-in zoom-in duration-200 relative w-full max-w-xl rounded-3xl border border-slate-200 bg-white dark:bg-[#1E293B] dark:border-[#334156] shadow-2xl"
 		>
 
 			<!-- HEADER -->
-			<div class="sticky top-0 rounded-t-3xl border-b border-slate-100 bg-white p-6">
+			<div class="sticky top-0 rounded-t-3xl border-b border-slate-100 bg-white dark:bg-[#1E293B] dark:border-[#334156] p-6">
 
                 <div class="flex items-start justify-between">
 
                     <div>
 
-                    <h2 class="text-2xl font-bold text-slate-800">
+                    <h2 class="text-2xl font-bold text-slate-800 dark:text-white">
                         Crear Usuario
                     </h2>
 
@@ -246,7 +246,7 @@
 
                     <button
                     type="button"
-                    class="rounded-xl p-2 text-slate-400 transition hover:bg-slate-100 hover:text-slate-700"
+                    class="rounded-xl p-2 text-slate-400 transition hover:bg-slate-100 hover:text-slate-700 dark:hover:bg-[#162033]"
                     on:click={cerrarModal}
                     >
                     <X size={20} />
@@ -264,29 +264,29 @@
 					<!-- NOMBRE -->
 					<div class="md:col-span-2">
 
-						<label class="mb-2 block text-sm font-semibold text-slate-700">
+						<label class="mb-2 block text-sm font-semibold text-slate-700 dark:text-white">
 							Nombre Completo
 						</label>
 
 						<input
 							bind:value={form.nombre_completo}
 							placeholder="Nombre completo"
-							class="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm outline-none transition focus:border-[#0C4A6E] focus:ring-4 focus:ring-sky-100"
+							class="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm outline-none transition focus:border-[#0C4A6E] focus:ring-4 focus:ring-sky-100 dark:border-[#334156] dark:text-[#64748B] dark:focus:border-[#39BDF8] dark:focus:ring-4 dark:focus:ring-[#39BDF8]/20"
 						/>
 
 					</div>
 
 					<!-- TIPO DOCUMENTO -->
-                    <div class="relative">
+                    <div class="relative ">
 
-                        <label class="mb-2 block text-sm font-semibold text-slate-700">
+                        <label class="mb-2 block text-sm font-semibold text-slate-700 dark:text-white">
                                                 Tipo Documento
                                             </label>
 
 
                     <select
                         bind:value={form.tipo_documento}
-                        class="w-full appearance-none rounded-xl border border-slate-200 bg-white px-4 py-3 pr-11 text-sm outline-none transition duration-200 focus:border-[#0C4A6E] focus:ring-4 focus:ring-sky-100 focus:scale-[1.01]"
+                        class="w-full appearance-none rounded-xl border border-slate-200 bg-white dark:bg-[#1E293B] dark:border-[#334156] dark:text-[#64748B] px-4 py-3 pr-11 text-sm outline-none transition duration-200 focus:border-[#0C4A6E] focus:ring-4 focus:ring-sky-100 focus:scale-[1.01] dark:focus:border-[#39BDF8] dark:focus:ring-4 dark:focus:ring-[#39BDF8]/20"
                     >
                         <option value="CC">CC</option>
                         <option value="TI">TI</option>
@@ -295,7 +295,7 @@
                     </select>
 
                     <div
-                        class="pointer-events-none absolute inset-y-0 right-4 top-6 flex items-center"
+                        class="pointer-events-none absolute inset-y-0 right-4 top-7 flex items-center"
                     >
                         <svg
                         class="h-4 w-4 text-slate-500"
@@ -317,7 +317,7 @@
 					<!-- DOCUMENTO -->
 					<div>
 
-						<label class="mb-2 block text-sm font-semibold text-slate-700">
+						<label class="mb-2 block text-sm font-semibold text-slate-700 dark:text-white">
 							Número Documento
 						</label>
                             <input
@@ -325,7 +325,7 @@
                                 on:input={manejarDocumento}
                                 inputmode="numeric"
                                 placeholder="Número"
-                                class="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm outline-none transition focus:border-[#0C4A6E] focus:ring-4 focus:ring-sky-100"
+                                class="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm outline-none dark:border-[#334156] dark:text-[#64748B] transition focus:border-[#0C4A6E] focus:ring-4 focus:ring-sky-100 dark:focus:border-[#39BDF8] dark:focus:ring-4 dark:focus:ring-[#39BDF8]/20"
                             />
 
 					</div>
@@ -333,14 +333,14 @@
 					<!-- DIRECCION -->
 					<div class="md:col-span-2">
 
-						<label class="mb-2 block text-sm font-semibold text-slate-700">
+						<label class="mb-2 block text-sm font-semibold text-slate-700 dark:text-white">
 							Dirección
 						</label>
 
 						<input
 							bind:value={form.direccion}
                             placeholder="Dirección"
-							class="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm outline-none transition focus:border-[#0C4A6E] focus:ring-4 focus:ring-sky-100"
+							class="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm outline-none transition focus:border-[#0C4A6E] dark:text-[#64748B] dark:border-[#334156] focus:ring-4 focus:ring-sky-100 dark:focus:border-[#39BDF8] dark:focus:ring-4 dark:focus:ring-[#39BDF8]/20"
 						/>
 
 					</div>
@@ -348,13 +348,13 @@
 					<!-- SANGRE -->
                     <div class="relative">
 
-                        <label class="mb-2 block text-sm font-semibold text-slate-700">
+                        <label class="mb-2 block text-sm font-semibold text-slate-700 dark:text-white">
                             Tipo de Sangre
                         </label>
 
                         <select
                         bind:value={form.tipo_sangre}
-                        class="w-full appearance-none rounded-xl border border-slate-200 bg-white px-4 py-3 pr-11 text-sm outline-none transition duration-200 focus:border-[#0C4A6E] focus:ring-4 focus:ring-sky-100 focus:scale-[1.01]"
+                        class="w-full appearance-none rounded-xl border border-slate-200 bg-white dark:bg-[#1E293B] dark:border-[#334156] dark:text-[#64748B] px-4 py-3 pr-11 text-sm outline-none transition duration-200 focus:border-[#0C4A6E] focus:ring-4 focus:ring-sky-100 focus:scale-[1.01] dark:focus:border-[#39BDF8] dark:focus:ring-4 dark:focus:ring-[#39BDF8]/20"
                     >
                             <option>A+</option>
                             <option>A-</option>
@@ -367,7 +367,7 @@
                         </select>
 
                     <div
-                        class="pointer-events-none absolute inset-y-0 right-4 top-6 flex items-center"
+                        class="pointer-events-none absolute inset-y-0 right-4 top-7 flex items-center"
                     >
                         <svg
                         class="h-4 w-4 text-slate-500"
@@ -389,14 +389,14 @@
 					<!-- EPS -->
                     <div class="relative">
 
-                        <label class="mb-2 block text-sm font-semibold text-slate-700">
+                        <label class="mb-2 block text-sm font-semibold text-slate-700 dark:text-white">
                             EPS
                         </label>
 
 
                     <select
                         bind:value={form.eps}
-                        class="w-full appearance-none rounded-xl border border-slate-200 bg-white px-4 py-3 pr-11 text-sm outline-none transition duration-200 focus:border-[#0C4A6E] focus:ring-4 focus:ring-sky-100 focus:scale-[1.01]"
+                        class="w-full appearance-none rounded-xl border border-slate-200 bg-white dark:bg-[#1E293B] dark:border-[#334156] dark:text-[#64748B] px-4 py-3 pr-11 text-sm outline-none transition duration-200 focus:border-[#0C4A6E] focus:ring-4 focus:ring-sky-100 focus:scale-[1.01] dark:focus:border-[#39BDF8] dark:focus:ring-4 dark:focus:ring-[#39BDF8]/20"
                     >
                          <option value="">Selecciona una EPS</option>
 
@@ -430,7 +430,7 @@
                     </select>
 
                     <div
-                        class="pointer-events-none absolute inset-y-0 right-4 top-6 flex items-center"
+                        class="pointer-events-none absolute inset-y-0 right-4 top-7 flex items-center"
                     >
                         <svg
                         class="h-4 w-4 text-slate-500"
@@ -452,14 +452,14 @@
 					<!-- GENERO -->
                     <div class="relative">
 
-                        <label class="mb-2 block text-sm font-semibold text-slate-700">
+                        <label class="mb-2 block text-sm font-semibold text-slate-700 dark:text-white">
                             Género
                         </label>
 
 
                     <select
                         bind:value={form.genero}
-                        class="w-full appearance-none rounded-xl border border-slate-200 bg-white px-4 py-3 pr-11 text-sm outline-none transition duration-200 focus:border-[#0C4A6E] focus:ring-4 focus:ring-sky-100 focus:scale-[1.01]"
+                        class="w-full appearance-none rounded-xl border border-slate-200 bg-white dark:bg-[#1E293B] dark:border-[#334156] dark:text-[#64748B] px-4 py-3 pr-11 text-sm outline-none transition duration-200 focus:border-[#0C4A6E] focus:ring-4 focus:ring-sky-100 focus:scale-[1.01] dark:focus:border-[#39BDF8] dark:focus:ring-4 dark:focus:ring-[#39BDF8]/20"
                     >
                         <option value="MASCULINO">Masculino</option>
                         <option value="FEMENINO">Femenino</option>
@@ -491,17 +491,21 @@
 
                     <!-- TELEFONO -->
                     <div>
-
-                        <label class="mb-2 block text-sm font-semibold text-slate-700">
+                        <label class="mb-2 block text-sm font-semibold text-slate-700 dark:text-white">
                             Teléfono
                         </label>
 
                         <div
-                            class="flex overflow-hidden rounded-xl border border-slate-200 focus-within:border-[#0C4A6E] focus-within:ring-4 focus-within:ring-sky-100"
+                            class="flex overflow-hidden rounded-xl border border-slate-200 dark:border-[#334156] dark:text-[#64748B]
+                            focus-within:border-[#0C4A6E]
+                            focus-within:ring-4
+                            focus-within:ring-sky-100
+                            dark:focus-within:border-[#39BDF8]
+                            dark:focus-within:ring-4
+                            dark:focus-within:ring-[#39BDF8]/20"
                         >
-
                             <div
-                                class="flex items-center border-r border-slate-200 bg-slate-50 px-4 text-sm font-medium text-slate-600"
+                                class="flex items-center border-r border-slate-200 bg-slate-50 px-4 text-sm font-medium text-slate-600 dark:bg-[#1E293B] dark:border-[#334156] dark:text-[#64748B]"
                             >
                                 +57
                             </div>
@@ -513,16 +517,13 @@
                                 placeholder="300 123 4567"
                                 class="w-full px-4 py-3 text-sm outline-none"
                             />
-
                         </div>
-
-
                     </div>
 
 					<!-- CORREO -->
 					<div>
 
-						<label class="mb-2 block text-sm font-semibold text-slate-700">
+						<label class="mb-2 block text-sm font-semibold text-slate-700 dark:text-white">
 							Correo
 						</label>
 
@@ -530,7 +531,7 @@
 							type="email"
                             placeholder="email@ejemplo.com"
 							bind:value={form.correo}
-							class="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm outline-none transition focus:border-[#0C4A6E] focus:ring-4 focus:ring-sky-100"
+							class="w-full rounded-xl border border-slate-200  dark:border-[#334156] dark:text-[#64748B] px-4 py-3 text-sm outline-none transition focus:border-[#0C4A6E] focus:ring-4 focus:ring-sky-100 dark:focus:border-[#39BDF8] dark:focus:ring-4 dark:focus:ring-[#39BDF8]/20"
 						/>
 
 					</div>
@@ -538,7 +539,7 @@
 					<!-- PASSWORD -->
 					<div>
 
-						<label class="mb-2 block text-sm font-semibold text-slate-700">
+						<label class="mb-2 block text-sm font-semibold text-slate-700 dark:text-white">
 							Contraseña
 						</label>
 
@@ -547,7 +548,7 @@
                                 type={mostrarPassword ? 'text' : 'password'}
                                 placeholder="••••••••"
                                 bind:value={form.password}
-                                class="w-full rounded-xl border border-slate-200 px-4 py-3 pr-12 text-sm outline-none transition focus:border-[#0C4A6E] focus:ring-4 focus:ring-sky-100"
+                                class="w-full rounded-xl border border-slate-200 dark:border-[#334156] dark:text-[#64748B] px-4 py-3 pr-12 text-sm outline-none transition focus:border-[#0C4A6E] focus:ring-4 focus:ring-sky-100 dark:focus:border-[#39BDF8] dark:focus:ring-4 dark:focus:ring-[#39BDF8]/20"
                             />
 
                             <button
@@ -576,12 +577,12 @@
 
 			<!-- FOOTER -->
 			<div
-				class="flex justify-end gap-3 border-t border-slate-200 px-8 py-5"
+				class="flex justify-end gap-3 border-t border-slate-200 dark:border-[#334156]  px-8 py-5"
 			>
 
 				<button
 					on:click={cerrarModal}
-					class="rounded-xl border border-slate-200 px-5 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-100"
+					class="rounded-xl border border-slate-200 dark:border-[#334156] dark:text-white px-5 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-100 dark:hover:bg-[#162033]"
 				>
 					Cancelar
 				</button>
@@ -589,7 +590,7 @@
 				<button
 					on:click={guardarUsuario}
 					disabled={loading}
-					class="rounded-xl bg-[#0C4A6E] px-5 py-2.5 text-sm font-medium text-white transition hover:bg-[#0a3a52] disabled:opacity-50"
+					class="rounded-xl bg-[#0C4A6E] px-5 py-2.5 text-sm font-medium text-white dark:text-[#39BDF8] transition hover:bg-[#0a3a52] disabled:opacity-50"
 				>
 
 					{#if loading}

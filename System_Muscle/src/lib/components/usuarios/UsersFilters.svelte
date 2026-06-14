@@ -7,7 +7,7 @@
 </script>
 
 <div
-  class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm"
+  class="rounded-2xl border border-slate-200 bg-white dark:bg-[#1E293B] dark:border-[#334156] p-4 shadow-sm"
 >
 
   <div class="relative">
@@ -22,7 +22,7 @@
   bind:value={search}
   type="text"
   placeholder="Buscar por nombre, documento o email..."
-  class="w-full rounded-xl border border-slate-200 py-3 pl-10 pr-4 outline-none transition focus:border-sky-500"
+  class="w-full rounded-xl border border-slate-200 py-3 pl-10 pr-4 outline-none transition focus:border-sky-500 dark:border-[#334156] dark:text-white"
 />
 
 

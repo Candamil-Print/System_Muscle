@@ -26,30 +26,30 @@
 {#if open}
 
   <!-- OVERLAY -->
-  <div
-    class="fixed inset-0 z-[9998] bg-black/50 backdrop-blur-sm"
-  ></div>
+<div
+  class="fixed top-0 left-0 w-screen h-screen z-9998 bg-black/50 backdrop-blur-md"
+></div>
 
   <!-- MODAL -->
   <div
-    class="fixed inset-0 z-[9999] flex items-center justify-center p-4"
+    class="fixed inset-0 z-9999 flex items-center justify-center p-4"
   >
 
-    <div
-      class="w-full max-w-md rounded-2xl bg-white shadow-2xl"
-    >
+  <div
+    class="animate-in fade-in zoom-in duration-200 w-full max-w-md rounded-3xl border border-slate-200 bg-white shadow-2xl dark:bg-[#1E293B] dark:border-[#334156]"
+  >
 
       <!-- HEADER -->
-      <div class="px-6 pb-0 pt-6">
+      <div class="sticky top-0 rounded-t-3xl border-b border-slate-100 bg-white dark:bg-[#1E293B] dark:border-[#334156] p-6">
 
         <h2
-          class="text-lg font-semibold text-slate-900"
+          class="text-2xl font-bold text-slate-800 dark:text-white"
         >
           Confirmar Venta
         </h2>
 
         <p
-          class="mt-1 text-sm text-slate-500"
+          class="mt-1 text-sm text-slate-500 dark:text-slate-400"
         >
           ¿Estas seguro de procesar esta venta?
         </p>
@@ -57,22 +57,24 @@
       </div>
 
       <!-- BODY -->
-      <div class="px-6 pb-6 pt-4">
+      <div class="space-y-5 p-5">
 
         <div class="space-y-3">
 
           {#each carrito as item}
 
             <div
-              class="flex justify-between text-sm"
+              class="flex items-center justify-between rounded-xl   px-3 py-2 "
             >
 
-              <span class="text-slate-700">
+             <span
+                class="font-medium text-slate-900 dark:text-white"
+              >
                 {item.cantidad}x {item.nombre}
               </span>
 
               <span
-                class="font-medium text-slate-900"
+                class="font-semibold text-[#0C4A6E] dark:text-[#39BDF8]"
               >
                 $
                 {formatear(
@@ -87,23 +89,23 @@
         </div>
 
         <!-- DIVIDER -->
-        <div
-          class="my-5 h-px bg-slate-200"
-        ></div>
+       <div
+        class="h-px bg-slate-200 dark:bg-[#334156]"
+      ></div>
 
         <!-- TOTAL -->
         <div
-          class="flex items-center justify-between"
+          class="rounded-2xl bg-slate-50 p-4 dark:bg-[#111827]"
         >
 
           <span
-            class="font-medium text-slate-900"
+            class="font-semibold text-slate-800 dark:text-white"
           >
             Total
           </span>
 
           <span
-            class="text-2xl font-bold text-[#0C4A6E]"
+            class="text-3xl font-bold text-[#0C4A6E] dark:text-[#39BDF8]"
           >
             $
             {formatear(total)}
@@ -113,7 +115,7 @@
 
         <!-- METODO -->
         <p
-          class="mt-2 text-sm text-slate-500"
+          class="mt-3 text-sm text-slate-500 dark:text-slate-400"
         >
           Método de pago:
           {metodoPago}
@@ -122,29 +124,30 @@
       </div>
 
       <!-- FOOTER -->
-      <div
-        class="flex justify-end gap-3 px-6 pb-6"
-      >
+     <div
+      class="sticky bottom-0 rounded-b-3xl border-t border-slate-100 bg-white dark:bg-[#1E293B] dark:border-[#334156] p-5"
+    >
+      <div class="flex justify-end gap-3">
 
         <button
           on:click={onClose}
-          class="rounded-lg border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
+          class="rounded-xl border border-slate-200 px-5 py-2.5 text-sm font-medium text-slate-700 dark:border-[#334156] dark:text-white transition hover:bg-slate-100 dark:hover:bg-[#162033]"
         >
           Cancelar
         </button>
 
         <button
           on:click={onConfirm}
-          class="rounded-lg bg-[#0C4A6E] px-4 py-2 text-sm font-medium text-white transition hover:bg-[#0a3d5c]"
+          class="rounded-xl bg-[#0C4A6E] px-5 py-2.5 text-sm font-medium text-white dark:text-[#39BDF8] transition hover:bg-[#0a3a52]"
         >
           Confirmar Venta
         </button>
 
       </div>
+      </div>  
 
     </div>
 
   </div>
 
 {/if}
-

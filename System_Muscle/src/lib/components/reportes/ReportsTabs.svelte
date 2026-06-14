@@ -11,8 +11,8 @@
 		on:click={() => activeTab = 'ventas'}
 		class={`flex items-center gap-2 px-5 py-3 font-semibold border-b-2 transition-colors ${
 			activeTab === 'ventas'
-				? 'border-[#0C4A6E] text-[#0C4A6E]'
-				: 'border-transparent text-slate-500 hover:text-slate-700'
+				? 'border-[#0C4A6E] text-[#0C4A6E] dark:text-[#39BDF8] '
+				: 'border-transparent text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:boder-[#263244]'
 		}`}
 	>
 		<DollarSign class="w-4 h-4" />
@@ -23,7 +23,7 @@
 		on:click={() => activeTab = 'entradas'}
 		class={`flex items-center gap-2 px-5 py-3 font-semibold border-b-2 transition-colors ${
 			activeTab === 'entradas'
-				? 'border-[#0C4A6E] text-[#0C4A6E]'
+				? 'border-[#0C4A6E] text-[#0C4A6E] dark:text-[#39BDF8] '
 				: 'border-transparent text-slate-500 hover:text-slate-700'
 		}`}
 	>

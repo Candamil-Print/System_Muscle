@@ -20,12 +20,12 @@
 </script>
 
 <div
-	class="rounded-lg border border-zinc-200 bg-white p-6 dark:border-zinc-800 dark:bg-zinc-900"
+	class="rounded-lg border border-zinc-200 bg-white p-6 dark:border-[#334156] dark:bg-[#1E293B]"
 >
 	<div class="mb-2 flex items-center gap-2">
 		<AlertTriangle
 			size={20}
-			class="text-[#0C4A6E] dark:text-zinc-300"
+			class="text-[#0C4A6E] dark:text-[#39BDF8]"
 		/>
 
 		<h3
@@ -44,7 +44,7 @@
 	{#if alerts.length === 0}
 
 		<div
-			class="relative overflow-hidden rounded-2xl border border-[#0C4A6E]/20  p-8 dark:from-[#0C4A6E]/10 "
+			class="relative overflow-hidden rounded-2xl border border-[#0C4A6E]/20  p-8 dark:bg-[#111827] dark:border-[#334156]"
 		>
 
 			<!-- Glow decorativo -->
@@ -56,7 +56,7 @@
 				class="absolute -bottom-10 -left-10 h-32 w-32 rounded-full bg-[#0C4A6E]/10 blur-3xl"
 			></div>
 
-			<div class="relative flex flex-col items-center text-center">
+			<div class="relative flex flex-col items-center text-center ">
 
 				<div
 					class="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-[#0C4A6E]/10"
@@ -93,24 +93,30 @@
 
 	{:else}
 
-		<div class="space-y-3">
+		<div
+			class={`space-y-3 ${
+				alerts.length > 3
+					? 'max-h-63.75 overflow-y-auto pr-2'
+					: ''
+			}`}
+		>
 
 			{#each alerts as alert}
 
 				<div
-					class="flex items-center justify-between rounded-lg bg-[#0C4A6E]/10 p-4 dark:bg-zinc-800"
+					class="flex items-center justify-between rounded-lg bg-[#0C4A6E]/10 p-4 dark:bg-[#39BDF8]/20"
 				>
 
 					<div>
 
 						<h4
-							class="font-semibold text-[#0C4A6E] dark:text-white"
+							class="font-semibold text-[#0C4A6E] dark:text-[#39BDF8]"
 						>
 							{alert.nombre}
 						</h4>
 
 						<p
-							class="text-sm text-zinc-500 dark:text-zinc-400"
+							class="text-sm text-zinc-500 dark:text-[#39BDF8]"
 						>
 							{alert.tipo_producto}
 						</p>
@@ -120,13 +126,13 @@
 					<div class="text-right">
 
 						<p
-							class="font-semibold text-[#0C4A6E] dark:text-white"
+							class="font-semibold text-[#0C4A6E] dark:text-[#39BDF8]"
 						>
 							{alert.stock_actual} / {alert.stock_maximo}
 						</p>
 
 						<p
-							class="text-xs text-zinc-500 dark:text-zinc-400"
+							class="text-xs text-zinc-500 dark:text-[#39BDF8]"
 						>
 							{alert.porcentaje_stock.toFixed(0)}%
 							disponible

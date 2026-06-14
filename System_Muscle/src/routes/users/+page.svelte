@@ -114,9 +114,15 @@
 
 </script>
 
-<Toaster position="top-center" />
+<Toaster
+	position="top-center"
+	theme="dark"
+	toastOptions={{
+		class: '!bg-[#1E293B] !border !border-[#334156] !text-white'
+	}}
+/>
 
-<div class="slex min-h-screen bg-slate-50">
+<div class="slex min-h-screen bg-slate-50 dark:bg-[#111827]">
 
   <Sidebar />
 

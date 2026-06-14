@@ -1,6 +1,9 @@
 <script lang="ts">
+  import { Toaster } from 'svelte-sonner';
+
   import Header from '$lib/components/layout/Header.svelte';
   import Sidebar from '$lib/components/layout/Sidebar.svelte';
+  
 
   import ReportsTabs from '$lib/components/reportes/ReportsTabs.svelte';
 
@@ -30,12 +33,21 @@
     vendedor: 'todos'
   };
 
+
   function aplicarFiltros(nuevosFiltros) {
     filtros = nuevosFiltros;
   }
 </script>
 
-<div class="flex min-h-screen bg-slate-50">
+<Toaster
+	position="top-center"
+	theme="dark"
+	toastOptions={{
+		class: '!bg-[#1E293B] !border !border-[#334156] !text-white'
+	}}
+/>
+
+<div class="flex min-h-screen bg-slate-50 dark:bg-[#111827]">
   <Sidebar />
 
   <div class="ml-[280px] flex flex-1 flex-col">
@@ -43,7 +55,7 @@
 
     <main class="space-y-6 p-6">
       <div>
-        <h1 class="text-3xl font-bold text-slate-800">
+        <h1 class="text-3xl font-bold text-slate-800 dark:text-white">
           Reportes
         </h1>
 

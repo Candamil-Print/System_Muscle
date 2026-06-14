@@ -176,28 +176,28 @@
 		class="fixed left-0 top-0 z-[9999] flex h-dvh w-dvw items-center justify-center p-4"
 	>
 		<div
-			class="animate-in fade-in zoom-in duration-200 relative w-full max-w-xl rounded-3xl border border-slate-200 bg-white shadow-2xl"
+			class="animate-in fade-in zoom-in duration-200 relative w-full max-w-xl rounded-3xl border border-slate-200 bg-white dark:border-[#334156] dark:bg-[#1E293B] shadow-2xl"
 		>
 
 			<!-- HEADER -->
 			<div
-				class="sticky top-0 rounded-t-3xl border-b border-slate-100 bg-white p-6"
+				class="sticky top-0 rounded-t-3xl border-b border-slate-100 bg-white dark:border-[#334156] dark:bg-[#1E293B] p-6"
 			>
 				<div class="flex items-start justify-between">
 
 					<div>
-						<h2 class="text-2xl font-bold text-slate-800">
+						<h2 class="text-2xl font-bold text-slate-800 dark:text-white">
 							Editar Usuario
 						</h2>
 
-						<p class="mt-1 text-sm text-slate-500">
+						<p class="mt-1 text-sm text-slate-500 dark:text-slate-400">
 							Modifica la información de contacto del usuario
 						</p>
 					</div>
 
 					<button
 						type="button"
-						class="rounded-xl p-2 text-slate-400 transition hover:bg-slate-100 hover:text-slate-700"
+						class="rounded-xl p-2 text-slate-400 transition hover:bg-slate-100 hover:text-slate-700 dark:hover:bg-[#162033]"
 						on:click={() => dispatch('close')}
 					>
 						<X size={20} />
@@ -211,7 +211,7 @@
 
 				<!-- PREVIEW USUARIO -->
 				<div
-					class="mb-6 flex items-center gap-4 rounded-2xl border border-slate-200 bg-slate-50 p-5"
+					class="mb-6 flex items-center gap-4 rounded-2xl border border-slate-200 bg-slate-50 dark:bg-[#111827] dark:border-[#334156] p-5"
 				>
 
 					<div
@@ -226,12 +226,12 @@
 
 					<div class="flex-1">
 
-						<p class="font-medium text-slate-800">
+						<p class="font-medium text-slate-800 dark:text-white">
 							{user.nombre_completo}
 						</p>
 
 						<span
-							class="mt-1 inline-block rounded-full bg-slate-200 px-2 py-1 text-xs font-medium text-slate-700"
+							class="mt-1 inline-block rounded-full bg-slate-200 px-2 py-1 text-xs font-medium text-slate-700 dark:text-[#39BDF8] dark:bg-[#39BDF8]/20"
 						>
 							{user.id_rol === 1
 								? 'Administrador'
@@ -246,17 +246,23 @@
                 <div class="mb-5">
 
                     <label
-                        class="mb-2 block text-sm font-semibold text-slate-700"
+                        class="mb-2 block text-sm font-semibold text-slate-70 dark:text-white"
                     >
                         Dirección Domiciliaria
                     </label>
 
-                    <div
-                        class="flex overflow-hidden rounded-xl border border-slate-200 focus-within:border-[#0C4A6E] focus-within:ring-4 focus-within:ring-sky-100"
-                    >
+                        <div
+                            class="flex overflow-hidden rounded-xl border border-slate-200 dark:border-[#334156] dark:text-[#64748B]
+                            focus-within:border-[#0C4A6E]
+                            focus-within:ring-4
+                            focus-within:ring-sky-100
+                            dark:focus-within:border-[#39BDF8]
+                            dark:focus-within:ring-4
+                            dark:focus-within:ring-[#39BDF8]/20"
+                        >
 
                         <div
-                            class="flex items-center border-r border-slate-200 bg-slate-50 px-4 text-slate-600"
+                            class="flex items-center border-r border-slate-200 bg-slate-50 px-4 text-slate-600 dark:bg-[#111827] dark:border-[#334156] dark:text-[#64748B] "
                         >
                             <House size={18} />
                         </div>
@@ -264,7 +270,7 @@
                         <input
                             bind:value={form.direccion}
                             placeholder="Ingrese dirección"
-                            class="w-full px-4 py-3 text-sm outline-none"
+                            class="w-full px-4 py-3 text-sm outline-none dark:text-[#64748B]"
                         />
 
                     </div>
@@ -276,17 +282,23 @@
                 <div class="mb-5">
 
                     <label
-                        class="mb-2 block text-sm font-semibold text-slate-700"
+                        class="mb-2 block text-sm font-semibold text-slate-700 dark:text-white"
                     >
                         Teléfono
                     </label>
 
-                    <div
-                        class="flex overflow-hidden rounded-xl border border-slate-200 focus-within:border-[#0C4A6E] focus-within:ring-4 focus-within:ring-sky-100"
-                    >
+                        <div
+                            class="flex overflow-hidden rounded-xl border border-slate-200 dark:border-[#334156] dark:text-[#64748B]
+                            focus-within:border-[#0C4A6E]
+                            focus-within:ring-4
+                            focus-within:ring-sky-100
+                            dark:focus-within:border-[#39BDF8]
+                            dark:focus-within:ring-4
+                            dark:focus-within:ring-[#39BDF8]/20"
+                        >
 
                         <div
-                            class="flex items-center border-r border-slate-200 bg-slate-50 px-4 text-sm font-medium text-slate-600"
+                            class="flex items-center border-r border-slate-200 bg-slate-50 dark:bg-[#111827] dark:border-[#334156] px-4 text-sm font-medium text-slate-600 dark:text-[#64748B]"
                         >
                             +57
                         </div>
@@ -296,7 +308,7 @@
                             on:input={manejarTelefono}
                             inputmode="numeric"
                             placeholder="300 123 4567"
-                            class="w-full px-4 py-3 text-sm outline-none"
+                            class="w-full px-4 py-3 text-sm outline-none dark:text-[#64748B]"
                         />
 
                     </div>
@@ -307,17 +319,23 @@
                 <div>
 
                     <label
-                        class="mb-2 block text-sm font-semibold text-slate-700"
+                        class="mb-2 block text-sm font-semibold text-slate-700 dark:text-white"
                     >
                         Correo Electrónico
                     </label>
 
-                    <div
-                        class="flex overflow-hidden rounded-xl border border-slate-200 focus-within:border-[#0C4A6E] focus-within:ring-4 focus-within:ring-sky-100"
-                    >
+                        <div
+                            class="flex overflow-hidden rounded-xl border border-slate-200 dark:border-[#334156] dark:text-[#64748B]
+                            focus-within:border-[#0C4A6E]
+                            focus-within:ring-4
+                            focus-within:ring-sky-100
+                            dark:focus-within:border-[#39BDF8]
+                            dark:focus-within:ring-4
+                            dark:focus-within:ring-[#39BDF8]/20"
+                        >
 
                         <div
-                            class="flex items-center border-r border-slate-200 bg-slate-50 px-4 text-slate-600"
+                            class="flex items-center border-r border-slate-200 bg-slate-50 px-4 text-slate-600 dark:bg-[#111827] dark:border-[#334156] dark:text-[#64748B]"
                         >
                             <Mail size={18} />
                         </div>
@@ -326,7 +344,7 @@
                             type="email"
                             bind:value={form.correo}
                             placeholder="correo@ejemplo.com"
-                            class="w-full px-4 py-3 text-sm outline-none"
+                            class="w-full px-4 py-3 text-sm outline-none dark:text-[#64748B]"
                         />
 
                     </div>
@@ -337,12 +355,12 @@
 
 			<!-- FOOTER -->
 			<div
-				class="flex justify-end gap-3 border-t border-slate-200 px-8 py-5"
+				class="flex justify-end gap-3 border-t border-slate-200 dark:border-[#334156] px-8 py-5"
 			>
 
 				<button
 					on:click={() => dispatch('close')}
-					class="rounded-xl border border-slate-200 px-5 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-100"
+					class="rounded-xl border border-slate-200 dark:border-[#334156] dark:text-white px-5 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-100 dark:hover:bg-[#162033]"
 				>
 					Cancelar
 				</button>
@@ -350,7 +368,7 @@
 				<button
 					on:click={guardarCambios}
 					disabled={loading}
-					class="rounded-xl bg-[#0C4A6E] px-5 py-2.5 text-sm font-medium text-white transition hover:bg-[#0a3a52] disabled:opacity-50"
+					class="rounded-xl bg-[#0C4A6E] px-5 py-2.5 text-sm font-medium text-white dark:text-[#39BDF8] transition hover:bg-[#0a3a52] disabled:opacity-50"
 				>
 					{#if loading}
 						Guardando...

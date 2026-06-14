@@ -85,3 +85,23 @@ export interface ResumenVentasRango {
 	total_transferencia: number;
 	total_general: number;
 }
+
+export interface DetalleMargenProducto {
+	id_producto: number;
+	nombre_producto: string;
+	cantidad_vendida: number;
+	total_ventas: number;
+	total_costo: number;
+	ganancia_neta: number;
+	margen_porcentaje: number;
+}
+
+export interface ReporteMargenGanancia {
+	fecha_inicio: string;
+	fecha_fin: string;
+	total_ventas: number;
+	total_costo: number;
+	ganancia_neta: number;
+	margen_porcentaje: number;
+	productos: DetalleMargenProducto[];
+}

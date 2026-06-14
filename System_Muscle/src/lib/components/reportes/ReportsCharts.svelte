@@ -1,5 +1,6 @@
 <script lang="ts">
   import { onMount } from 'svelte';
+  import { toast } from 'svelte-sonner';
   import ReportsChartCard from './ChartCard.svelte';
   import type { ChartData } from 'chart.js';
 
@@ -7,7 +8,8 @@
     obtenerResumenVentasDiarioRango,
     obtenerProductosMasVendidos,
     obtenerVentasPorUsuario,
-    obtenerVentasPorMetodoPago
+    obtenerVentasPorMetodoPago,
+    obtenerMargenGanancia
   } from '$lib/services/api/reports/reports.service';
 
   export let filtros = {
@@ -22,6 +24,8 @@
   let topProducts: ChartData<'bar'> = { labels: [], datasets: [] };
   let salesBySeller: ChartData<'pie'> = { labels: [], datasets: [] };
 
+  let margenData: any[] = [];
+
   let loading = true;
   let error = '';
 
@@ -32,14 +36,12 @@
     try {
       loading = true;
       error = '';
-      
-console.log('FECHA INICIO:', fechaInicio);
-console.log('FECHA FIN:', fechaFin);
 
       const [
         ventasDiarias,
         productosMasVendidos,
-        ventasPorUsuario
+        ventasPorUsuario,
+        margenGanancia
         
       ] = await Promise.all([
         obtenerResumenVentasDiarioRango(
@@ -57,11 +59,30 @@ console.log('FECHA FIN:', fechaFin);
         obtenerVentasPorUsuario(
           fechaInicio,
           fechaFin
+        ),
+
+        obtenerMargenGanancia(
+          fechaInicio,
+          fechaFin
         )
-      ]); console.log('======================');
-console.log('VENTAS DIARIAS');
-console.log(ventasDiarias);
-console.log('TOTAL REGISTROS:', ventasDiarias.length);
+      ]);
+
+      margenData = margenGanancia.productos;
+
+      // SIN RESULTADOS
+      if (
+        ventasDiarias.length === 0 &&
+        productosMasVendidos.length === 0 &&
+        ventasPorUsuario.length === 0
+      ) {
+        toast.warning(
+          'No se encontraron ventas para los filtros seleccionados',
+          {
+            description:
+              'Prueba con otro rango de fechas o cambia los filtros.'
+          }
+        );
+      }
 
       // Gráfico 1 - Ventas por Día (Line)
       salesByDay = {
@@ -98,16 +119,20 @@ console.log('TOTAL REGISTROS:', ventasDiarias.length);
 
       // Gráfico 2 - Margen de Ganancias (Bar vertical)
       profitMargin = {
-        labels: productosMasVendidos.map(
+        labels: margenGanancia.productos.map(
           p => p.nombre_producto
         ),
 
         datasets: [
           {
             label: 'Margen de Ganancias (%)',
-            data: productosMasVendidos.map(
-              p => (p.margen_ganancia || 30)
+
+            data: margenGanancia.productos.map(
+              p => Number(
+                p.margen_porcentaje.toFixed(2)
+              )
             ),
+
             backgroundColor: [
               '#0c4a6e',
               '#1565a0',
@@ -115,6 +140,7 @@ console.log('TOTAL REGISTROS:', ventasDiarias.length);
               '#2d8ad0',
               '#3d9ae8'
             ],
+
             borderRadius: 8,
             borderSkipped: false
           }
@@ -169,15 +195,19 @@ console.log('TOTAL REGISTROS:', ventasDiarias.length);
         ]
       };
     }
-    catch (err) {
-      console.error(
-        'Error cargando reportes:',
-        err
-      );
+  catch (err) {
+    console.error(
+      'Error cargando reportes:',
+      err
+    );
 
-      error =
-        'Error al cargar los datos de reportes';
-    }
+    toast.error(
+      'Error al cargar los reportes'
+    );
+
+    error =
+      'Error al cargar los datos de reportes';
+  }
     finally {
       loading = false;
     }
@@ -214,6 +244,13 @@ console.log('TOTAL REGISTROS:', ventasDiarias.length);
       filtros.fechaFin
     );
   }
+
+  toast.warning(
+  'No se encontraron ventas para los filtros seleccionados',
+  {
+    id: 'sin-resultados-reportes'
+  }
+);
 </script>
 
 {#if loading}
@@ -243,6 +280,7 @@ console.log('TOTAL REGISTROS:', ventasDiarias.length);
       title="Reporte de Margen de Ganancias"
       type="bar"
       data={profitMargin}
+      reportData={margenData}
     />
 
     <ReportsChartCard

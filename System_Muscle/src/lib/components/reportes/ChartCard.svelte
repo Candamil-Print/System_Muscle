@@ -4,9 +4,14 @@
 	import Chart from 'chart.js/auto';
 	import type { ChartData, ChartType } from 'chart.js';
 
+	import jsPDF from 'jspdf';
+	import autoTable from 'jspdf-autotable';
+
 	export let title = '';
 	export let type: ChartType = 'bar';
 	export let data: ChartData;
+
+	export let reportData: any[] = [];
 
 	// NUEVA PROP PARA GRÁFICOS HORIZONTALES
 	export let horizontal = false;
@@ -14,7 +19,6 @@
 	let canvas: HTMLCanvasElement;
 	let chart: Chart | null = null;
 
-	
 
 	onMount(() => {
 		if (!canvas) return;
@@ -148,21 +152,169 @@
 		link.click();
 		document.body.removeChild(link);
 	}
+
+
+function descargarReporteMargen() {
+	if (!canvas) return;
+
+	const doc = new jsPDF();
+
+	// =====================
+	// TÍTULO
+	// =====================
+
+	doc.setFontSize(18);
+	doc.setFont('helvetica', 'bold');
+
+	doc.text(
+		'Reporte de Margen de Ganancias',
+		14,
+		20
+	);
+
+	doc.setFontSize(10);
+	doc.setFont('helvetica', 'normal');
+
+	doc.text(
+		`Generado: ${new Date().toLocaleString('es-ES')}`,
+		14,
+		28
+	);
+
+	// =====================
+	// GRÁFICO
+	// =====================
+
+	const image = canvas.toDataURL('image/png');
+
+	doc.addImage(
+		image,
+		'PNG',
+		15,
+		35,
+		180,
+		80
+	);
+
+	// =====================
+	// TABLA
+	// =====================
+
+	autoTable(doc, {
+		startY: 125,
+
+		head: [[
+			'Producto',
+			'Cantidad',
+			'Ventas',
+			'Costo',
+			'Ganancia',
+			'Margen %'
+		]],
+
+		body: reportData.map((p) => [
+			p.nombre_producto,
+			p.cantidad_vendida,
+			`$${Number(
+				p.total_ventas
+			).toLocaleString('es-CO')}`,
+			`$${Number(
+				p.total_costo
+			).toLocaleString('es-CO')}`,
+			`$${Number(
+				p.ganancia_neta
+			).toLocaleString('es-CO')}`,
+			`${Number(
+				p.margen_porcentaje
+			).toFixed(2)}%`
+		])
+	});
+
+	// =====================
+	// RESUMEN
+	// =====================
+
+	const finalY =
+		(doc as any).lastAutoTable?.finalY || 140;
+
+	const totalVentas = reportData.reduce(
+		(sum, p) => sum + Number(p.total_ventas || 0),
+		0
+	);
+
+	const totalCosto = reportData.reduce(
+		(sum, p) => sum + Number(p.total_costo || 0),
+		0
+	);
+
+	const totalGanancia = reportData.reduce(
+		(sum, p) => sum + Number(p.ganancia_neta || 0),
+		0
+	);
+
+	const margenGeneral =
+		totalVentas > 0
+			? (totalGanancia / totalVentas) * 100
+			: 0;
+
+	doc.setFontSize(12);
+	doc.setFont('helvetica', 'bold');
+
+	doc.text(
+		`Productos analizados: ${reportData.length}`,
+		14,
+		finalY + 15
+	);
+
+	doc.text(
+		`Ventas Totales: $${totalVentas.toLocaleString('es-CO')}`,
+		14,
+		finalY + 25
+	);
+
+	doc.text(
+		`Costo Total: $${totalCosto.toLocaleString('es-CO')}`,
+		14,
+		finalY + 35
+	);
+
+	doc.text(
+		`Ganancia Neta: $${totalGanancia.toLocaleString('es-CO')}`,
+		14,
+		finalY + 45
+	);
+
+	doc.text(
+		`Margen General: ${margenGeneral.toFixed(2)}%`,
+		14,
+		finalY + 55
+	);
+
+	doc.save(
+		`reporte-margen-${new Date()
+			.toISOString()
+			.split('T')[0]}.pdf`
+	);
+}
 </script>
 
-<div class="rounded-2xl border border-slate-200 bg-white p-5">
+<div class="rounded-2xl border border-slate-200 bg-white p-5 dark:bg-[#1E293B] dark:border-[#334156]">
 	<div class="mb-5 flex items-center justify-between">
-		<h3 class="text-lg font-semibold text-slate-800">
+		<h3 class="text-lg font-semibold text-slate-800 dark:text-[#6C7280]">
 			{title}
 		</h3>
 
-		<button
-			on:click={descargarGrafico}
-			class="h-10 w-10 rounded-lg border border-slate-200 flex items-center justify-center hover:bg-slate-50 transition-colors"
-			title="Descargar gráfico"
-		>
-			<Download class="w-5 h-5 text-slate-700" />
-		</button>
+	<button
+	on:click={() =>
+		title === 'Reporte de Margen de Ganancias'
+		? descargarReporteMargen()
+		: descargarGrafico()
+	}
+	class="h-10 w-10 rounded-lg border border-slate-200 flex items-center justify-center hover:bg-slate-50 transition-colors dark:border-[#334156]"
+	title="Descargar gráfico"
+	>
+	<Download class="w-5 h-5 text-slate-700 dark:text-[#39BDF8]" />
+	</button>
 	</div>
 
 	<div class={horizontal ? 'h-[380px]' : 'h-[300px]'}>

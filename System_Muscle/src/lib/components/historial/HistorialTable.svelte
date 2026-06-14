@@ -55,14 +55,18 @@
 
         historial = historialOriginal.filter((item) => {
             const matchSearch =
-                !textoBusqueda ||
-                item.accion?.toLowerCase().includes(textoBusqueda) ||
-                item.descripcion?.toLowerCase().includes(textoBusqueda) ||
-                item.usuario?.toLowerCase().includes(textoBusqueda);
+            !textoBusqueda ||
+            item.accion?.toLowerCase().includes(textoBusqueda);
 
-            const matchTurno =
-                !filtros.turno ||
-                item.turno === filtros.turno;
+            const matchTurno = coincideTurno(
+                item.turno,
+                filtros.turno
+            );
+
+            console.log({
+                fechaFiltro: filtros.fecha,
+                fechaItem: item.fecha
+            });
 
             const matchFecha =
                 !filtros.fecha ||
@@ -76,6 +80,64 @@
         });
 
         currentPage = 1;
+    }
+
+    function formatearFecha(fecha: string): string {
+    const [year, month, day] = fecha.split('-');
+
+    const meses = [
+        'enero',
+        'febrero',
+        'marzo',
+        'abril',
+        'mayo',
+        'junio',
+        'julio',
+        'agosto',
+        'septiembre',
+        'octubre',
+        'noviembre',
+        'diciembre'
+    ];
+
+    return `${day} de ${meses[Number(month) - 1]} de ${year}`;
+}
+
+    function formatearHora(hora: string): string {
+        const [hours, minutes, seconds] = hora.split(':').map(Number);
+
+        const date = new Date();
+        date.setHours(hours, minutes, seconds || 0);
+
+        return date.toLocaleTimeString('es-CO', {
+            hour: 'numeric',
+            minute: '2-digit',
+            hour12: true
+        });
+    }
+
+    function coincideTurno(
+        turnoHistorial: string,
+        filtroTurno: string
+    ): boolean {
+        if (!filtroTurno) return true;
+
+        switch (filtroTurno) {
+            case 'MAÑANA':
+                return turnoHistorial.includes('Mañana');
+
+            case 'TARDE_LJ':
+                return turnoHistorial.includes('Lunes - Jueves');
+
+            case 'TARDE_V':
+                return turnoHistorial.includes('Viernes');
+
+            case 'UNICO_SF':
+                return turnoHistorial.includes('Sábado');
+
+            default:
+                return false;
+        }
     }
 
     function badgeClass(accion: string) {
@@ -121,17 +183,17 @@
 
 {:else}
 
-    <div class="bg-white border border-slate-200 rounded-2xl overflow-hidden">
+    <div class="bg-white border border-slate-200 rounded-2xl overflow-hidden dark:bg-[#1E293B] dark:border-[#334156]">
 
-        <div class="flex items-start justify-between px-6 py-4 border-b border-slate-200">
+        <div class="flex items-start justify-between px-6 py-4 border-b border-slate-200 dark:border-[#334156]">
 
             <div class="flex flex-col items-start gap-0">
 
                 <div class="flex items-center gap-2">
 
-                    <ClipboardClock class="w-5 h-5 text-slate-700" />
+                    <ClipboardClock class="w-5 h-5 text-slate-700 dark:text-[#39BDF8]" />
 
-                    <h3 class="text-lg font-semibold text-slate-800">
+                    <h3 class="text-lg font-semibold text-slate-800 dark:text-white">
                         Registro de Actividad
                     </h3>
 
@@ -155,13 +217,13 @@
 
         {:else}
 
-            <div class="overflow-x-auto px-6 py-6">
+            <div class="overflow-x-auto px-6 py-6 ">
 
-                <div class="border border-slate-200 rounded-xl overflow-hidden">
+                <div class="border border-slate-200 rounded-xl overflow-hidden dark:border-[#334156]">
 
                     <table class="w-full">
 
-                        <thead class="bg-[#26557c]">
+                        <thead class="bg-[#26557c] dark:bg-[#334156]">
 
                             <tr class="text-left">
 
@@ -189,42 +251,45 @@
 
                         </thead>
 
-                        <tbody class="divide-y divide-slate-200">
+                        <tbody class="divide-y divide-slate-200 ">
 
                             {#each paginatedHistorial as item}
 
-                                <tr class="hover:bg-slate-50">
+                                <tr class="hover:bg-slate-50 dark:border-[#334156] dark:hover:bg-[#0F172A]">
 
                                     <td class="px-6 py-4">
 
                                         <span
-                                            class={`inline-flex rounded-full px-3 py-1 text-xs bg-[#1c5476]/10 text-[#1c5476] font-medium ${badgeClass(item.accion)}`}
+                                            class={`inline-flex rounded-full px-3 py-1 text-xs bg-[#1c5476]/10 text-[#1c5476] dark:bg-[#0C4A6E]/20 dark:text-[#39BDF8]  font-medium ${badgeClass(item.accion)}`}
                                         >
                                             {item.accion}
                                         </span>
 
                                     </td>
 
-                                    <td class="px-6 py-4 text-sm text-slate-900">
+                                    <td class="px-6 py-4 text-sm text-slate-900 dark:text-white">
                                         {item.descripcion}
                                     </td>
 
-                                    <td class="px-6 py-4 text-sm text-slate-900">
+                                    <td class="px-6 py-4 text-sm text-slate-900 dark:text-white">
                                         {item.usuario}
                                     </td>
 
                                     <td class="px-6 py-4">
 
                                         <span
-                                            class={`inline-flex rounded-full px-3 py-1 text-xs font-medium bg-[#1c5476]/10 text-[#1c5476] ${turnoClass(item.turno)}`}
+                                            class={`inline-flex rounded-full px-3 py-1 text-xs font-medium bg-[#1c5476]/10 text-[#1c5476] dark:bg-[#0C4A6E]/20 dark:text-[#39BDF8] dark:border-transparent ${turnoClass(item.turno)}`}
                                         >
                                             {item.turno}
                                         </span>
 
                                     </td>
 
-                                    <td class="px-6 py-4 text-sm text-slate-500">
-                                        {item.fecha} {item.hora}
+                                    <td class="px-6 py-4 text-sm text-slate-500 dark:text-white">
+                                        <div>{formatearFecha(item.fecha)}</div>
+                                        <div class="text-xs text-slate-400 dark:text-slate-300">
+                                            {formatearHora(item.hora)}
+                                        </div>
                                     </td>
 
                                 </tr>

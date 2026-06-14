@@ -89,7 +89,7 @@
 
 			await marcarTodasLeidas();
 
-			notificaciones = await listarNotificaciones(false);
+			notificaciones = await listarNotificaciones(true);
 
 			totalNotificaciones = 0;
 
@@ -102,15 +102,17 @@
 
 		}
 	}
+	
 
 	async function limpiarTodas() {
 		try {
 
 			await limpiarNotificaciones();
 
-			notificaciones = [];
+			notificaciones = await listarNotificaciones(true);
 
-			totalNotificaciones = 0;
+			totalNotificaciones =
+				await contarNotificacionesNoLeidas();
 
 		} catch (error) {
 
@@ -120,6 +122,55 @@
 			);
 
 		}
+	}
+
+	function nombreTurnoLegible(nombre: string | undefined): string {
+		switch (nombre?.toUpperCase()) {
+			case 'TARDE_LJ':
+				return 'Turno: Tarde Lunes - Jueves';
+
+			case 'MAÑANA':
+				return 'Turno: Mañana';
+
+			case 'TARDE_V':
+				return 'Turno: Tarde Viernes';
+
+			case 'UNICO_SF':
+				return 'Turno: Único Sábado - Domingo - Festivo';
+
+			default:
+				return 'Sin turno';
+		}
+	}
+
+	function formatearHora12h(hora: string): string {
+		const [h, m] = hora.split(':');
+
+		const fecha = new Date();
+		fecha.setHours(Number(h));
+		fecha.setMinutes(Number(m));
+
+		return fecha.toLocaleTimeString('es-CO', {
+			hour: 'numeric',
+			minute: '2-digit',
+			hour12: true
+		});
+	}
+
+	function formatearHorario(horario: string | undefined): string {
+		if (!horario || horario.trim() === '') {
+			return 'No hay un turno configurado para esta franja horaria';
+		}
+
+		const partes = horario.split(' - ');
+
+		if (partes.length !== 2) {
+			return 'No hay un turno configurado para esta franja horaria';
+		}
+
+		const [inicio, fin] = partes;
+
+		return `${formatearHora12h(inicio)} - ${formatearHora12h(fin)}`;
 	}
 
 	const toggleTheme = () => {
@@ -151,47 +202,45 @@
 				class="flex items-center gap-2 rounded-full border border-zinc-200 px-4 py-2 text-sm dark:border-zinc-700 dark:text-zinc-200"
 			>
 				<Clock size={18} />
-				<span>{turnoActual?.nombre || 'Seleccionar turno'}</span>
+				<span>{nombreTurnoLegible(turnoActual?.nombre)}</span>
 				<ChevronDown size={16} />
 			</button>
 
-			{#if openTurnos}
-				<div
-					class="absolute right-0 mt-2 w-80 overflow-hidden rounded-xl border border-zinc-200 bg-white shadow-lg dark:border-zinc-700 dark:bg-slate-900"
-				>
-					<div class="border-b border-zinc-200 px-4 py-3 dark:border-zinc-700">
-						<p class="font-medium dark:text-white">
-							Seleccionar turno
-						</p>
-					</div>
+{#if openTurnos}
+	<div
+		class="absolute right-0 mt-2 w-80 overflow-hidden rounded-xl border border-zinc-200 bg-white shadow-lg dark:border-zinc-700 dark:bg-slate-900"
+	>
+		<div class="border-b border-zinc-200 px-4 py-3 dark:border-zinc-700">
+			<p class="font-medium dark:text-white">
+				Información del turno
+			</p>
+		</div>
 
-					{#each tiposTurno as turno}
-							<button
-								on:click={() =>
-									seleccionarTurno(
-										turno.id_tipo_turno,
-										turno.nombre,
-										`${turno.hora_inicio} - ${turno.hora_fin}`
-									)}
-								class="flex w-full flex-col items-start px-4 py-3 text-left transition hover:bg-zinc-50 dark:hover:bg-slate-800"
-							>
-								<span class="font-medium dark:text-white">
-									{turno.nombre}
-								</span>
+		<div class="space-y-3 p-4">
 
-								<span class="text-xs text-zinc-500">
-									{turno.hora_inicio} - {turno.hora_fin}
-								</span>
+			<div>
+				<p class="text-xs text-zinc-500">
+					Turno actual
+				</p>
 
-								{#if turno.dias_aplicacion}
-									<span class="mt-1 text-[10px] text-zinc-400">
-										{turno.dias_aplicacion}
-									</span>
-								{/if}
-							</button>
-					{/each}
-				</div>
-			{/if}
+				<p class="font-semibold dark:text-white">
+					{nombreTurnoLegible(turnoActual?.nombre)}
+				</p>
+			</div>
+
+			<div>
+				<p class="text-xs text-zinc-500">
+					Horario
+				</p>
+
+				<p class="dark:text-zinc-200">
+					{formatearHorario(turnoActual?.horario)}
+				</p>
+			</div>
+
+		</div>
+	</div>
+{/if}
 		</div>
 
 		<div class="relative">
@@ -237,7 +286,7 @@
 
 							<button
 								on:click={marcarComoLeidas}
-								class="flex items-center gap-1 rounded-lg border border-zinc-200 px-2 py-1 text-xs transition hover:bg-zinc-100 dark:border-zinc-700 dark:hover:bg-slate-800"
+								class="flex items-center gap-1 rounded-lg border border-zinc-200 px-2 py-1 text-xs transition hover:bg-zinc-100 dark:border-zinc-700 dark:hover:bg-slate-800 dark:text-white"
 							>
 								<CheckCheck size={14} />
 								<span>Leídas</span>
@@ -374,9 +423,9 @@
 			class="flex h-10 w-10 items-center justify-center rounded-full border border-zinc-200 transition hover:bg-zinc-100 dark:border-zinc-700 dark:text-zinc-200 dark:hover:bg-slate-800"
 		>
 			{#if currentTheme === 'dark'}
-				<Sun size={18} />
+				<Sun size={18} class="dark:text-[#39BDF8]" />
 			{:else}
-				<Moon size={18} />
+				<Moon size={18}  />
 			{/if}
 		</button>
 	</div>

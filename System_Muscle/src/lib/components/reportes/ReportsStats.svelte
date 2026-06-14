@@ -107,26 +107,26 @@
 	{#each stats as stat}
 
 		<div
-			class="flex items-center gap-4 rounded-2xl border border-slate-200 bg-white p-4 transition-all duration-300 hover:shadow-md"
+			class="flex items-center gap-4 rounded-2xl border border-slate-200 bg-white p-4 transition-all duration-300 hover:shadow-md dark:bg-[#1E293B] dark:border-[#334156] "
 		>
 
 			<div
-				class="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-slate-100"
+				class="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-slate-100 dark:bg-[#0C4A6E]/20"
 			>
 				<svelte:component
 					this={icons[stat.icon]}
-					class="h-5 w-5 text-[#0C4A6E]"
+					class="h-5 w-5 text-[#0C4A6E] dark:text-[#0C4A6E]"
 				/>
 			</div>
 
 			<div class="min-w-0">
 				<p
-					class="text-[11px] font-semibold uppercase tracking-wide text-slate-500"
+					class="text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-[#6C7280]"
 				>
 					{stat.title}
 				</p>
 
-				<h3 class="mt-1 text-2xl font-bold text-slate-800">
+				<h3 class="mt-1 text-2xl font-bold text-slate-800 dark:text-[#6C7280]">
 					{stat.value}
 				</h3>
 			</div>

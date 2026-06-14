@@ -23,8 +23,8 @@
 		disabled={disabled}
 		class={`relative flex h-6 w-11 items-center rounded-full transition-colors duration-200 ${
 			activo
-				? 'bg-[#85A4B6]'
-				: 'bg-slate-300'
+				? 'bg-[#85A4B6] dark:bg-[#0C4A6E]'
+				: 'bg-slate-300 dark:bg-[#334156]'
 		} ${
 			disabled
 				? 'cursor-not-allowed opacity-60'

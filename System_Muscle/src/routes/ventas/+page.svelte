@@ -29,14 +29,14 @@
 
   let productos: ProductoVenta[] = [];
 
-  $: categorias = [
+$: categorias = [
   'Todos',
   ...new Set(
-    productos.map((p) => p.categoria)
+    productos.map((p) => p.categoria?.trim())
   )
 ];
 
-  $: productosFiltrados = productos.filter((producto) => {
+$: productosFiltrados = productos.filter((producto) => {
   const coincideBusqueda =
     producto.nombre
       .toLowerCase()
@@ -46,8 +46,13 @@
     categoria === 'Todos' ||
     producto.categoria === categoria;
 
-  return coincideBusqueda && coincideCategoria;
+  return (
+    coincideBusqueda &&
+    coincideCategoria &&
+    producto.stock_actual > 0
+  );
 });
+
 
   // LOADING
   let loading = false;
@@ -55,6 +60,19 @@
   let ventasHoy = 0;
 
   let totalVentas = 0;
+
+  async function cargarResumenVentas() {
+
+    const ventas = await listarVentas();
+
+    ventasHoy = ventas.length;
+
+    totalVentas = ventas.reduce(
+      (acc, venta) => acc + venta.total,
+      0
+    );
+
+  }
 
   // CARGAR PRODUCTOS
   onMount(async () => {
@@ -90,14 +108,7 @@
         imagen: product.imagen_url || ''
       }));
 
-      const ventas = await listarVentas();
-
-      ventasHoy = ventas.length;
-
-      totalVentas = ventas.reduce(
-        (acc, venta) => acc + venta.total,
-        0
-      );
+      await cargarResumenVentas();
 
     } catch (error) {
 
@@ -108,6 +119,13 @@
       loading = false;
 
     }
+
+    const interval = setInterval(
+      cargarResumenVentas,
+      5000
+    );
+
+    return () => clearInterval(interval);
 
   });
 </script>
@@ -192,5 +210,7 @@
   </div>
 
 </div>
+
+
 
 

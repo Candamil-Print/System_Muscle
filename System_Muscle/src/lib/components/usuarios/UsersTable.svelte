@@ -171,22 +171,22 @@ async function confirmarHabilitar() {
 }
 </script>
 
-<div class="bg-white border border-slate-200 rounded-2xl overflow-hidden">
+<div class="bg-white border border-slate-200 dark:bg-[#1E293B] dark:border-[#334156] rounded-2xl overflow-hidden">
 
 <!-- HEADER -->
 <div
-  class="border-b border-slate-200 px-6 py-4"
+  class="border-b border-slate-200 dark:border-[#334156] px-6 py-4"
 >
 
   <div class="flex items-center gap-3">
 
     <Users
       size={24}
-      class="text-slate-600"
+      class="text-slate-600 dark:text-[#39BDF8]"
     />
 
     <h3
-      class="text-xl font-bold text-slate-900"
+      class="text-xl font-bold text-slate-900 dark:text-white"
     >
       Lista de Usuarios
     </h3>
@@ -204,9 +204,9 @@ async function confirmarHabilitar() {
   <!-- TABLA -->
   <div class="overflow-x-auto px-6 py-6">
 
-    <div class="overflow-hidden rounded-xl border border-slate-200">
+    <div class="overflow-hidden rounded-xl border border-slate-200 dark:border-[#334156]">
 
-     <table class="w-full table-fixed">
+     <table class="w-full table-fixed ">
 
 <colgroup>
   <col class="w-[25%]" />
@@ -218,7 +218,7 @@ async function confirmarHabilitar() {
   <col class="w-[10%]" />
 </colgroup>
 
-  <thead class="bg-[#26557c]">
+  <thead class="bg-[#26557c] dark:bg-[#334156]">
 
           <tr>
 
@@ -259,7 +259,7 @@ async function confirmarHabilitar() {
 
           {#each paginatedUsers as user (user.id_usuario)}
 
-            <tr class="transition hover:bg-slate-50">
+            <tr class="transition hover:bg-slate-50 dark:hover:bg-[#0F172A] dark:border-[#334156]">
 
               <!-- USUARIO -->
               <td class="px-6 py-5 align-middle">
@@ -267,7 +267,7 @@ async function confirmarHabilitar() {
                 <div class="flex items-center gap-3">
 
                   <div
-                    class="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[#0C4A6E] to-[#0284C7] text-sm font-semibold text-white"
+                    class="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[#0C4A6E] to-[#0284C7] text-sm font-semibold text-white "
                     >
                     {user.nombre_completo
                       .split(' ')
@@ -279,7 +279,7 @@ async function confirmarHabilitar() {
                   <div class="min-w-0">
 
                     <p
-                        class="line-clamp-2 text-[15px] font-medium leading-6 text-slate-800"
+                        class="line-clamp-2 text-[15px] font-medium leading-6 text-slate-800 dark:text-white"
                         >
                         {user.nombre_completo}
                     </p>
@@ -294,11 +294,11 @@ async function confirmarHabilitar() {
 
                 <div class="flex flex-col">
 
-                  <span class="text-xs text-slate-500">
+                  <span class="text-xs text-slate-500 dark:text-white">
                     {user.tipo_documento}
                   </span>
 
-                  <span class="whitespace-nowrap font-medium text-slate-700">
+                  <span class="whitespace-nowrap font-medium text-slate-700 dark:text-white">
                         {user.numero_documento}
                     </span>
 
@@ -308,14 +308,14 @@ async function confirmarHabilitar() {
 
               <!-- EMAIL -->
             <td class="px-6 py-5 align-middle">
-            <span class="block truncate text-slate-600">
+            <span class="block truncate text-slate-600 dark:text-white">
                 {user.correo || '-'}
             </span>
             </td>
               <!-- TELEFONO -->
               <td class="px-6 py-5 align-middle">
 
-                <span class="text-slate-600">
+                <span class="text-slate-600 dark:text-white">
                   {user.telefono || '-'}
                 </span>
 
@@ -327,8 +327,8 @@ async function confirmarHabilitar() {
                 <span
                   class={`inline-flex rounded-full px-4 py-2 text-xs font-semibold ${
                     user.id_rol === 1
-                      ? 'bg-[#1c5476]/10 text-[#1c5476]'
-                      : 'bg-[#EFF0F3] text-[#ACAFB8]'
+                      ? 'bg-[#1c5476]/10 text-[#1c5476] dark:bg-[#0C4A6E]/20 dark:text-[#39BDF8]'
+                      : 'bg-[#EFF0F3] text-[#ACAFB8] dark:bg-[#0C4A6E]/20 dark:text-[#39BDF8]'
                   }`}
                 >
                   {user.id_rol === 1
@@ -359,17 +359,17 @@ async function confirmarHabilitar() {
                 <div class="flex items-center justify-center gap-3">
 
                   <button
-                    class="rounded-lg p-2 transition hover:bg-slate-100"
+                    class="rounded-lg p-2 transition hover:bg-slate-100 dark:hover:bg-[#162033]"
                     on:click={() => abrirVista(user)}
                   >
-                    <Eye size={18} />
+                    <Eye size={18} class="dark:text-white" />
                   </button>
 
                   <button
-                    class="rounded-lg p-2 transition hover:bg-slate-100"
+                    class="rounded-lg p-2 transition hover:bg-slate-100 dark:hover:bg-[#162033]"
                     on:click={() => abrirEdicion(user)}
                   >
-                    <Pencil size={18} />
+                    <Pencil size={18} class="dark:text-white"/>
                   </button>
 
                 </div>

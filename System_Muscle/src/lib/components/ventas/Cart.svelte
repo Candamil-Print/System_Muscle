@@ -8,7 +8,8 @@
     ShoppingCart,
     Wallet,
     Landmark,
-    AlertCircle
+    AlertCircle,
+    Trash2
   } from 'lucide-svelte';
 
   // STORE
@@ -56,14 +57,17 @@
     try {
       abriendo = true;
       errorCaja = '';
-      
-      // Abre una nueva caja
+
+      if (!turnoActual) {
+        throw new Error('No hay un turno activo');
+      }
+
       const resultado = await abrirCaja(turnoActual.id_turno);
+
       console.log('Caja abierta:', resultado);
-      
-      // Recarga la caja activa
+
       await cargarCajaActiva();
-      
+
     } catch (error) {
       console.error('Error al abrir caja:', error);
       errorCaja = `Error: ${(error as Error).message}`;
@@ -151,8 +155,28 @@
     }
   }
 
+  function actualizarCantidad(index: number, valor: string) {
+  const cantidad = parseInt(valor);
+
+  cart.update((items) => {
+    if (isNaN(cantidad) || cantidad <= 0) {
+      items.splice(index, 1);
+    } else {
+      items[index].cantidad = cantidad;
+    }
+
+    return [...items];
+  });
+}
+
+function limpiarCarrito() {
+  cart.set([]);
+}
+
   // Obtén el turno activo
-  const turnoGuardado = JSON.parse(localStorage.getItem('turnoSeleccionado'));
+  const turnoGuardado = JSON.parse(
+  localStorage.getItem('turnoSeleccionado') ?? '{}'
+  );
   console.log('Turno guardado:', turnoGuardado);
 
   // Copia esto en la consola del navegador
@@ -171,43 +195,131 @@
       <p class="mt-1 text-sm text-slate-500">{$cart.length} productos</p>
     </div>
 
-    <div class="space-y-3 p-5">
+    <div class="p-5">
+
       {#if $cart.length === 0}
-        <div class="flex items-center justify-center rounded-xl border border-dashed border-slate-300 dark:border-[#334156] py-10 text-sm text-slate-500 dark:text-slate-400">
-          No hay productos en el carrito
-        </div>
-      {:else}
-        {#each $cart as item, index}
-          <div class="rounded-xl bg-[#F3F4F6] dark:bg-[#334156] p-4">
-            <div class="flex items-center justify-between">
-              <div>
-                <h3 class="font-medium text-slate-800 dark:text-white">{item.nombre}</h3>
-                <p class="text-sm text-slate-500 dark:text-slate-400">$ {formatear(item.precio)}</p>
-              </div>
-              <div class="flex items-center gap-3">
-                <button
-                  on:click={() => disminuirCantidad(index)}
-                  class="flex h-8 w-8 items-center justify-center rounded-lg border border-[#E5E7EB] dark:border-[#475569] bg-white dark:bg-[#1E293B] hover:bg-slate-100 dark:hover:bg-[#0F172A] text-slate-800 dark:text-white"
-                >
-                  −
-                </button>
-                <span class="w-6 text-center font-semibold text-slate-800 dark:text-white">{item.cantidad}</span>
-                <button
-                  on:click={() => aumentarCantidad(index)}
-                  class="flex h-8 w-8 items-center justify-center rounded-lg border border-[#E5E7EB] dark:border-[#475569] bg-white dark:bg-[#1E293B] hover:bg-slate-100 dark:hover:bg-[#0F172A] text-slate-800 dark:text-white"
-                >
-                  +
-                </button>
-              </div>
-            </div>
+
+        <div
+          class="flex flex-col items-center justify-center rounded-xl border border-dashed border-slate-300 dark:border-[#334156] py-10 text-center"
+        >
+          <div
+            class="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-slate-100 dark:bg-[#0F172A]"
+          >
+            <ShoppingCart
+              size={30}
+              class="text-[#0C4A6E] dark:text-[#39BDF8]"
+            />
           </div>
-        {/each}
+
+          <h3
+            class="text-base font-semibold text-slate-700 dark:text-white"
+          >
+            No hay productos seleccionados
+          </h3>
+
+          <p
+            class="mt-2 max-w-xs text-sm text-slate-500 dark:text-slate-400"
+          >
+            Los productos agregados aparecerán aquí para procesar la venta.
+          </p>
+        </div>
+
+      {:else}
+
+        <div class="mb-4 flex items-center justify-between">
+
+          <p class="text-sm text-slate-500 dark:text-slate-400">
+            {$cart.length} productos agregados
+          </p>
+
+          <button
+            on:click={limpiarCarrito}
+            class="flex items-center gap-2 rounded-lg border border-[#0C4A6E] px-3 py-2 text-xs font-medium text-[#0C4A6E] transition hover:bg-red-50 dark:border-[#39BDF8] dark:text-[#39BDF8] dark:hover:bg-[#162033]"
+          >
+            <Trash2 size={14} />
+            Vaciar carrito
+          </button>
+
+        </div>
+
+        <div
+          class={`space-y-3 ${
+            $cart.length >= 4
+              ? 'max-h-95 overflow-y-auto pr-2'
+              : ''
+          }`}
+        >
+
+          {#each $cart as item, index}
+
+            <div class="rounded-xl bg-[#F3F4F6] dark:bg-[#334156] p-4">
+
+              <div class="flex items-center justify-between">
+
+                <div>
+
+                  <h3 class="font-medium text-slate-800 dark:text-white">
+                    {item.nombre}
+                  </h3>
+
+                  <p class="text-sm text-slate-500 dark:text-slate-400">
+                    $ {formatear(item.precio)}
+                  </p>
+
+                </div>
+
+                <div class="flex items-center gap-3">
+
+                  <button
+                    on:click={() => disminuirCantidad(index)}
+                    class="flex h-8 w-8 items-center justify-center rounded-lg border border-[#E5E7EB] dark:border-[#475569] bg-white dark:bg-[#1E293B] hover:bg-slate-100 dark:hover:bg-[#0F172A] text-slate-800 dark:text-white"
+                  >
+                    −
+                  </button>
+
+                  <input
+                    type="number"
+                    min="1"
+                    value={item.cantidad}
+                    on:input={(e) =>
+                      actualizarCantidad(
+                        index,
+                        (e.currentTarget as HTMLInputElement).value
+                      )
+                    }
+                    class="h-8 w-14 rounded-lg border border-[#E5E7EB] dark:border-[#475569]
+                    bg-white dark:bg-[#1E293B]
+                    text-center text-sm font-semibold
+                    text-slate-800 dark:text-white
+                    outline-none
+                    focus:border-[#0C4A6E]
+                    dark:focus:border-[#39BDF8]"
+                  />
+
+                  <button
+                    on:click={() => aumentarCantidad(index)}
+                    class="flex h-8 w-8 items-center justify-center rounded-lg border border-[#E5E7EB] dark:border-[#475569] bg-white dark:bg-[#1E293B] hover:bg-slate-100 dark:hover:bg-[#0F172A] text-slate-800 dark:text-white"
+                  >
+                    +
+                  </button>
+
+                </div>
+
+              </div>
+
+            </div>
+
+          {/each}
+
+        </div>
+
       {/if}
+
     </div>
 
     <div class="border-t border-slate-200 dark:border-[#334156] p-5">
       <div class="mb-5 flex items-center justify-between">
-        <span class="text-slate-600">Total</span>
+        <span class="text-slate-600 dark:text-white">Total</span>
         <span class="text-3xl font-bold text-[#0C4A6E] dark:text-[#39BDF8]">$ {formatear(total)}</span>
       </div>
 
@@ -218,19 +330,20 @@
             on:click={() => (metodoPago = 'efectivo')}
             class={`flex-1 flex items-center justify-center gap-2 rounded-lg px-4 py-3 text-sm font-medium transition ${
               metodoPago === 'efectivo'
-                ? 'bg-[#0C4A6E] dark:text-[#39BDF8] text-white'
-                : 'border border-slate-300 text-slate-700 hover:bg-slate-50'
+                ? 'bg-[#0C4A6E] text-white dark:text-[#39BDF8]'
+                : 'border border-slate-300 dark:border-[#475569] text-slate-700 dark:text-white bg-white dark:bg-[#1E293B] hover:bg-slate-50 dark:hover:bg-[#334156]'
             }`}
           >
             <Wallet size={18} />
             Efectivo
           </button>
+
           <button
             on:click={() => (metodoPago = 'transferencia')}
             class={`flex-1 flex items-center justify-center gap-2 rounded-lg px-4 py-3 text-sm font-medium transition ${
               metodoPago === 'transferencia'
-                ? 'bg-[#0C4A6E] dark:text-[#39BDF8] text-white'
-                : 'border border-slate-300 text-slate-700 hover:bg-slate-50'
+                ? 'bg-[#0C4A6E] text-white dark:text-[#39BDF8]'
+                : 'border border-slate-300 dark:border-[#475569] text-slate-700 dark:text-white bg-white dark:bg-[#1E293B] hover:bg-slate-50 dark:hover:bg-[#334156]'
             }`}
           >
             <Landmark size={18} />
@@ -252,7 +365,7 @@
           confirmOpen = true;
         }}
         disabled={!cajaActiva || !turnoActual || $cart.length === 0 || procesando}
-        class="w-full rounded-lg bg-[#0C4A6E] py-3.5 text-sm font-medium text-white transition hover:bg-[#0a3a52] disabled:opacity-50 disabled:cursor-not-allowed"
+        class="w-full rounded-lg bg-[#0C4A6E] py-3.5 text-sm font-medium text-white transition hover:bg-[#0a3a52] disabled:opacity-50 disabled:cursor-not-allowed dark:text-[#39BDF8] "
       >
         {procesando ? 'Procesando...' : 'Procesar Venta'}
       </button>

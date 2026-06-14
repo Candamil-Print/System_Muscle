@@ -32,7 +32,7 @@
 	}
 </script>
 
-<div class="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4 dark:border-[#334156] dark:bg-[#1E293B]">
+<div class="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4 ">
 	<div class="rounded-xl border border-slate-200 bg-white p-5 dark:border-[#334156] dark:bg-[#1E293B]">
 		<div class="flex items-center justify-between ">
 			<p class="text-sm font-medium text-slate-500">

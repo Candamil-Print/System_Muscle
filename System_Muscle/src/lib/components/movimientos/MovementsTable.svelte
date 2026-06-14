@@ -10,6 +10,9 @@
 
   export let movements: MovementDetail[] = [];
 
+  console.log('Movimientos:', movements);
+  console.log('Cantidad:', movements.length);
+
   // PAGINACIÓN
   let currentPage = 1;
 
@@ -134,7 +137,10 @@
 
     </div>
 
+
   </div>
+
+  
 
   <!-- PAGINACIÓN -->
   <div class="px-6 pb-6 dark:bg-[#1E293B]">

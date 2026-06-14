@@ -1,5 +1,6 @@
 <script lang="ts">
   import { onMount } from 'svelte';
+  import { toast } from 'svelte-sonner';
   import CreditCard from 'lucide-svelte/icons/credit-card';
   import Banknote from 'lucide-svelte/icons/banknote';
   import ShoppingCart from 'lucide-svelte/icons/shopping-cart';
@@ -15,6 +16,10 @@
     obtenerVentasPorUsuario,
     obtenerVentasPorMetodoPago
   } from '$lib/services/api/reports/reports.service';
+
+  import {
+    listarVentas
+  } from '$lib/services/api/sale/sale.service';
 
   export let filtros = {
     fechaInicio: '',
@@ -62,6 +67,8 @@
       icon: null
     };
   }
+
+  
 
 function descargarPDF() {
   if (sales.length === 0) {
@@ -340,34 +347,52 @@ function descargarPDF() {
             : 'Transferencia';
       }
 
-      sales = productos.map((producto, index) => ({
-        producto: producto.nombre_producto,
+sales = productos.map((producto, index) => ({
+  producto: producto.nombre_producto,
 
-        precio: producto.total_ventas,
+  precio: producto.total_ventas,
 
-        metodo: metodoSeleccionado,
+  metodo: metodoSeleccionado,
 
-        vendedor:
-          usuariosFiltrados[index]?.nombre_usuario ||
-          usuariosFiltrados[0]?.nombre_usuario ||
-          'N/A',
+  vendedor:
+    usuariosFiltrados[index]?.nombre_usuario ||
+    usuariosFiltrados[0]?.nombre_usuario ||
+    'N/A',
 
-        fecha: new Date().toLocaleDateString('es-ES', {
-          year: 'numeric',
-          month: '2-digit',
-          day: '2-digit',
-          hour: '2-digit',
-          minute: '2-digit',
-          second: '2-digit'
-        })
-      }));
+  fecha: new Date().toLocaleDateString('es-ES', {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit'
+  })
+}));
+
+if (sales.length === 0) {
+  toast.warning(
+    'No se encontraron resultados',
+    {
+      description:
+        'No existen ventas para los filtros seleccionados.',
+      id: 'sin-resultados-tabla'
+    }
+  );
+}
+
+loading = false;
 
       loading = false;
     } catch (err) {
-      console.error('Error cargando ventas:', err);
-      error = 'Error al cargar el historial de ventas';
-      loading = false;
-    }
+  console.error('Error cargando ventas:', err);
+
+  toast.error(
+    'Error al cargar el historial de ventas'
+  );
+
+  error = 'Error al cargar el historial de ventas';
+  loading = false;
+}
   }
 
   onMount(() => {
@@ -396,23 +421,23 @@ function descargarPDF() {
   }
 </script>
 
-<div class="bg-white border border-slate-200 rounded-2xl overflow-hidden">
+<div class="bg-white border border-slate-200 rounded-2xl overflow-hidden dark:bg-[#1E293B] dark:border-[#334156]">
 
-  <div class="flex items-center justify-between px-6 py-4 border-b border-slate-200">
+  <div class="flex items-start justify-between px-6 py-4 border-b border-slate-200 dark:border-[#334156]">
 
     <div class="flex flex-col items-start gap-0">
 
       <div class="flex items-center gap-2">
 
-        <ShoppingCart class="w-5 h-5 text-slate-700" />
+        <ShoppingCart class="w-5 h-5 text-slate-700 dark:text-[#39BDF8]" />
         
-        <h3 class="text-lg font-semibold text-slate-800">
+        <h3 class="text-lg font-semibold text-slate-800 dark:text-white">
           Historial de Ventas
         </h3>
 
       </div>
 
-      <p class="text-sm text-slate-500">
+     <p class="text-sm text-slate-500 dark:text-slate-400">
         {sales.length} ventas encontradas
       </p>
 
@@ -421,10 +446,10 @@ function descargarPDF() {
     <button
       on:click={descargarPDF}
       disabled={loading || sales.length === 0}
-      class="h-11 w-11 rounded-xl border border-slate-200 flex items-center justify-center hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+      class="h-11 w-11 rounded-xl border  border-slate-200 flex items-center justify-center hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors dark:border-[#334156] dark:hover:bg-[#0F172A]"
       title="Descargar reporte"
     >
-      <Download class="w-5 h-5 text-slate-700" />
+      <Download class="w-5 h-5 text-slate-700 dark:text-[#39BDF8] " />
     </button>
 
   </div>
@@ -440,33 +465,33 @@ function descargarPDF() {
       </div>
     </div>
   {:else}
-    <div class="overflow-x-auto px-6 py-6">
+   <div class="overflow-x-auto px-6 py-6 dark:bg-[#1E293B]">
 
-      <div class="border border-slate-200 rounded-xl overflow-hidden">
+      <div class="border border-slate-200 rounded-xl overflow-hidden dark:border-[#475569]">
 
-        <table class="w-full">
+        <table class="w-full dark:border-b-[#475569]">
 
-          <thead class="bg-[#26557c]">
+          <thead class="bg-[#26557c] dark:bg-[#334156] border-b-2 border-slate-300 dark:border-b-[#475569]">
 
-            <tr class="text-left">
+            <tr class="text-left ">
 
-              <th class="px-6 py-4 text-sm font-medium text-[#ffffff]">
+             <th class="px-6 py-4 text-sm font-medium text-[#dee6eb]">
                 Producto
               </th>
 
-              <th class="px-6 py-4 text-sm font-medium text-[#ffffff]">
+             <th class="px-6 py-4 text-sm font-medium text-[#dee6eb]">
                 Precio
               </th>
 
-              <th class="px-6 py-4 text-sm font-medium text-[#ffffff]">
+             <th class="px-6 py-4 text-sm font-medium text-[#dee6eb]">
                 Método
               </th>
 
-              <th class="px-6 py-4 text-sm font-medium text-[#ffffff]">
+             <th class="px-6 py-4 text-sm font-medium text-[#dee6eb]">
                 Vendedor
               </th>
 
-              <th class="px-6 py-4 text-sm font-medium text-[#ffffff]">
+             <th class="px-6 py-4 text-sm font-medium text-[#dee6eb]">
                 Fecha y Hora
               </th>
 
@@ -474,28 +499,28 @@ function descargarPDF() {
 
           </thead>
 
-          <tbody class="divide-y divide-slate-200">
+          <tbody class="divide-y divide-slate-200 dark:divide-[#334156]">
 
             {#if paginatedSales.length > 0}
 
               {#each paginatedSales as sale (sale.producto + sale.vendedor)}
                 {@const metodoEstilo = getMetodoEstilo(sale.metodo)}
 
-                <tr class="bg-white hover:bg-slate-50 transition-colors">
+                <tr class="border-t border-slate-100 dark:border-[#334156] transition hover:bg-slate-50 dark:hover:bg-[#0F172A]">
 
                   <td class="px-6 py-5">
-                    <span class="font-medium text-slate-700">
+                    <span class="text-sm text-slate-600 dark:text-[#E2E8F0]">
                       {sale.producto}
                     </span>
                   </td>
 
                   <td class="px-6 py-5">
-                    <span class="text-slate-700">
+                    <span class="text-sm text-slate-600 dark:text-[#E2E8F0]">
                       ${sale.precio.toLocaleString('es-ES')}
                     </span>
                   </td>
 
-                  <td class="px-6 py-5">
+                  <td class="px-6 py-5 ">
                     <div class="inline-flex items-center gap-2  rounded-full  bg-[#1c5476]/10 dark:bg-[#0C4A6E]/20 px-3 py-1 text-xs font-medium text-[#1c5476] dark:text-[#39BDF8] ">
                       {#if metodoEstilo.icon}
                         <svelte:component this={metodoEstilo.icon} class="w-4 h-4 {metodoEstilo.text}" />
@@ -507,13 +532,13 @@ function descargarPDF() {
                   </td>
 
                   <td class="px-6 py-5">
-                    <span class="text-slate-700">
+                    <span class="text-sm text-slate-600 dark:text-[#E2E8F0]">
                       {sale.vendedor}
                     </span>
                   </td>
 
                   <td class="px-6 py-5">
-                    <span class="text-slate-500 text-sm">
+                    <span class="text-sm text-slate-600 dark:text-[#E2E8F0]">
                       {sale.fecha}
                     </span>
                   </td>
@@ -530,13 +555,13 @@ function descargarPDF() {
 
                   <div class="flex flex-col items-center justify-center">
 
-                    <Search class="mb-3 h-10 w-10 text-slate-300" />
+                   <Search class="mb-3 h-10 w-10 text-slate-300 dark:text-slate-600" />
 
-                    <h3 class="text-base font-semibold text-slate-700">
+                    <h3 class="text-base font-semibold text-slate-700 dark:text-slate-300">
                       No se encontraron resultados
                     </h3>
 
-                    <p class="mt-1 text-sm text-slate-500">
+                    <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">
                       Intenta con otras fechas
                     </p>
 
@@ -557,7 +582,7 @@ function descargarPDF() {
     </div>
 
     <!-- PAGINACIÓN -->
-    <div class="px-6 pb-6">
+    <div class="px-6 pb-6 dark:bg-[#1E293B]">
 
       <Pagination
         {currentPage}
