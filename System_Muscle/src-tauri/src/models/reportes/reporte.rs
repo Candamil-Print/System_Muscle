@@ -161,3 +161,13 @@ pub struct VentaDetallePorTurno {
     pub id_caja: i32,
     pub caja_inicial: f64,
 }
+
+/// Reporte consolidado de ventas para un rango de fechas.
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct ReporteConsolidadoVentas {
+    pub fecha_inicio: String,
+    pub fecha_fin: String,
+    pub productos_mas_vendidos: Vec<ProductoMasVendido>,
+    pub metodos_pago: Vec<VentasPorMetodoPago>,
+    pub ventas_por_vendedor: Vec<VentasPorUsuario>,
+}

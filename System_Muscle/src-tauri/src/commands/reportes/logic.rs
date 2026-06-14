@@ -2,7 +2,7 @@ use rusqlite::Connection;
 use crate::models::reportes::reporte::{
     DashboardResumen, DetalleMargenProducto, ProductoMasVendido, ReporteCaja, ReporteEntradasProducto,
     ReporteInventario, ReporteMargenGanancia, ReporteStockBajo, ResumenVentasDiario, ResumenVentasRango,
-    VentasPorMetodoPago, VentasPorUsuario, VentasPorTurno, VentaDetallePorTurno,
+    VentasPorMetodoPago, VentasPorUsuario, VentasPorTurno, VentaDetallePorTurno, ReporteConsolidadoVentas,
 };
 
 fn validar_rango_fechas(fecha_inicio: &str, fecha_fin: &str) -> Result<(), String> {
@@ -661,4 +661,26 @@ pub fn ventas_del_turno_actual_logic(conn: &Connection) -> Result<Vec<VentasPorT
     } else {
         Ok(Vec::new())
     }
+}
+
+/// Obtener reporte consolidado de ventas: productos más vendidos, métodos de pago y vendedor
+pub fn reporte_consolidado_ventas_logic(
+    conn: &Connection,
+    fecha_inicio: &str,
+    fecha_fin: &str,
+    limite_productos: i32,
+) -> Result<ReporteConsolidadoVentas, String> {
+    validar_rango_fechas(fecha_inicio, fecha_fin)?;
+
+    let productos_mas_vendidos = productos_mas_vendidos_logic(conn, fecha_inicio, fecha_fin, limite_productos)?;
+    let metodos_pago = ventas_por_metodo_pago_logic(conn, fecha_inicio, fecha_fin)?;
+    let ventas_por_vendedor = ventas_por_usuario_reporte_logic(conn, fecha_inicio, fecha_fin)?;
+
+    Ok(ReporteConsolidadoVentas {
+        fecha_inicio: fecha_inicio.to_string(),
+        fecha_fin: fecha_fin.to_string(),
+        productos_mas_vendidos,
+        metodos_pago,
+        ventas_por_vendedor,
+    })
 }

@@ -295,3 +295,31 @@ pub fn eliminar_producto_logic(conn: &Connection, id: i32) -> Result<(), String>
     
     Ok(())
 }
+
+/// Desactiva un producto de forma lógica (activo = 0).
+pub fn desactivar_producto_logic(conn: &Connection, id: i32) -> Result<(), String> {
+    eliminar_producto_logic(conn, id)
+}
+
+/// Activa un producto de forma lógica (activo = 1).
+pub fn activar_producto_logic(conn: &Connection, id: i32) -> Result<(), String> {
+    // Verificar que el producto existe
+    let mut stmt = conn
+        .prepare("SELECT 1 FROM productos WHERE id_producto = ?1")
+        .map_err(|e| e.to_string())?;
+    
+    let existe = stmt.exists([id]).map_err(|e| e.to_string())?;
+    
+    if !existe {
+        return Err("El producto no existe".to_string());
+    }
+    
+    // Activar el producto
+    conn.execute(
+        "UPDATE productos SET activo = 1 WHERE id_producto = ?1",
+        [id],
+    )
+    .map_err(|e| e.to_string())?;
+    
+    Ok(())
+}
