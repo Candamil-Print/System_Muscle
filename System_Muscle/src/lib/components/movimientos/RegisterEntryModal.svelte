@@ -89,6 +89,25 @@
 
     const parsedQuantity = parseNumber(quantity);
 
+    if (selectedProduct) {
+
+    const stockResultante =
+      selectedProduct.stock + parsedQuantity;
+
+    if (
+      stockResultante >
+      selectedProduct.stockMax
+    ) {
+
+      toast.error(
+        `No puedes superar el stock máximo (${selectedProduct.stockMax}).`
+      );
+
+      return;
+    }
+
+  }
+
     // VALIDAR MAYOR A 0
     if (parsedQuantity <= 0) {
 
@@ -101,15 +120,24 @@
 
       loading = true;
 
-      await crearMovement({
+      const sesionGuardada =
+      localStorage.getItem('sesion');
 
-        id_producto: Number(selectedProductId),
+    if (!sesionGuardada) {
+      toast.error(
+        'No se encontró una sesión activa'
+      );
+      return;
+    }
 
-        cantidad: parsedQuantity,
+    const sesion =
+      JSON.parse(sesionGuardada);
 
-        id_usuario: 1
-
-      });
+    await crearMovement({
+      id_producto: Number(selectedProductId),
+      cantidad: parsedQuantity,
+      id_usuario: sesion.id_usuario
+    });
 
       await onCreated();
 
@@ -146,6 +174,8 @@
     onClose();
 
   }
+
+  
 </script>
 
 {#if open}
@@ -162,13 +192,13 @@
 
     <!-- MODAL -->
     <div
-      class="animate-in fade-in zoom-in duration-200 relative w-full max-w-md rounded-3xl border border-slate-200 bg-white p-8 shadow-2xl"
+      class="animate-in fade-in zoom-in duration-200 relative w-full max-w-md rounded-3xl border border-slate-200 bg-white dark:bg-[#1E293B] dark:border-[#334156]  p-8 shadow-2xl"
     >
 
       <!-- CLOSE -->
       <button
         on:click={handleClose}
-        class="absolute right-6 top-6 rounded-xl p-2 text-slate-400 transition hover:bg-slate-100 hover:text-slate-700"
+        class="absolute right-6 top-6 rounded-xl p-2 text-slate-400 transition hover:bg-slate-100 hover:text-slate-700 dark:hover:bg-[#162033]"
       >
         <X class="h-5 w-5" />
       </button>
@@ -176,11 +206,11 @@
       <!-- HEADER -->
       <div class="mb-8">
 
-        <h2 class="text-2xl font-bold tracking-tight text-slate-900">
+        <h2 class="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">
           Registrar Entrada
         </h2>
 
-        <p class="mt-2 text-sm text-slate-500">
+        <p class="mt-2 text-sm text-slate-500 dark:text-slate-400">
           Ingresa los datos del movimiento de entrada
         </p>
 
@@ -192,7 +222,7 @@
         <!-- PRODUCT -->
         <div>
 
-          <label class="mb-1 block text-sm font-semibold text-slate-700">
+          <label class="mb-1 block text-sm font-semibold text-slate-700 dark:text-white">
             Producto
           </label>
 
@@ -200,7 +230,7 @@
 
             <select
               bind:value={selectedProductId}
-              class="w-full appearance-none rounded-xl border border-slate-200 bg-white px-4 py-3 pr-11 text-sm text-slate-700 outline-none transition duration-200 focus:border-[#0C4A6E] focus:ring-4 focus:ring-sky-100 focus:scale-[1.01]"
+              class="w-full appearance-none rounded-xl border border-slate-200 bg-white px-4 py-3 pr-11 text-sm text-slate-700 dark:text-[#64748B] dark:bg-[#111827] dark:border-[#334156] outline-none transition duration-200 focus:border-[#0C4A6E] focus:ring-4 focus:ring-sky-100 focus:scale-[1.01] dark:focus:border-[#39BDF8] dark:focus:ring-4 dark:focus:ring-[#39BDF8]/20"
             >
 
               <option value="">
@@ -248,12 +278,12 @@
         {#if selectedProduct}
 
           <div
-            class="flex items-center gap-4 rounded-xl border border-slate-200 bg-slate-50 p-4"
+            class="flex items-center gap-4 rounded-xl border border-slate-200 bg-slate-50 dark:bg-[#111827] dark:border-[#334156] p-4"
           >
 
             <!-- IMAGE -->
             <div
-              class="flex h-16 w-16 flex-shrink-0 items-center justify-center overflow-hidden rounded-lg bg-slate-200"
+              class="flex h-16 w-16 flex-shrink-0 items-center justify-center overflow-hidden rounded-lg bg-slate-200 "
             >
 
               {#if selectedProduct.image}
@@ -275,11 +305,11 @@
             <!-- INFO -->
             <div>
 
-              <h3 class="text-base font-bold text-slate-900">
+              <h3 class="text-base font-bold text-slate-900 dark:text-[#64748B]">
                 {selectedProduct.name}
               </h3>
 
-              <p class="mt-0.5 text-sm text-slate-500">
+              <p class="mt-0.5 text-sm text-slate-500 dark:text-[#64748B]">
                 Stock actual:
                 {selectedProduct.stock}
                 /
@@ -295,42 +325,139 @@
         <!-- QUANTITY -->
         <div>
 
-          <label class="mb-1 block text-sm font-semibold text-slate-700">
+          <label class="mb-1 block text-sm font-semibold text-slate-700 dark:text-white">
             Cantidad a Ingresar
           </label>
 
           <div
-            class="group flex overflow-hidden rounded-xl border border-slate-200 bg-white transition duration-200 focus-within:border-[#0C4A6E] focus-within:ring-4 focus-within:ring-sky-100 focus-within:scale-[1.01]"
+            class="
+              group flex overflow-hidden rounded-xl
+              border border-slate-200
+              bg-white
+
+              dark:bg-[#111827]
+              dark:border-[#334156]
+              dark:text-[#64748B]
+
+              transition duration-200
+
+              focus-within:border-[#0C4A6E]
+              focus-within:ring-4
+              focus-within:ring-sky-100
+              focus-within:scale-[1.01]
+
+              dark:focus-within:border-[#39BDF8]
+              dark:focus-within:ring-[#39BDF8]/20
+            "
           >
 
-            <input
-              value={quantity}
-              on:input={(e) => {
+<input
+  type="text"
+  inputmode="numeric"
+  pattern="[0-9]*"
 
-                quantity = formatNumber(
-                  e.currentTarget.value
-                );
+  on:keydown={(e) => {
+    const teclasPermitidas = [
+      'Backspace',
+      'Delete',
+      'ArrowLeft',
+      'ArrowRight',
+      'Tab'
+    ];
 
-              }}
-              type="text"
-              inputmode="numeric"
-              placeholder="0"
-              class="w-full bg-transparent px-4 py-3 text-sm text-slate-700 outline-none"
-            />
+    if (
+      !/[0-9]/.test(e.key) &&
+      !teclasPermitidas.includes(e.key)
+    ) {
+      e.preventDefault();
+    }
+  }}
+
+  class="
+    w-full
+    px-4
+    py-3
+    bg-transparent
+    text-sm
+    text-slate-700
+    dark:text-white
+    placeholder:text-slate-400
+    outline-none
+  "
+
+  value={quantity}
+
+  on:input={(e) => {
+
+    const valorFormateado = formatNumber(
+      e.currentTarget.value
+    );
+
+    quantity = valorFormateado;
+
+    if (selectedProduct) {
+
+      const cantidadIngresada =
+        parseNumber(valorFormateado);
+
+      const stockResultante =
+        selectedProduct.stock + cantidadIngresada;
+
+      if (
+        stockResultante >
+        selectedProduct.stockMax
+      ) {
+
+        const maxPermitido =
+          selectedProduct.stockMax -
+          selectedProduct.stock;
+
+        toast.warning(
+          `Solo puedes ingresar ${maxPermitido} unidades. El stock máximo es ${selectedProduct.stockMax}.`
+        );
+
+        quantity = formatNumber(
+          String(maxPermitido)
+        );
+      }
+
+    }
+
+  }}
+/>
 
           </div>
 
           {#if selectedProduct}
 
-            <p class="mt-2 text-sm text-slate-500">
+            <div class="mt-2">
 
-              Nuevo stock:
+              <p class="text-sm text-slate-500 dark:text-white">
 
-              <span class="font-bold text-slate-900">
-                {newStock.toLocaleString('es-CO')}
-              </span>
+                Nuevo stock:
 
-            </p>
+                <span
+                  class={`font-bold ${
+                    newStock > selectedProduct.stockMax
+                      ? 'text-red-500'
+                      : 'text-slate-900 dark:text-[#39BDF8]'
+                  }`}
+                >
+                  {newStock.toLocaleString('es-CO')}
+                </span>
+
+              </p>
+
+              {#if newStock > selectedProduct.stockMax}
+
+                <p class="mt-1 text-xs text-red-500">
+                  El stock máximo permitido es
+                  {selectedProduct.stockMax}
+                </p>
+
+              {/if}
+
+            </div>
 
           {/if}
 
@@ -344,7 +471,7 @@
         <!-- CANCEL -->
         <button
           on:click={handleClose}
-          class="rounded-xl border border-slate-200 px-5 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-100"
+          class="rounded-xl border border-slate-200 px-5 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-100 dark:border-[#334156] dark:text-white dark:hover:bg-[#162033]"
         >
           Cancelar
         </button>
@@ -353,7 +480,7 @@
         <button
           on:click={handleSubmit}
           disabled={loading}
-          class="rounded-xl bg-[#0C4A6E] px-5 py-2.5 text-sm font-medium text-white transition hover:bg-[#0a3a52] disabled:opacity-50"
+          class="rounded-xl bg-[#0C4A6E] px-5 py-2.5 text-sm font-medium text-white dark:text-[#39BDF8] transition hover:bg-[#0a3a52] disabled:opacity-50"
         >
 
           {#if loading}

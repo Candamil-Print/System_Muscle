@@ -111,11 +111,11 @@
 		>
 
 			<div
-				class="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-slate-100 dark:bg-[#0C4A6E]/20"
+				class="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-slate-100 dark:bg-[#39BDF8]/20"
 			>
 				<svelte:component
 					this={icons[stat.icon]}
-					class="h-5 w-5 text-[#0C4A6E] dark:text-[#0C4A6E]"
+					class="h-5 w-5 text-[#0C4A6E] dark:text-[#39BDF8]"
 				/>
 			</div>
 
@@ -126,7 +126,7 @@
 					{stat.title}
 				</p>
 
-				<h3 class="mt-1 text-2xl font-bold text-slate-800 dark:text-[#6C7280]">
+				<h3 class="mt-1 text-2xl font-bold text-slate-800 dark:text-white">
 					{stat.value}
 				</h3>
 			</div>

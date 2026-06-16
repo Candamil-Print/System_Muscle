@@ -25,45 +25,45 @@
     }
 </script>
 
-<div class="bg-white border border-slate-200 rounded-2xl p-5">
+<div class="bg-white border border-slate-200 dark:bg-[#1E293B] dark:border-[#334156] rounded-2xl p-5">
 
     <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-5 gap-4">
 
         <!-- Fecha Inicio -->
         <div>
-            <label class="text-xs font-semibold text-slate-500 uppercase">
+            <label class="text-xs font-semibold text-slate-500 dark:text-white uppercase">
                 Fecha Inicio
             </label>
 
             <input
                 bind:value={fechaInicio}
                 type="date"
-                class="w-full mt-2 h-11 px-4 rounded-xl border border-slate-200"
+                class="w-full mt-2 h-11 px-4 rounded-xl border border-slate-200 dark:border-[#334156] dark:text-white"
             />
         </div>
 
         <!-- Fecha Fin -->
         <div>
-            <label class="text-xs font-semibold text-slate-500 uppercase">
+            <label class="text-xs font-semibold text-slate-500 dark:text-white uppercase">
                 Fecha Fin
             </label>
 
             <input
                 bind:value={fechaFin}
                 type="date"
-                class="w-full mt-2 h-11 px-4 rounded-xl border border-slate-200"
+                class="w-full mt-2 h-11 px-4 rounded-xl border border-slate-200 dark:border-[#334156] dark:text-white"
             />
         </div>
 
         <!-- Tipo Producto -->
         <div class="relative">
-            <label class="text-xs font-semibold text-slate-500 uppercase">
+            <label class="text-xs font-semibold text-slate-500 dark:text-white uppercase">
                 Tipo de Producto
             </label>
 
             <select
                 bind:value={tipoProducto}
-                class="h-11 w-full rounded-xl border mt-2 border-slate-200 px-4 pr-10 text-sm outline-none focus:border-cyan-600 appearance-none bg-transparent"
+                class="h-11 w-full rounded-xl border mt-2 border-slate-200 px-4 pr-10 text-sm outline-none focus:border-cyan-600 appearance-none bg-transparent dark:border-[#334156] dark:text-white"
             >
                 <option value="">Todos</option>
                 <option value="proteinas">Proteínas</option>
@@ -80,13 +80,13 @@
 
         <!-- Vendedor -->
         <div class="relative">
-            <label class="text-xs font-semibold text-slate-500 uppercase">
+            <label class="text-xs font-semibold text-slate-500 dark:text-white uppercase">
                 Vendedor
             </label>
 
             <select
                 bind:value={proveedor}
-                class="h-11 w-full rounded-xl border mt-2 border-slate-200 px-4 pr-10 text-sm outline-none focus:border-cyan-600 appearance-none bg-transparent"
+                class="h-11 w-full rounded-xl border mt-2 border-slate-200 px-4 pr-10 text-sm outline-none focus:border-cyan-600 appearance-none bg-transparent dark:border-[#334156] dark:text-white"
             >
                 <option value="">Todos</option>
                 <option value="nutricion-pro">Persona 1</option>
@@ -104,17 +104,17 @@
         <div class="flex items-end gap-3">
             <button
                 on:click={aplicarFiltros}
-                class="h-11 px-5 rounded-xl bg-[#0C4A6E] text-white flex items-center gap-2 cursor-pointer hover:bg-sky-800"
+                class="h-11 px-5 rounded-xl bg-[#0C4A6E] text-white dark:text-[#39BDF8]  flex items-center gap-2 cursor-pointer hover:bg-sky-800"
             >
-                <Search class="w-4 h-4" />
+                <Search class="w-4 h-4 " />
                 Filtrar
             </button>
 
             <button
                 on:click={exportarPDF}
-                class="h-11 w-11 rounded-xl border border-slate-200 flex items-center justify-center hover:bg-slate-50 cursor-pointer"
+                class="h-11 w-11 rounded-xl border border-slate-200 flex items-center justify-center hover:bg-slate-50 dark:hover:bg-[#162033] cursor-pointer dark:border-[#334156] "
             >
-                <Download class="w-4 h-4" />
+                <Download class="w-4 h-4 dark:text-[#39BDF8]" />
             </button>
         </div>
 

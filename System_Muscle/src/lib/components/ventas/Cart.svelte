@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { toast } from 'svelte-sonner';
   import ConfirmSaleModal from './ConfirmSaleModal.svelte';
   import SaleSuccessModal from './SaleSuccessModal.svelte';
   import { registrarVenta } from '$lib/services/api/sale';
@@ -97,7 +98,20 @@
 
   function aumentarCantidad(index: number) {
     cart.update((items) => {
-      items[index].cantidad += 1;
+
+      const item = items[index];
+
+      if (item.cantidad >= item.stock_actual) {
+
+        toast.warning(
+          `Solo hay ${item.stock_actual} unidades disponibles de ${item.nombre}`
+        );
+
+        return [...items];
+      }
+
+      item.cantidad += 1;
+
       return [...items];
     });
   }
@@ -122,6 +136,19 @@
     if (!turnoActual || !turnoActual.id_turno) {
       alert('Por favor, selecciona un turno antes de procesar la venta.');
       return;
+    }
+
+    for (const item of $cart) {
+
+      if (item.cantidad > item.stock_actual) {
+
+        toast.error(
+          `Stock insuficiente para ${item.nombre}. Disponible: ${item.stock_actual}`
+        );
+
+        return;
+      }
+
     }
 
     try {
@@ -156,18 +183,33 @@
   }
 
   function actualizarCantidad(index: number, valor: string) {
-  const cantidad = parseInt(valor);
+    const cantidad = parseInt(valor);
 
-  cart.update((items) => {
-    if (isNaN(cantidad) || cantidad <= 0) {
-      items.splice(index, 1);
-    } else {
-      items[index].cantidad = cantidad;
-    }
+    cart.update((items) => {
 
-    return [...items];
-  });
-}
+      const item = items[index];
+
+      if (isNaN(cantidad) || cantidad <= 0) {
+        items.splice(index, 1);
+        return [...items];
+      }
+
+      if (cantidad > item.stock_actual) {
+
+        toast.warning(
+          `Solo hay ${item.stock_actual} unidades disponibles de ${item.nombre}`
+        );
+
+        item.cantidad = item.stock_actual;
+
+        return [...items];
+      }
+
+      item.cantidad = cantidad;
+
+      return [...items];
+    });
+  }
 
 function limpiarCarrito() {
   cart.set([]);

@@ -206,23 +206,30 @@ export async function listarTurnosDetalle(
 	}
 }
 
-export async function abrirCaja(idTurno: number): Promise<number> {
-    const sesion = JSON.parse(
-        localStorage.getItem('sesion') ?? '{}'
-    );
+export async function abrirCaja(
+	idTurno: number,
+	montoApertura: number
+): Promise<number> {
 
-    return await invoke<number>(
-        'abrir_caja',
-        {
-            nueva: {
-                id_usuario: sesion.id_usuario,
-                id_turno: idTurno,
-                saldo_inicial: 0,
-                monto_apertura: 0,
-                id_usuario_apertura: sesion.id_usuario
-            }
-        }
-    );
+	const sesion = JSON.parse(
+		localStorage.getItem('sesion') ?? '{}'
+	);
+
+	return await invoke<number>(
+		'abrir_caja',
+		{
+			nueva: {
+				id_usuario: sesion.id_usuario,
+				id_turno: idTurno,
+
+				saldo_inicial: montoApertura,
+				monto_apertura: montoApertura,
+
+				id_usuario_apertura:
+					sesion.id_usuario
+			}
+		}
+	);
 }
 
 export async function cerrarCaja(

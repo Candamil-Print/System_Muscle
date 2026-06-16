@@ -75,7 +75,9 @@
 
     <main class="space-y-6 p-6">
 
-      <MovementsTitle />
+      <MovementsTitle
+          onCreated={loadMovements}
+      />
 
       <MovementsStats
         {movements}

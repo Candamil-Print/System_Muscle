@@ -8,7 +8,6 @@
     obtenerResumenVentasDiarioRango,
     obtenerProductosMasVendidos,
     obtenerVentasPorUsuario,
-    obtenerVentasPorMetodoPago,
     obtenerMargenGanancia
   } from '$lib/services/api/reports/reports.service';
 
@@ -19,15 +18,227 @@
     vendedor: 'todos'
   };
 
-  let salesByDay: ChartData<'line'> = { labels: [], datasets: [] };
-  let profitMargin: ChartData<'bar'> = { labels: [], datasets: [] };
-  let topProducts: ChartData<'bar'> = { labels: [], datasets: [] };
-  let salesBySeller: ChartData<'pie'> = { labels: [], datasets: [] };
+  // ==========================================
+  // Datos originales de la API
+  // ==========================================
+
+  let ventasDiariasData: any[] = [];
+
+  // TOP 5 para el gráfico
+  let productosMasVendidosData: any[] = [];
+
+  // TODOS para el PDF
+  let todosProductosVendidosData: any[] = [];
+
+  let ventasPorUsuarioData: any[] = [];
+  let margenGananciaData: any = null;
+
+  // ==========================================
+  // Datos para Chart.js
+  // ==========================================
+
+  let salesByDay: ChartData<'line'> = {
+    labels: [],
+    datasets: []
+  };
+
+  let profitMargin: ChartData<'bar'> = {
+    labels: [],
+    datasets: []
+  };
+
+  let topProducts: ChartData<'bar'> = {
+    labels: [],
+    datasets: []
+  };
+
+  let salesBySeller: ChartData<'bar'> = {
+    labels: [],
+    datasets: []
+  };
 
   let margenData: any[] = [];
 
   let loading = true;
   let error = '';
+
+  // ==========================================
+  // Construir gráficos
+  // ==========================================
+
+  function construirGraficos() {
+    const dark =
+      document.documentElement.classList.contains('dark');
+
+    // -------------------------
+    // Ventas por día
+    // -------------------------
+
+    salesByDay = {
+      labels: ventasDiariasData.map((v) =>
+        new Date(v.fecha).toLocaleDateString(
+          'es-ES',
+          {
+            day: '2-digit',
+            month: 'short'
+          }
+        )
+      ),
+
+      datasets: [
+        {
+          label: 'Total Ventas',
+
+          data: ventasDiariasData.map(
+            (v) => v.total_general
+          ),
+
+          borderColor: dark
+            ? '#39BDF8'
+            : '#0C4A6E',
+
+          backgroundColor: dark
+            ? 'rgba(57,189,248,.20)'
+            : 'rgba(12,74,110,.12)',
+
+          borderWidth: 2,
+          fill: true,
+          tension: 0.4,
+
+          pointBackgroundColor: dark
+            ? '#39BDF8'
+            : '#0C4A6E',
+
+          pointBorderColor: dark
+            ? '#39BDF8'
+            : '#0C4A6E',
+
+          pointRadius: 5,
+          pointHoverRadius: 7
+        }
+      ]
+    };
+
+    // -------------------------
+    // Margen
+    // -------------------------
+
+    const topMargen =
+      [...(margenGananciaData?.productos ?? [])]
+        .sort(
+          (a, b) =>
+            b.margen_porcentaje -
+            a.margen_porcentaje
+        )
+        .slice(0, 5);
+
+    profitMargin = {
+      labels: topMargen.map((p) =>
+        p.nombre_producto.length > 18
+          ? p.nombre_producto.slice(0, 18) + '...'
+          : p.nombre_producto
+      ),
+
+      datasets: [
+        {
+          label: 'Margen de Ganancias (%)',
+
+          data: topMargen.map((p) =>
+            Number(
+              p.margen_porcentaje.toFixed(2)
+            )
+          ),
+
+          backgroundColor: [
+            '#0c4a6e',
+            '#1565a0',
+            '#1e7ab8',
+            '#2d8ad0',
+            '#3d9ae8'
+          ],
+
+          borderRadius: 8,
+          borderSkipped: false
+        }
+      ]
+    };
+
+    // -------------------------
+    // Top 5 productos
+    // -------------------------
+
+    topProducts = {
+      labels: productosMasVendidosData.map(
+        (p) => p.nombre_producto
+      ),
+
+      datasets: [
+        {
+          label: 'Unidades Vendidas',
+
+          data:
+            productosMasVendidosData.map(
+              (p) => p.cantidad_vendida
+            ),
+
+          backgroundColor: [
+            '#0c4a6e',
+            '#1565a0',
+            '#1e7ab8',
+            '#2d8ad0',
+            '#3d9ae8'
+          ],
+
+          borderRadius: 8,
+          borderSkipped: false
+        }
+      ]
+    };
+
+    // -------------------------
+    // Vendedores
+    // -------------------------
+
+    const topVendedores =
+      [...ventasPorUsuarioData]
+        .sort(
+          (a, b) =>
+            b.total_vendido -
+            a.total_vendido
+        )
+        .slice(0, 5);
+
+    salesBySeller = {
+      labels: topVendedores.map(
+        (u) => u.nombre_usuario
+      ),
+
+      datasets: [
+        {
+          label: 'Total Vendido',
+
+          data: topVendedores.map(
+            (u) => u.total_vendido
+          ),
+
+          backgroundColor: [
+            '#0c4a6e',
+            '#1565a0',
+            '#1e7ab8',
+            '#2d8ad0',
+            '#3d9ae8'
+          ],
+
+          borderRadius: 8,
+          borderSkipped: false
+        }
+      ]
+    };
+  }
+
+  // ==========================================
+  // Cargar API
+  // ==========================================
 
   async function cargarReportes(
     fechaInicio: string,
@@ -40,20 +251,26 @@
       const [
         ventasDiarias,
         productosMasVendidos,
+        todosProductos,
         ventasPorUsuario,
         margenGanancia
-        
       ] = await Promise.all([
         obtenerResumenVentasDiarioRango(
           fechaInicio,
           fechaFin
         ),
-        
 
+        // TOP 5
         obtenerProductosMasVendidos(
           fechaInicio,
           fechaFin,
           5
+        ),
+
+        // TODOS
+        obtenerProductosMasVendidos(
+          fechaInicio,
+          fechaFin
         ),
 
         obtenerVentasPorUsuario(
@@ -67,9 +284,35 @@
         )
       ]);
 
-      margenData = margenGanancia.productos;
+      ventasDiariasData = ventasDiarias;
 
-      // SIN RESULTADOS
+      // TOP 5
+      productosMasVendidosData =
+        productosMasVendidos;
+
+      // TODOS
+      todosProductosVendidosData =
+        todosProductos;
+
+      ventasPorUsuarioData =
+        ventasPorUsuario;
+
+      margenGananciaData =
+        margenGanancia;
+
+      margenData =
+        margenGanancia.productos;
+
+      console.log(
+        'TOP 5:',
+        productosMasVendidosData.length
+      );
+
+      console.log(
+        'TODOS:',
+        todosProductosVendidosData.length
+      );
+
       if (
         ventasDiarias.length === 0 &&
         productosMasVendidos.length === 0 &&
@@ -78,142 +321,46 @@
         toast.warning(
           'No se encontraron ventas para los filtros seleccionados',
           {
+            id: 'sin-resultados-reportes',
             description:
               'Prueba con otro rango de fechas o cambia los filtros.'
           }
         );
       }
 
-      // Gráfico 1 - Ventas por Día (Line)
-      salesByDay = {
-        labels: ventasDiarias.map(v =>
-          new Date(v.fecha).toLocaleDateString(
-            'es-ES',
-            {
-              day: '2-digit',
-              month: 'short'
-            }
-          )
-        ),
+      construirGraficos();
+    } catch (err) {
+      console.error(err);
 
-        datasets: [
-          {
-            label: 'Total Ventas',
-            data: ventasDiarias.map(
-              v => v.total_general
-            ),
-            borderColor: '#0c4a6e',
-            backgroundColor:
-              'rgba(12,74,110,.1)',
-            borderWidth: 2,
-            fill: true,
-            tension: 0.4,
-            pointBackgroundColor: '#0c4a6e',
-            pointBorderColor: '#ffffff',
-            pointBorderWidth: 2,
-            pointRadius: 5,
-            pointHoverRadius: 7
-          }
-        ]
-      };
+      toast.error(
+        'Error al cargar los reportes'
+      );
 
-      // Gráfico 2 - Margen de Ganancias (Bar vertical)
-      profitMargin = {
-        labels: margenGanancia.productos.map(
-          p => p.nombre_producto
-        ),
-
-        datasets: [
-          {
-            label: 'Margen de Ganancias (%)',
-
-            data: margenGanancia.productos.map(
-              p => Number(
-                p.margen_porcentaje.toFixed(2)
-              )
-            ),
-
-            backgroundColor: [
-              '#0c4a6e',
-              '#1565a0',
-              '#1e7ab8',
-              '#2d8ad0',
-              '#3d9ae8'
-            ],
-
-            borderRadius: 8,
-            borderSkipped: false
-          }
-        ]
-      };
-
-      // Gráfico 3 - Top 5 Productos (Bar horizontal)
-      topProducts = {
-        labels: productosMasVendidos.map(
-          p => p.nombre_producto
-        ),
-
-        datasets: [
-          {
-            label: 'Unidades Vendidas',
-            data: productosMasVendidos.map(
-              p => p.cantidad_vendida
-            ),
-            backgroundColor: [
-              '#0c4a6e',
-              '#1565a0',
-              '#1e7ab8',
-              '#2d8ad0',
-              '#3d9ae8'
-            ],
-            borderRadius: 8,
-            borderSkipped: false
-          }
-        ]
-      };
-
-      // Gráfico 4 - Ventas por Vendedor (Bar)
-      salesBySeller = {
-        labels: ventasPorUsuario.map(
-          u => u.nombre_usuario
-        ),
-
-        datasets: [
-          {
-            label: 'Total Vendido',
-            data: ventasPorUsuario.map(
-              u => u.total_vendido
-            ),
-            backgroundColor: [
-              '#0c4a6e',
-              '#1565a0',
-              '#1e7ab8'
-            ],
-            borderRadius: 8,
-            borderSkipped: false
-          }
-        ]
-      };
-    }
-  catch (err) {
-    console.error(
-      'Error cargando reportes:',
-      err
-    );
-
-    toast.error(
-      'Error al cargar los reportes'
-    );
-
-    error =
-      'Error al cargar los datos de reportes';
-  }
-    finally {
+      error =
+        'Error al cargar los datos de reportes';
+    } finally {
       loading = false;
     }
   }
 
-  onMount(async () => {
+  // ==========================================
+  // Primera carga
+  // ==========================================
+
+  onMount(() => {
+    const observer =
+      new MutationObserver(() => {
+        construirGraficos();
+      });
+
+    observer.observe(
+      document.documentElement,
+      {
+        attributes: true,
+        attributeFilter: ['class']
+      }
+    );
+
     const today = new Date();
 
     const sevenDaysAgo = new Date(
@@ -221,36 +368,32 @@
         7 * 24 * 60 * 60 * 1000
     );
 
-    const fechaInicio =
+    cargarReportes(
       sevenDaysAgo
         .toISOString()
-        .split('T')[0];
+        .split('T')[0],
 
-    const fechaFin =
-      today.toISOString().split('T')[0];
-
-    await cargarReportes(
-      fechaInicio,
-      fechaFin
+      today
+        .toISOString()
+        .split('T')[0]
     );
+
+    return () => observer.disconnect();
   });
 
+  // ==========================================
+  // Cambio de filtros
+  // ==========================================
+
   $: if (
-    filtros?.fechaInicio &&
-    filtros?.fechaFin
+    filtros.fechaInicio &&
+    filtros.fechaFin
   ) {
     cargarReportes(
       filtros.fechaInicio,
       filtros.fechaFin
     );
   }
-
-  toast.warning(
-  'No se encontraron ventas para los filtros seleccionados',
-  {
-    id: 'sin-resultados-reportes'
-  }
-);
 </script>
 
 {#if loading}
@@ -274,6 +417,7 @@
       title="Ventas por Día"
       type="line"
       data={salesByDay}
+      reportData={ventasDiariasData}
     />
 
     <ReportsChartCard
@@ -287,13 +431,17 @@
       title="Top 5 Productos Vendidos"
       type="bar"
       data={topProducts}
-      horizontal={true}
+      reportData={productosMasVendidosData}
+      todosProductosData={todosProductosVendidosData}
+      horizontal
     />
 
     <ReportsChartCard
       title="Ventas por Vendedor"
       type="bar"
       data={salesBySeller}
+      reportData={ventasPorUsuarioData}
+      tall
     />
 
   </div>

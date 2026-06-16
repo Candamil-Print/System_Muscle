@@ -3,7 +3,9 @@ import { invoke } from '@tauri-apps/api/core';
 import type {
   ProductoVenta,
   NuevaVenta,
-  VentaResumen
+  VentaResumen,
+  VentaDetallePorTurno,
+  DetalleVentaDetalle
 } from './sale.types';
 
 
@@ -51,6 +53,31 @@ export async function ventasPorUsuario(
     { idUsuario }
   );
 
+}
+
+// VENTAS POR TURNO
+export async function ventasPorTurno(
+  idTurno: number
+): Promise<VentaDetallePorTurno[]> {
+
+  return await invoke(
+    'ventas_por_turno_detalle',
+    {
+      idTurno
+    }
+  );
+
+}
+
+export async function listarDetalleVenta(
+  idVenta: number
+): Promise<DetalleVentaDetalle[]> {
+  return await invoke(
+    'listar_detalle_venta',
+    {
+      idVenta
+    }
+  );
 }
 
 

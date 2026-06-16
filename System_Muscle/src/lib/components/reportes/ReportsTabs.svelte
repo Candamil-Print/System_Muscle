@@ -5,7 +5,7 @@
 	export let activeTab = 'ventas';
 </script>
 
-<div class="flex gap-2 border-b border-slate-200">
+<div class="flex gap-2 border-b border-slate-200 dark:border-[#39BDF8]">
 
 	<button
 		on:click={() => activeTab = 'ventas'}

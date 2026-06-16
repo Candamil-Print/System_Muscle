@@ -28,7 +28,8 @@ addToCart({
   nombre: producto.nombre,
   precio: producto.precio,
   imagen: producto.imagen,
-  cantidad: 1
+  cantidad: 1,
+  stock_actual: producto.stock_actual
 });
 
   }

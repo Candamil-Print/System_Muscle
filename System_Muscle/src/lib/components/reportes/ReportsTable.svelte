@@ -11,15 +11,7 @@
   import jsPDF from 'jspdf';
   import autoTable from 'jspdf-autotable';
 
-  import {
-    obtenerProductosMasVendidos,
-    obtenerVentasPorUsuario,
-    obtenerVentasPorMetodoPago
-  } from '$lib/services/api/reports/reports.service';
-
-  import {
-    listarVentas
-  } from '$lib/services/api/sale/sale.service';
+  import { listarVentas, listarDetalleVenta } from '$lib/services/api/sale/sale.service';
 
   export let filtros = {
     fechaInicio: '',
@@ -68,249 +60,394 @@
     };
   }
 
+  function formatCurrency(valor: number | string) {
+  return Number(valor).toLocaleString('es-CO');
+}
+
+  function formatearFechaHora(fecha = new Date()) {
+    const fechaTexto = fecha.toLocaleDateString(
+      'es-CO',
+      {
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric'
+      }
+    );
+
+    const horaTexto = fecha.toLocaleTimeString(
+      'es-CO',
+      {
+        hour: 'numeric',
+        minute: '2-digit',
+        hour12: true
+      }
+    );
+
+    return {
+      fecha:
+        fechaTexto.charAt(0).toUpperCase() +
+        fechaTexto.slice(1),
+      hora: horaTexto
+    };
+  }
   
 
 function descargarPDF() {
-  if (sales.length === 0) {
-    alert('No hay datos para descargar');
-    return;
-  }
+	if (sales.length === 0) {
+		alert('No hay datos para descargar');
+		return;
+	}
 
-  const doc = new jsPDF('p', 'mm', 'a4');
+	const doc = new jsPDF('p', 'mm', 'a4');
 
-  const fechaGeneracion = new Date().toLocaleString('es-ES', {
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit'
-  });
+	const fechaGeneracion = formatearFechaHora();
 
-  const totalVentas = sales.reduce(
-    (acc, sale) => acc + Number(sale.precio || 0),
-    0
+	// ==========================
+	// CALCULOS
+	// ==========================
+
+	const totalVentas = sales.reduce(
+		(acc, sale) =>
+			acc + Number(sale.precio || 0),
+		0
+	);
+
+	const promedioVenta =
+		sales.length > 0
+			? totalVentas / sales.length
+			: 0;
+
+	const ventaMasAlta =
+		sales.length > 0
+			? [...sales].sort(
+					(a, b) =>
+						Number(b.precio || 0) -
+						Number(a.precio || 0)
+			  )[0]
+			: null;
+
+	// ==========================
+	// HEADER
+	// ==========================
+
+	doc.setFillColor(12, 74, 110);
+
+  doc.rect(
+    0,
+    0,
+    210,
+    40,
+    'F'
   );
 
-  // ======================================
-  // ENCABEZADO
-  // ======================================
+	doc.setTextColor(
+		255,
+		255,
+		255
+	);
 
-  doc.setFillColor(38, 85, 124);
-  doc.rect(0, 0, 210, 30, 'F');
-
-  doc.setTextColor(255, 255, 255);
-
-  doc.setFontSize(18);
-  doc.setFont('helvetica', 'bold');
+	doc.setFontSize(22);
+	doc.setFont(
+		'helvetica',
+		'bold'
+	);
 
   doc.text(
     'REPORTE DE VENTAS',
     105,
-    12,
-    { align: 'center' }
-  );
-
-  doc.setFontSize(10);
-
-  doc.text(
-    `Desde: ${filtros.fechaInicio || 'N/A'}   |   Hasta: ${filtros.fechaFin || 'N/A'}`,
-    105,
-    21,
-    { align: 'center' }
-  );
-
-  // ======================================
-  // DATOS DEL REPORTE
-  // ======================================
-
-  doc.setTextColor(0);
-
-  doc.setFontSize(12);
-  doc.setFont('helvetica', 'bold');
-
-  doc.text('Resumen Ejecutivo', 14, 42);
-
-  doc.setFont('helvetica', 'normal');
-  doc.setFontSize(10);
-
-  doc.text(
-    `Registros encontrados: ${sales.length}`,
     14,
-    50
+    {
+      align: 'center'
+    }
   );
 
-  doc.text(
-    `Método de pago: ${
-      filtros.metodoPago === 'todos'
-        ? 'Todos'
-        : filtros.metodoPago
-    }`,
-    14,
-    56
-  );
+doc.setFontSize(11);
+doc.setFont('helvetica', 'normal');
 
-  // ======================================
-  // TABLA
-  // ======================================
+doc.text(
+	fechaGeneracion.fecha,
+	105,
+	23,
+	{
+		align: 'center'
+	}
+);
 
-  autoTable(doc, {
-    startY: 65,
+doc.text(
+	fechaGeneracion.hora,
+	105,
+	29,
+	{
+		align: 'center'
+	}
+);
 
-    head: [
-      [
-        'Producto',
-        'Precio',
-        'Método',
-        'Vendedor',
-        'Fecha'
-      ]
-    ],
+	// ==========================
+	// RESUMEN EJECUTIVO
+	// ==========================
 
-    body: sales.map((sale) => [
+	doc.setTextColor(
+		0,
+		0,
+		0
+	);
+
+	doc.setFontSize(16);
+	doc.setFont(
+		'helvetica',
+		'bold'
+	);
+
+	doc.text(
+		'Resumen Ejecutivo',
+		14,
+		50
+	);
+
+	const cards = [
+		[
+			'Registros',
+			sales.length.toString()
+		],
+
+		[
+			'Total Vendido',
+			`$${totalVentas.toLocaleString(
+				'es-CO'
+			)}`
+		],
+
+		[
+			'Promedio Venta',
+			`$${Math.round(
+				promedioVenta
+			).toLocaleString('es-CO')}`
+		]
+	];
+
+	let x = 14;
+
+	cards.forEach(([titulo, valor]) => {
+		doc.setFillColor(
+			245,
+			247,
+			250
+		);
+
+		doc.roundedRect(
+			x,
+			58,
+			56,
+			24,
+			2,
+			2,
+			'F'
+		);
+
+		doc.setFontSize(9);
+		doc.setFont(
+			'helvetica',
+			'normal'
+		);
+
+		doc.text(
+			titulo,
+			x + 4,
+			67
+		);
+
+		doc.setFontSize(12);
+		doc.setFont(
+			'helvetica',
+			'bold'
+		);
+
+		doc.text(
+			valor,
+			x + 4,
+			76
+		);
+
+		x += 62;
+	});
+
+	// ==========================
+	// INDICADOR CLAVE
+	// ==========================
+
+	doc.setFontSize(14);
+	doc.setFont(
+		'helvetica',
+		'bold'
+	);
+
+	doc.text(
+		'Indicadores Clave',
+		14,
+		98
+	);
+
+	doc.setFillColor(
+		245,
+		247,
+		250
+	);
+
+	doc.roundedRect(
+		14,
+		104,
+		182,
+		18,
+		2,
+		2,
+		'F'
+	);
+
+	doc.setFontSize(8);
+	doc.setFont(
+		'helvetica',
+		'normal'
+	);
+
+	doc.text(
+		'Venta más alta registrada',
+		18,
+		111
+	);
+
+	if (ventaMasAlta) {
+		doc.setFontSize(9);
+		doc.setFont(
+			'helvetica',
+			'bold'
+		);
+
+		doc.text(
+			String(
+				ventaMasAlta.producto
+			).slice(0, 40),
+			18,
+			117
+		);
+
+		doc.text(
+			`$${Number(
+				ventaMasAlta.precio
+			).toLocaleString('es-CO')}`,
+			190,
+			117,
+			{
+				align: 'right'
+			}
+		);
+	}
+
+	// ==========================
+	// TABLA
+	// ==========================
+
+	autoTable(doc, {
+		startY: 130,
+
+		head: [[
+			'Producto',
+			'Precio',
+			'Método',
+			'Vendedor',
+			'Fecha'
+		]],
+
+  body: sales.map((sale) => {
+    const fecha = formatearFechaHora(
+      new Date(sale.fecha.replace(' ', 'T'))
+    );
+
+    return [
       sale.producto,
-      `$${sale.precio.toLocaleString('es-CO')}`,
+      `$${Number(
+        sale.precio || 0
+      ).toLocaleString('es-CO')}`,
       sale.metodo,
       sale.vendedor,
-      sale.fecha
-    ]),
+      `${fecha.fecha}\n${fecha.hora}`
+    ];
+  }),
 
-    theme: 'grid',
+		headStyles: {
+			fillColor: [12, 74, 110],
+			fontStyle: 'bold'
+		},
 
-    headStyles: {
-      fillColor: [38, 85, 124],
-      textColor: [255, 255, 255],
-      fontStyle: 'bold',
-      halign: 'center'
-    },
+		alternateRowStyles: {
+			fillColor: [245, 247, 250]
+		},
 
-    alternateRowStyles: {
-      fillColor: [245, 247, 250]
-    },
+		styles: {
+			fontSize: 9,
+			cellPadding: 3,
+			valign: 'middle'
+		},
 
-    styles: {
-      fontSize: 9,
-      cellPadding: 3
-    },
+		columnStyles: {
+			1: {
+				halign: 'right'
+			}
+		}
+	});
 
-    columnStyles: {
-      1: {
-        halign: 'right'
-      }
-    }
-  });
+	// ==========================
+	// FOOTER
+	// ==========================
 
-  // ======================================
-  // RESUMEN FINAL
-  // ======================================
+	const pageCount =
+		doc.getNumberOfPages();
 
-  const finalY =
-    (doc as any).lastAutoTable.finalY || 80;
+	for (
+		let i = 1;
+		i <= pageCount;
+		i++
+	) {
+		doc.setPage(i);
 
-  doc.setDrawColor(220);
-  doc.line(
-    14,
-    finalY + 10,
-    196,
-    finalY + 10
-  );
+		doc.setTextColor(
+			120,
+			120,
+			120
+		);
 
-  doc.setFontSize(13);
-  doc.setFont('helvetica', 'bold');
-  doc.setTextColor(38, 85, 124);
-
-  doc.text(
-    'Resumen General',
-    14,
-    finalY + 22
-  );
-
-  // Caja resumen
-
-  doc.setFillColor(245, 248, 250);
-
-  doc.roundedRect(
-    14,
-    finalY + 28,
-    182,
-    28,
-    3,
-    3,
-    'F'
-  );
-
-  doc.setFontSize(10);
-  doc.setTextColor(80);
-  doc.setFont('helvetica', 'normal');
-
-  doc.text(
-    `Cantidad de registros: ${sales.length}`,
-    20,
-    finalY + 40
-  );
-
-  doc.setFontSize(15);
-  doc.setFont('helvetica', 'bold');
-  doc.setTextColor(38, 85, 124);
-
-  doc.text(
-    `TOTAL VENDIDO: $${totalVentas.toLocaleString('es-CO')}`,
-    20,
-    finalY + 50
-  );
-
-  // ======================================
-  // FECHA GENERACIÓN
-  // ======================================
-
-  doc.setFontSize(9);
-  doc.setTextColor(120);
-
-  doc.text(
-    `Reporte generado el ${fechaGeneracion}`,
-    14,
-    finalY + 68
-  );
-
-  // ======================================
-  // NUMERACIÓN DE PÁGINAS
-  // ======================================
-
-  const pageCount = doc.getNumberOfPages();
-
-  for (let i = 1; i <= pageCount; i++) {
-    doc.setPage(i);
-
-    const pageWidth =
-      doc.internal.pageSize.getWidth();
-
-    const pageHeight =
-      doc.internal.pageSize.getHeight();
-
-    doc.setFontSize(8);
-    doc.setTextColor(120);
+		doc.setFontSize(8);
 
     doc.text(
-      `Generado: ${fechaGeneracion}`,
+      `${fechaGeneracion.fecha} ${fechaGeneracion.hora}`,
       14,
-      pageHeight - 8
+      290
     );
 
-    doc.text(
-      `Página ${i} de ${pageCount}`,
-      pageWidth - 14,
-      pageHeight - 8,
-      { align: 'right' }
-    );
-  }
+		doc.text(
+			`Página ${i} de ${pageCount}`,
+			170,
+			290
+		);
 
-  // ======================================
+		doc.setTextColor(
+			0,
+			0,
+			0
+		);
+	}
 
-  doc.save(
-    `reporte-ventas-${new Date()
-      .toISOString()
-      .split('T')[0]}.pdf`
-  );
+	// ==========================
+	// GUARDAR
+	// ==========================
+
+	doc.save(
+		`reporte-ventas-${new Date()
+			.toISOString()
+			.split('T')[0]}.pdf`
+	);
 }
+
+
 
   export async function actualizarTabla(
     fechaInicio: string,
@@ -323,76 +460,79 @@ function descargarPDF() {
     currentPage = 1;
 
     try {
-      const [productos, ventasPorUsuario, ventasPorMetodo] = await Promise.all([
-        obtenerProductosMasVendidos(fechaInicio, fechaFin, 100),
-        obtenerVentasPorUsuario(fechaInicio, fechaFin),
-        obtenerVentasPorMetodoPago(fechaInicio, fechaFin)
-      ]);
+      const ventas = await listarVentas();
 
-      let usuariosFiltrados = ventasPorUsuario;
+      const resultado: any[] = [];
 
-      if (vendedor !== 'todos') {
-        usuariosFiltrados = ventasPorUsuario.filter(
-          (u) => String(u.id_usuario) === String(vendedor)
+      for (const venta of ventas) {
+
+        const fechaVenta = venta.fecha.split(' ')[0];
+
+        if (
+          fechaVenta < fechaInicio ||
+          fechaVenta > fechaFin
+        ) {
+          continue;
+        }
+
+        if (
+          vendedor !== 'todos' &&
+          String(venta.id_usuario) !== String(vendedor)
+        ) {
+          continue;
+        }
+
+        const detalles = await listarDetalleVenta(
+          venta.id_venta
+        );
+
+        for (const detalle of detalles) {
+
+          if (
+            metodoPago !== 'todos' &&
+            detalle.nombre_metodo_pago.toLowerCase() !== metodoPago
+          ) {
+            continue;
+          }
+
+          resultado.push({
+            id: `${venta.id_venta}-${detalle.id_detalle}`,
+            producto: detalle.nombre_producto,
+            precio: detalle.subtotal,
+            metodo: detalle.nombre_metodo_pago,
+            vendedor: venta.nombre_usuario,
+            fecha: venta.fecha
+          });
+
+        }
+
+      }
+
+      sales = resultado;
+
+      if (sales.length === 0) {
+        toast.warning(
+          'No se encontraron resultados',
+          {
+            id: 'sin-resultados-tabla',
+            description:
+              'No existen ventas para los filtros seleccionados.'
+          }
         );
       }
 
-      let metodoSeleccionado =
-        ventasPorMetodo[0]?.nombre_metodo || 'N/A';
-
-      if (metodoPago !== 'todos') {
-        metodoSeleccionado =
-          metodoPago === 'efectivo'
-            ? 'Efectivo'
-            : 'Transferencia';
-      }
-
-sales = productos.map((producto, index) => ({
-  producto: producto.nombre_producto,
-
-  precio: producto.total_ventas,
-
-  metodo: metodoSeleccionado,
-
-  vendedor:
-    usuariosFiltrados[index]?.nombre_usuario ||
-    usuariosFiltrados[0]?.nombre_usuario ||
-    'N/A',
-
-  fecha: new Date().toLocaleDateString('es-ES', {
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit',
-    second: '2-digit'
-  })
-}));
-
-if (sales.length === 0) {
-  toast.warning(
-    'No se encontraron resultados',
-    {
-      description:
-        'No existen ventas para los filtros seleccionados.',
-      id: 'sin-resultados-tabla'
-    }
-  );
-}
-
-loading = false;
-
-      loading = false;
     } catch (err) {
-  console.error('Error cargando ventas:', err);
+      console.error(err);
 
-  toast.error(
-    'Error al cargar el historial de ventas'
-  );
+      toast.error(
+        'Error al cargar el historial de ventas'
+      );
 
-  error = 'Error al cargar el historial de ventas';
-  loading = false;
-}
+      error =
+        'Error al cargar el historial de ventas';
+    } finally {
+      loading = false;
+    }
   }
 
   onMount(() => {
@@ -475,23 +615,23 @@ loading = false;
 
             <tr class="text-left ">
 
-             <th class="px-6 py-4 text-sm font-medium text-[#dee6eb]">
+             <th class="px-6 py-4 text-sm font-medium text-[#dee6eb] dark:text-white">
                 Producto
               </th>
 
-             <th class="px-6 py-4 text-sm font-medium text-[#dee6eb]">
+             <th class="px-6 py-4 text-sm font-medium text-[#dee6eb] dark:text-white">
                 Precio
               </th>
 
-             <th class="px-6 py-4 text-sm font-medium text-[#dee6eb]">
+             <th class="px-6 py-4 text-sm font-medium text-[#dee6eb] dark:text-white">
                 Método
               </th>
 
-             <th class="px-6 py-4 text-sm font-medium text-[#dee6eb]">
+             <th class="px-6 py-4 text-sm font-medium text-[#dee6eb] dark:text-white">
                 Vendedor
               </th>
 
-             <th class="px-6 py-4 text-sm font-medium text-[#dee6eb]">
+             <th class="px-6 py-4 text-sm font-medium text-[#dee6eb] dark:text-white">
                 Fecha y Hora
               </th>
 
@@ -503,8 +643,11 @@ loading = false;
 
             {#if paginatedSales.length > 0}
 
-              {#each paginatedSales as sale (sale.producto + sale.vendedor)}
+              {#each paginatedSales as sale (sale.id)}
                 {@const metodoEstilo = getMetodoEstilo(sale.metodo)}
+                {@const formattedDate = formatearFechaHora(
+                  new Date(sale.fecha.replace(' ', 'T'))
+                )}
 
                 <tr class="border-t border-slate-100 dark:border-[#334156] transition hover:bg-slate-50 dark:hover:bg-[#0F172A]">
 
@@ -516,16 +659,16 @@ loading = false;
 
                   <td class="px-6 py-5">
                     <span class="text-sm text-slate-600 dark:text-[#E2E8F0]">
-                      ${sale.precio.toLocaleString('es-ES')}
+                     ${formatCurrency(sale.precio)}
                     </span>
                   </td>
 
                   <td class="px-6 py-5 ">
-                    <div class="inline-flex items-center gap-2  rounded-full  bg-[#1c5476]/10 dark:bg-[#0C4A6E]/20 px-3 py-1 text-xs font-medium text-[#1c5476] dark:text-[#39BDF8] ">
+                    <div class="inline-flex items-center gap-2  rounded-full  bg-[#1c5476]/10 px-3 py-1 text-xs font-medium text-[#1c5476] dark:bg-[#39BDF8]/20 dark:text-[#39BDF8]">
                       {#if metodoEstilo.icon}
                         <svelte:component this={metodoEstilo.icon} class="w-4 h-4 {metodoEstilo.text}" />
                       {/if}
-                      <span class="text-sm font-medium {metodoEstilo.text}">
+                      <span class="text-sm font-medium">
                         {sale.metodo}
                       </span>
                     </div>
@@ -538,9 +681,15 @@ loading = false;
                   </td>
 
                   <td class="px-6 py-5">
-                    <span class="text-sm text-slate-600 dark:text-[#E2E8F0]">
-                      {sale.fecha}
-                    </span>
+                    <div class="flex flex-col">
+                      <span class="text-sm font-semibold text-slate-800 dark:text-white">
+                        {formattedDate.fecha}
+                      </span>
+
+                      <span class="text-xs text-slate-500 dark:text-slate-400">
+                        {formattedDate.hora}
+                      </span>
+                    </div>
                   </td>
 
                 </tr>

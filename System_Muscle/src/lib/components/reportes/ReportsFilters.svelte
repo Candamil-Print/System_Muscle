@@ -241,7 +241,7 @@ onMount(() => {
   <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-5 gap-4 ">
 
   <div>
-    <label class="text-xs font-semibold text-slate-500 uppercase">
+    <label class="text-xs font-semibold text-slate-500 dark:text-white uppercase">
       Fecha Inicio
     </label>
 
@@ -261,7 +261,7 @@ onMount(() => {
   </div>
 
   <div>
-    <label class="text-xs font-semibold text-slate-500 uppercase">
+    <label class="text-xs font-semibold text-slate-500 uppercase dark:text-white">
       Fecha Fin
     </label>
 
@@ -281,13 +281,13 @@ onMount(() => {
   </div>
 
     <div class="relative">
-      <label class="text-xs font-semibold text-slate-500 uppercase">
+      <label class="text-xs font-semibold text-slate-500 dark:text-white uppercase">
         Método Pago
       </label>
 
       <select
         bind:value={metodoPago}
-        class="h-11 mt-2 w-full rounded-xl border border-slate-200 px-4 pr-10 text-sm outline-none focus:border-cyan-600 appearance-none bg-transparent dark:border-[#334156] dark:text-[#6C7280]"
+        class="h-11 mt-2 w-full rounded-xl border border-slate-200 px-4 pr-10 text-sm outline-none focus:border-cyan-600 appearance-none bg-transparent dark:border-[#334156] dark:text-white"
       >
         <option value="todos">Todos</option>
         <option value="efectivo">Efectivo</option>
@@ -296,18 +296,18 @@ onMount(() => {
 
        <ChevronDown
         size={18}
-        class="absolute right-3 top-11 pointer-events-none text-slate-400 dark:text-[#6C7280]"
+        class="absolute right-3 top-11 pointer-events-none text-slate-400 dark:text-white"
       />
     </div>
 
     <div class="relative">
-      <label class="text-xs font-semibold text-slate-500 uppercase">
+      <label class="text-xs font-semibold text-slate-500 dark:text-white uppercase">
         Vendedor
       </label>
 
       <select
         bind:value={vendedor}
-        class="h-11 mt-2 w-full rounded-xl border border-slate-200 px-4 pr-10 text-sm outline-none focus:border-cyan-600 appearance-none bg-transparent dark:border-[#334156] dark:text-[#6C7280]"
+        class="h-11 mt-2 w-full rounded-xl border border-slate-200 px-4 pr-10 text-sm outline-none focus:border-cyan-600 appearance-none bg-transparent dark:border-[#334156] dark:text-white"
       >
         <option value="todos">Todos</option>
         {#each vendedores as v (v.id_usuario)}
@@ -319,7 +319,7 @@ onMount(() => {
 
        <ChevronDown
         size={18}
-        class="absolute  right-3 top-11  pointer-events-none text-slate-400 dark:text-[#6C7280]"
+        class="absolute  right-3 top-11  pointer-events-none text-slate-400 dark:text-white"
       />
     </div>
 
@@ -328,7 +328,7 @@ onMount(() => {
       <button
         on:click={handleFilter}
         disabled={loading}
-        class="h-11 px-5 rounded-xl bg-[#0C4A6E]   text-white flex items-center gap-2 disabled:opacity-50 cursor-pointer"
+        class="h-11 px-5 rounded-xl bg-[#0C4A6E] dark:text-[#39BDF8]   text-white flex items-center gap-2 disabled:opacity-50 cursor-pointer"
       >
         <Search class="w-4 h-4" />
         {loading ? 'Cargando...' : 'Filtrar'}
@@ -336,7 +336,7 @@ onMount(() => {
 
       <button
         on:click={handleDownload}
-        class="h-11 w-11 rounded-xl border border-slate-200 dark:border-[#334156] dark:text-[#39BDF8] flex items-center justify-center hover:bg-slate-50 cursor-pointer"
+        class="h-11 w-11 rounded-xl border border-slate-200 dark:border-[#334156] dark:text-[#39BDF8] flex items-center justify-center hover:bg-slate-50 cursor-pointer "
       >
         <Download class="w-4 h-4" />
       </button>

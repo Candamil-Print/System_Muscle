@@ -6,6 +6,7 @@ export interface CartItem {
   precio: number;
   cantidad: number;
   imagen?: string;
+  stock_actual: number;
 }
 
 export const cart = writable<CartItem[]>([]);

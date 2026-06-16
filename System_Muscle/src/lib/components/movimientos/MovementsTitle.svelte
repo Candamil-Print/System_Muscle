@@ -8,6 +8,8 @@
   import { listarProductos }
   from '$lib/services/api/inventory';
 
+  export let onCreated: () => void = () => {};
+
   let showEntryModal = false;
 
   interface Product {
@@ -86,8 +88,11 @@
 </div>
 
 <RegisterEntryModal
-  open={showEntryModal}
-  products={products}
-  onClose={() => showEntryModal = false}
-  onCreated={loadProducts}
+    open={showEntryModal}
+    products={products}
+    onClose={() => showEntryModal = false}
+    onCreated={async () => {
+        await loadProducts();   // actualizar inventario
+        await onCreated();      // actualizar movimientos
+    }}
 />

@@ -10,17 +10,15 @@
     turnoActual = turno;
   });
 
-  // API
-  import {
-    ventasPorUsuario
-  } from '$lib/services/api/sale';
-
-  // TYPES
   import type {
-    VentaResumen
+    VentaDetallePorTurno
   } from '$lib/services/api/sale/sale.types';
 
-  let ventas: VentaResumen[] = [];
+  import {
+  ventasPorTurno
+} from '$lib/services/api/sale';
+
+  let ventas: VentaDetallePorTurno[] = [];
 
   let loading = false;
 
@@ -44,37 +42,47 @@
   };
 
   // CARGAR VENTAS
-  onMount(async () => {
+  async function cargarVentasTurno() {
+
+    if (!turnoActual?.id_turno) return;
 
     try {
 
       loading = true;
 
-      if (!turnoActual) return;
-
       ventas = await ventasPorTurno(
         turnoActual.id_turno
       );
 
-      // TOTAL GENERAL
       total = ventas.reduce(
-        (acc, venta) => {
-
-          return acc + venta.total;
-
-        },
+        (acc, venta) => acc + venta.subtotal,
         0
       );
 
-      /**
-       * TEMPORAL:
-       * mientras backend no mande
-       * total por método de pago
-       */
+      efectivo = ventas
+        .filter(
+          (v) =>
+            v.metodo_pago.toLowerCase() ===
+            'efectivo'
+        )
+        .reduce(
+          (acc, venta) =>
+            acc + venta.subtotal,
+          0
+        );
 
-      efectivo = total * 0.6;
-
-      transferencia = total * 0.4;
+      transferencia = ventas
+        .filter(
+          (v) =>
+            v.metodo_pago
+              .toLowerCase()
+              .includes('transfer')
+        )
+        .reduce(
+          (acc, venta) =>
+            acc + venta.subtotal,
+          0
+        );
 
     } catch (error) {
 
@@ -86,7 +94,11 @@
 
     }
 
-  });
+  }
+
+  $: if (turnoActual?.id_turno) {
+    cargarVentasTurno();
+  }
 
 </script>
 

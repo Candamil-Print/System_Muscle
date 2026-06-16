@@ -1,5 +1,6 @@
 <script lang="ts">
   import { onMount } from 'svelte';
+  import { Toaster } from 'svelte-sonner';
 
   import Header from '$lib/components/layout/Header.svelte';
   import Sidebar from '$lib/components/layout/Sidebar.svelte';
@@ -129,6 +130,14 @@ $: productosFiltrados = productos.filter((producto) => {
 
   });
 </script>
+
+<Toaster
+	position="top-center"
+	theme="dark"
+	toastOptions={{
+		class: '!bg-[#1E293B] !border !border-[#334156] !text-white'
+	}}
+/>
 
 <div class="flex min-h-screen bg-slate-50 dark:bg-[#111827]">
 

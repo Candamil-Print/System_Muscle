@@ -18,7 +18,7 @@
       bind:value={search}
       type="text"
       placeholder="Buscar por producto..."
-      class="h-11 w-full rounded-xl border border-slate-200 pl-10 pr-4 focus:outline-none focus:ring-2 focus:ring-cyan-700/20 dark:border-[#334156] dark:text-white"
+      class="h-11 w-full rounded-xl border border-slate-200 pl-10 pr-4 focus:outline-none focus:ring-2 focus:ring-cyan-700/20 dark:border-[#334156] dark:text-white dark:focus:border-[#39BDF8] dark:focus:ring-4 dark:focus:ring-[#39BDF8]/20"
     />
 
   </div>

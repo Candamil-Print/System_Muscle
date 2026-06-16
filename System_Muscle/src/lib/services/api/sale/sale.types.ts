@@ -67,3 +67,38 @@ export interface VentaResumen {
   total: number;
 }
 
+export interface VentaDetallePorTurno {
+
+  id_venta: number;
+
+  fecha: string;
+
+  vendedor: string;
+
+  producto: string;
+
+  cantidad: number;
+
+  precio_unitario: number;
+
+  subtotal: number;
+
+  metodo_pago: string;
+
+  id_caja: number;
+
+  caja_inicial: number;
+
+}
+
+export interface DetalleVentaDetalle {
+  id_detalle: number;
+  id_venta: number;
+  id_producto: number;
+  nombre_producto: string;
+  cantidad: number;
+  precio_unitario: number;
+  metodo_pago: number;
+  nombre_metodo_pago: string;
+  subtotal: number;
+}

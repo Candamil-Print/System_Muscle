@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
 
+
 	import WelcomeBackground from '$lib/components/welcome/WelcomeBackground.svelte';
 	import WelcomeLogo from '$lib/components/welcome/WelcomeLogo.svelte';
 	import WelcomeFeatures from '$lib/components/welcome/WelcomeFeatures.svelte';
@@ -13,6 +14,8 @@
 		goto('/login');
 	};
 </script>
+
+
 
 <div
 	class="relative flex min-h-screen flex-col items-center justify-center overflow-hidden bg-zinc-50 px-6 text-zinc-900 transition-all duration-500 dark:bg-[#020617] dark:text-white"

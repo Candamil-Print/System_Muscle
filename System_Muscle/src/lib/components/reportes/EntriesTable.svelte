@@ -2,43 +2,8 @@
     import ShoppingCart from 'lucide-svelte/icons/shopping-cart';
     import Download from 'lucide-svelte/icons/download';
 
-    export let entradas = [
-        {
-            producto: 'Proteína Whey 1kg',
-            cantidad: '50 Uni',
-            fecha: '07/05/2026 - 09:00 AM',
-            recibe: 'Juan García',
-            tipo: 'Proteína'
-        },
-        {
-            producto: 'Creatina Monohidrato',
-            cantidad: '30 Uni',
-            fecha: '07/05/2026 - 10:30 AM',
-            recibe: 'María López',
-            tipo: 'Suplemento'
-        },
-        {
-            producto: 'BCAA 500g',
-            cantidad: '40 Uni',
-            fecha: '06/05/2026 - 02:15 PM',
-            recibe: 'Carlos Rodríguez',
-            tipo: 'Suplemento'
-        },
-        {
-            producto: 'Mancuernas 5kg Par',
-            cantidad: '15 Uni',
-            fecha: '05/05/2026 - 11:45 AM',
-            recibe: 'Juan García',
-            tipo: 'Accesorio'
-        },
-        {
-            producto: 'Multivitamínico',
-            cantidad: '60 Uni',
-            fecha: '04/05/2026 - 03:20 PM',
-            recibe: 'María López',
-            tipo: 'Suplemento'
-        }
-    ];
+    export let entradas: any[] = [];
+   
 
     function getTipoEstilo(tipo: string) {
         const estilos: Record<string, { bg: string; text: string; border: string }> = {
@@ -82,19 +47,56 @@
         link.click();
         document.body.removeChild(link);
     }
+
+    function formatearFechaHora(fechaTexto: string) {
+    if (!fechaTexto) {
+        return {
+            fecha: '-',
+            hora: '-'
+        };
+    }
+
+    const [fechaParte, horaParte] = fechaTexto.split(',');
+
+    const [dia, mes, anioCorto] = fechaParte.trim().split('/');
+
+    const meses = [
+        'enero',
+        'febrero',
+        'marzo',
+        'abril',
+        'mayo',
+        'junio',
+        'julio',
+        'agosto',
+        'septiembre',
+        'octubre',
+        'noviembre',
+        'diciembre'
+    ];
+
+    const anio = `20${anioCorto}`;
+
+    return {
+        fecha: `${Number(dia)} de ${meses[Number(mes) - 1]} de ${anio}`,
+        hora: horaParte.trim()
+    };
+}
+
+
 </script>
 
-<div class="bg-white border border-slate-200 rounded-2xl overflow-hidden">
+<div class="bg-white border border-slate-200 dark:bg-[#1E293B] dark:border-[#334156] rounded-2xl overflow-hidden">
 
-    <div class="flex items-center justify-between px-6 py-4 border-b border-slate-200">
+    <div class="flex items-center justify-between px-6 py-4 border-b border-slate-200 dark:border-[#334156] ">
 
         <div class="flex flex-col items-start gap-0">
 
             <div class="flex items-center gap-2">
 
-                <ShoppingCart class="w-5 h-5 text-slate-700" />
+                <ShoppingCart class="w-5 h-5 text-slate-700 dark:text-[#39BDF8]" />
 
-                <h3 class="text-lg font-semibold text-slate-800">
+                <h3 class="text-lg font-semibold text-slate-800 dark:text-white">
                     Historial de Entradas
                 </h3>
 
@@ -109,21 +111,21 @@
         <button
             on:click={descargarCSV}
             disabled={entradas.length === 0}
-            class="h-11 w-11 rounded-xl border border-slate-200 flex items-center justify-center hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            class="h-11 w-11 rounded-xl border border-slate-200 dark:border-[#334156] flex items-center justify-center hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             title="Descargar reporte"
         >
-            <Download class="w-5 h-5 text-slate-700" />
+            <Download class="w-5 h-5 text-slate-700 dark:text-[#39BDF8]" />
         </button>
 
     </div>
 
     <div class="overflow-x-auto px-6 py-6">
 
-        <div class="border border-slate-200 rounded-xl overflow-hidden">
+        <div class="border border-slate-200 dark:border-[#334156] rounded-xl overflow-hidden">
 
             <table class="w-full">
 
-                <thead class="bg-[#26557c]">
+                <thead class="bg-[#26557c] dark:bg-[#334156] ">
 
                     <tr class="text-left">
 
@@ -151,42 +153,50 @@
 
                 </thead>
 
-                <tbody class="divide-y divide-slate-200">
+                <tbody class="divide-y divide-slate-200 dark:divide-[#334156]">
 
                     {#if entradas.length > 0}
 
-                        {#each entradas as entrada (entrada.producto + entrada.recibe)}
+                        {#each entradas as entrada (entrada.id)}
+                        
                             {@const tipoEstilo = getTipoEstilo(entrada.tipo)}
+                            
 
-                            <tr class="bg-white hover:bg-slate-50 transition-colors">
+                            <tr class="bg-white dark:bg-[#1E293B] hover:bg-slate-50 dark:hover:bg-[#162033] transition-colors">
 
                                 <td class="px-6 py-5">
-                                    <span class="font-medium text-slate-700">
+                                    <span class="font-medium text-slate-700 dark:text-white">
                                         {entrada.producto}
                                     </span>
                                 </td>
 
                                 <td class="px-6 py-5">
-                                    <span class="text-slate-700">
+                                    <span class="text-slate-700 dark:text-white">
                                         {entrada.cantidad}
                                     </span>
                                 </td>
 
                                 <td class="px-6 py-5">
-                                    <span class="text-slate-500 text-sm">
-                                        {entrada.fecha}
-                                    </span>
+                                    <div class="flex flex-col leading-tight">
+                                        <span class="text-base font-bold text-slate-800 dark:text-white">
+                                            {formatearFechaHora(entrada.fecha).fecha}
+                                        </span>
+
+                                        <span class="mt-1 text-sm font-medium text-slate-500">
+                                            {formatearFechaHora(entrada.fecha).hora}
+                                        </span>
+                                    </div>
                                 </td>
 
                                 <td class="px-6 py-5">
-                                    <span class="text-slate-700">
+                                    <span class="text-slate-700 dark:text-white">
                                         {entrada.recibe}
                                     </span>
                                 </td>
 
                                 <td class="px-6 py-5">
                                     <span
-                                        class="inline-flex px-3 py-2 rounded-lg border text-sm font-medium {tipoEstilo.bg} {tipoEstilo.text} {tipoEstilo.border}"
+                                        class="inline-flex px-3 py-2 rounded-full text-sm font-medium bg-[#1c5476]/10 px-3 py-1 text-xs font-medium text-[#1c5476] dark:bg-[#39BDF8]/20 dark:text-[#39BDF8]"
                                     >
                                         {entrada.tipo}
                                     </span>
