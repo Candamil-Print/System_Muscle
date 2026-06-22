@@ -100,7 +100,7 @@ fn test_resumen_ventas_rango() {
     )
     .unwrap();
 
-    let hoy = chrono::Local::now().format("%Y-%m-%d").to_string();
+    let hoy = chrono::Utc::now().format("%Y-%m-%d").to_string();
     let resumen = resumen_ventas_rango_logic(&conn, &hoy, &hoy).unwrap();
     assert!(resumen.numero_ventas >= 1);
     assert!(resumen.total_general >= 50000.0);
@@ -134,7 +134,7 @@ fn test_productos_mas_vendidos() {
     )
     .unwrap();
 
-    let hoy = chrono::Local::now().format("%Y-%m-%d").to_string();
+    let hoy = chrono::Utc::now().format("%Y-%m-%d").to_string();
     let top = productos_mas_vendidos_logic(&conn, &hoy, &hoy, 10).unwrap();
     let item = top.iter().find(|p| p.id_producto == id_producto).unwrap();
     assert_eq!(item.cantidad_vendida, 8);
@@ -165,7 +165,7 @@ fn test_reporte_entradas_rango() {
     let nombre = nombre_unico("ReporteTest Entrada");
     let id = crear_producto_con_stock(&conn, &nombre, 25);
 
-    let hoy = chrono::Local::now().format("%Y-%m-%d").to_string();
+    let hoy = chrono::Utc::now().format("%Y-%m-%d").to_string();
     let entradas = reporte_entradas_rango_logic(&conn, &hoy, &hoy).unwrap();
     let item = entradas.iter().find(|e| e.id_producto == id).unwrap();
     assert_eq!(item.cantidad_ingresada, 25);
@@ -177,7 +177,7 @@ fn test_reporte_entradas_rango() {
 fn test_ventas_por_metodo_pago_reporte() {
     println!("\n📊 TEST: Ventas por método de pago");
     let conn = get_db_connection().unwrap();
-    let hoy = chrono::Local::now().format("%Y-%m-%d").to_string();
+    let hoy = chrono::Utc::now().format("%Y-%m-%d").to_string();
     let metodos = ventas_por_metodo_pago_logic(&conn, &hoy, &hoy).unwrap();
     assert!(metodos.iter().all(|m| m.id_metodo == 1 || m.id_metodo == 2));
 }
@@ -247,7 +247,7 @@ fn test_reporte_margen_ganancia() {
     )
     .unwrap();
 
-    let hoy = chrono::Local::now().format("%Y-%m-%d").to_string();
+    let hoy = chrono::Utc::now().format("%Y-%m-%d").to_string();
     let reporte = reporte_margen_ganancia_logic(&conn, &hoy, &hoy).unwrap();
 
     // Verificaciones consolidadas
@@ -316,7 +316,7 @@ fn test_reporte_consolidado_ventas() {
     )
     .unwrap();
 
-    let hoy = chrono::Local::now().format("%Y-%m-%d").to_string();
+    let hoy = chrono::Utc::now().format("%Y-%m-%d").to_string();
     let reporte = reporte_consolidado_ventas_logic(&conn, &hoy, &hoy, 5).unwrap();
 
     // Verificaciones
@@ -372,7 +372,7 @@ fn test_reporte_ventas_detallado() {
     )
     .unwrap();
 
-    let hoy = chrono::Local::now().format("%Y-%m-%d").to_string();
+    let hoy = chrono::Utc::now().format("%Y-%m-%d").to_string();
     let reporte = reporte_ventas_detallado_logic(&conn, &hoy, &hoy).unwrap();
 
     // Verificaciones
