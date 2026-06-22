@@ -136,7 +136,10 @@ fn test_productos_mas_vendidos() {
 
     let hoy = chrono::Local::now().format("%Y-%m-%d").to_string();
     let top = productos_mas_vendidos_logic(&conn, &hoy, &hoy, 10).unwrap();
-    assert!(top.iter().any(|p| p.id_producto == id_producto && p.cantidad_vendida == 8));
+    let item = top.iter().find(|p| p.id_producto == id_producto).unwrap();
+    assert_eq!(item.cantidad_vendida, 8);
+    assert_eq!(item.metodo_pago, "TRANSFERENCIA");
+    assert!(!item.vendedor.is_empty());
 
     limpiar_producto(&conn, id_producto);
     limpiar_caja(&conn, id_caja);
@@ -338,6 +341,54 @@ fn test_reporte_consolidado_ventas() {
     assert!(vendedor.unwrap().total_vendido >= 36000.0);
 
     println!("   ✅ Reporte consolidado verificado con éxito");
+
+    // Limpieza
+    limpiar_producto(&conn, id_producto);
+    limpiar_caja(&conn, id_caja);
+}
+
+#[test]
+fn test_reporte_ventas_detallado() {
+    println!("\n📊 TEST: Reporte Ventas Detallado (vista_reporte_ventas)");
+    let conn = get_db_connection().unwrap();
+    let id_caja = crear_caja_abierta(&conn);
+    let nombre_prod = nombre_unico("ReporteTest Detallado");
+    let id_producto = crear_producto_con_stock(&conn, &nombre_prod, 10);
+
+    // Registrar una venta
+    registrar_venta_logic(
+        &conn,
+        &NuevaVenta {
+            id_usuario: 1,
+            id_caja,
+            id_turno: None,
+            lineas: vec![LineaVenta {
+                id_producto,
+                cantidad: 4,
+                precio_unitario: 15000.0,
+                metodo_pago: 1, // EFECTIVO
+            }],
+        },
+    )
+    .unwrap();
+
+    let hoy = chrono::Local::now().format("%Y-%m-%d").to_string();
+    let reporte = reporte_ventas_detallado_logic(&conn, &hoy, &hoy).unwrap();
+
+    // Verificaciones
+    assert!(!reporte.is_empty());
+    let sale = reporte.iter().find(|s| s.id_caja == id_caja).unwrap();
+    assert_eq!(sale.producto, nombre_prod);
+    assert_eq!(sale.cantidad, 4);
+    assert_eq!(sale.precio_unitario, 15000.0);
+    assert_eq!(sale.metodo_pago, "EFECTIVO");
+    assert!(!sale.vendedor.is_empty());
+    assert_eq!(sale.caja_inicial_valor, 0.0);
+    assert!(!sale.caja_inicial_hora.is_empty());
+    assert!(sale.total_efectivo >= 60000.0);
+    assert_eq!(sale.total_final, sale.total_efectivo + sale.total_transferencia);
+
+    println!("   ✅ Reporte de ventas detallado verificado con éxito");
 
     // Limpieza
     limpiar_producto(&conn, id_producto);

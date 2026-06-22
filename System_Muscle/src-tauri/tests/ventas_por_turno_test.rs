@@ -178,8 +178,20 @@ fn test_ventas_por_turno_detalle() {
                 println!("      Método de pago: {}", d.metodo_pago);
                 println!("      Caja ID: {}", d.id_caja);
                 println!("      Caja inicial: ${:.2}", d.caja_inicial);
+                println!("      Caja inicial hora: {}", d.caja_inicial_hora);
+                println!("      Caja final: {:?}", d.caja_final);
+                println!("      Caja final hora: {:?}", d.caja_final_hora);
+                println!("      Caja total: {:?}", d.caja_total);
+                println!("      Total efectivo: ${:.2}", d.total_efectivo);
+                println!("      Total transferencia: ${:.2}", d.total_transferencia);
+                println!("      Total final: ${:.2}", d.total_final);
             }
             assert_eq!(detalles.len(), 2);
+            assert!(!detalles[0].caja_inicial_hora.is_empty());
+            assert_eq!(detalles[0].caja_inicial, 500000.0);
+            assert!(detalles[0].total_efectivo >= 100000.0); // 2 * 50000
+            assert!(detalles[0].total_transferencia >= 60000.0); // 3 * 20000
+            assert_eq!(detalles[0].total_final, detalles[0].total_efectivo + detalles[0].total_transferencia);
         }
         Err(e) => panic!("❌ Error: {}", e),
     }
