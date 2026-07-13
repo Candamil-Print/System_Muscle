@@ -1,5 +1,6 @@
 <script>
   import { createEventDispatcher } from 'svelte';
+  import { esAdministrador } from '$lib/utils/session';
   const dispatch = createEventDispatcher();
 </script>
 
@@ -14,10 +15,12 @@
     </p>
   </div>
 
-  <button
-    class="rounded-lg bg-[#0C4A6E] dark:text-[#39BDF8] px-4 py-2.5 text-sm font-medium text-white hover:bg-[#0a3a52]"
-    onclick={() => dispatch('create')}
-  >
-    + Nuevo Producto
-  </button>
+  {#if esAdministrador()}
+    <button
+      class="rounded-lg bg-[#0C4A6E] dark:text-[#39BDF8] px-4 py-2.5 text-sm font-medium text-white hover:bg-[#0a3a52]"
+      onclick={() => dispatch('create')}
+    >
+      + Nuevo Producto
+    </button>
+  {/if}
 </div>

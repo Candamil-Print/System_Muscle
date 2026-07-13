@@ -1,28 +1,143 @@
 <script lang="ts">
-    import { createEventDispatcher } from 'svelte';
+    import { onMount } from 'svelte';
     import Search from 'lucide-svelte/icons/search';
     import Download from 'lucide-svelte/icons/download';
+    import { toast } from 'svelte-sonner';
+    import CalendarDays from 'lucide-svelte/icons/calendar-days';
     import { ChevronDown } from 'lucide-svelte';
 
-    const dispatch = createEventDispatcher();
+    import { obtenerVentasPorUsuario } from '$lib/services/api/reports/reports.service';
+    import type { VentasPorUsuario } from '$lib/services/api/reports/reports.types';
+
+    import { listarProductos } from '$lib/services/api/inventory/inventory.service';
+    import type { Producto } from '$lib/services/api/inventory/inventory.types';
+
+    import flatpickr from 'flatpickr';
+    import { Spanish } from 'flatpickr/dist/l10n/es.js';
+
+    // ==========================
+    // Referencias a los campos de fecha
+    // ==========================
+    let inicioInput: HTMLInputElement;
+    let finInput: HTMLInputElement;
+
+    let finPicker: flatpickr.Instance;
+
+    // ==========================
+    // Propiedades recibidas desde el componente padre
+    // ==========================
+    export let onFilter: (filters: { fechaInicio: string; fechaFin: string; tipoProducto: string; vendedorEntrada: string }) => void = () => {};
+
+    export let loading = false;
 
     let fechaInicio = '';
     let fechaFin = '';
-    let tipoProducto = '';
-    let proveedor = '';
+    let tipoProducto = 'todos';
+    let vendedorEntrada = 'todos';
 
-    function aplicarFiltros() {
-        dispatch('filter', {
-            fechaInicio,
-            fechaFin,
-            tipoProducto,
-            proveedor
+    let vendedoresEntrada: VentasPorUsuario[] = [];
+
+    let tiposProducto: string[] = [];
+
+    // ==========================
+    // Obtiene los tipos de producto registrados para llenar elnselector de filtros
+    // ==========================
+    async function cargarTiposProducto() {
+        try {
+            const productos: ProductoConStock[] = await listarProductos();
+
+            tiposProducto = [
+                ...new Set(productos.map(p => p.tipo_producto))
+            ].sort();
+
+        } catch (err) {
+            console.error('Error cargando tipos de producto:', err);
+        }
+    }
+
+    // ==========================
+    // Obtiene los vendedores que tienen movimientos registrados para llenar el selector
+    // ==========================
+    async function cargarVendedores() {
+        try {
+        const today = new Date();
+        const treintaDiasAgo = new Date(today.getTime() - 30 * 24 * 60 * 60 * 1000);
+        
+        const inicio = treintaDiasAgo.toISOString().split('T')[0];
+        const fin = today.toISOString().split('T')[0];
+
+        vendedoresEntrada = await obtenerVentasPorUsuario(inicio, fin);
+        } catch (err) {
+        console.error('Error cargando vendedores:', err);
+        }
+    }
+
+
+    // ==========================
+    // Valida los filtros y envía
+    // ==========================
+    function handleFilter() {
+        if (!fechaInicio || !fechaFin) {
+        toast.warning('Debes seleccionar ambas fechas');
+        return;
+        }
+    
+        onFilter({
+        fechaInicio,
+        fechaFin,
+        tipoProducto,
+        vendedorEntrada
         });
     }
 
-    function exportarPDF() {
-        dispatch('export');
-    }
+    // ==========================
+    // Inicializa los componentes
+    // ==========================
+    onMount(() => {
+        cargarVendedores();
+        cargarTiposProducto();
+
+        // Configuración del selector de fecha inicial
+        flatpickr(inicioInput, {
+            locale: Spanish,
+            dateFormat: 'Y-m-d',
+            allowInput: true,
+
+            onChange: (selectedDates) => {
+                if (selectedDates[0]) {
+                    fechaInicio = selectedDates[0]
+                        .toISOString()
+                        .split('T')[0];
+
+                    finPicker?.set('minDate', fechaInicio);
+
+                    if (
+                        fechaFin &&
+                        new Date(fechaFin) < new Date(fechaInicio)
+                    ) {
+                        fechaFin = fechaInicio;
+                        finPicker?.setDate(fechaInicio);
+                    }
+                }
+            }
+        });
+
+        // Configuración del selector de fecha final
+        finPicker = flatpickr(finInput, {
+            locale: Spanish,
+            dateFormat: 'Y-m-d',
+            allowInput: true,
+            minDate: fechaInicio,
+
+            onChange: (selectedDates) => {
+                if (selectedDates[0]) {
+                    fechaFin = selectedDates[0]
+                        .toISOString()
+                        .split('T')[0];
+                }
+            }
+        });
+    });
 </script>
 
 <div class="bg-white border border-slate-200 dark:bg-[#1E293B] dark:border-[#334156] rounded-2xl p-5">
@@ -35,11 +150,19 @@
                 Fecha Inicio
             </label>
 
-            <input
-                bind:value={fechaInicio}
-                type="date"
-                class="w-full mt-2 h-11 px-4 rounded-xl border border-slate-200 dark:border-[#334156] dark:text-white"
-            />
+            <div class="relative mt-2">
+
+                <CalendarDays
+                class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none"
+                />
+
+                <input
+                    bind:this={inicioInput}
+                    placeholder="Seleccione fecha"
+                    class="w-full h-11 pl-10 pr-4 rounded-xl border border-slate-200 bg-white text-slate-700 dark:bg-[#1E293B] dark:border-[#334156] dark:text-[#E2E8F0]"
+                />
+
+            </div>
         </div>
 
         <!-- Fecha Fin -->
@@ -48,11 +171,19 @@
                 Fecha Fin
             </label>
 
-            <input
-                bind:value={fechaFin}
-                type="date"
-                class="w-full mt-2 h-11 px-4 rounded-xl border border-slate-200 dark:border-[#334156] dark:text-white"
-            />
+            <div class="relative mt-2">
+
+                <CalendarDays
+                class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none"
+                />
+
+                <input
+                    bind:this={finInput}
+                    placeholder="Seleccione fecha"
+                    class="w-full h-11 pl-10 pr-4 rounded-xl border border-slate-200 bg-white text-slate-700 dark:bg-[#1E293B] dark:border-[#334156] dark:text-[#E2E8F0]"
+                />
+
+            </div>
         </div>
 
         <!-- Tipo Producto -->
@@ -65,11 +196,12 @@
                 bind:value={tipoProducto}
                 class="h-11 w-full rounded-xl border mt-2 border-slate-200 px-4 pr-10 text-sm outline-none focus:border-cyan-600 appearance-none bg-transparent dark:border-[#334156] dark:text-white"
             >
-                <option value="">Todos</option>
-                <option value="proteinas">Proteínas</option>
-                <option value="suplementos">Suplementos</option>
-                <option value="bebidas">Bebidas</option>
-                <option value="snacks">Snacks</option>
+                <option value="todos">Todos</option>
+                {#each tiposProducto as tipo}
+                    <option value={tipo}>
+                        {tipo.charAt(0) + tipo.slice(1).toLowerCase()}
+                    </option>
+                {/each}
             </select>
 
             <ChevronDown
@@ -85,13 +217,15 @@
             </label>
 
             <select
-                bind:value={proveedor}
+                bind:value={vendedorEntrada}
                 class="h-11 w-full rounded-xl border mt-2 border-slate-200 px-4 pr-10 text-sm outline-none focus:border-cyan-600 appearance-none bg-transparent dark:border-[#334156] dark:text-white"
             >
-                <option value="">Todos</option>
-                <option value="nutricion-pro">Persona 1</option>
-                <option value="suplementos-elite">Persona 2</option>
-                <option value="fitness-world">Persona 3</option>
+                <option value="todos">Todos</option>
+                {#each vendedoresEntrada as v (v.id_usuario)}
+                    <option value={v.id_usuario}>
+                        {v.nombre_usuario}
+                    </option>
+                {/each}
             </select>
 
             <ChevronDown
@@ -103,11 +237,12 @@
         <!-- Botones -->
         <div class="flex items-end gap-3">
             <button
-                on:click={aplicarFiltros}
+                on:click={handleFilter}
+                disabled={loading}
                 class="h-11 px-5 rounded-xl bg-[#0C4A6E] text-white dark:text-[#39BDF8]  flex items-center gap-2 cursor-pointer hover:bg-sky-800"
             >
                 <Search class="w-4 h-4 " />
-                Filtrar
+                {loading ? 'Cargando...' : 'Filtrar'}
             </button>
 
             <button

@@ -92,368 +92,411 @@
   }
   
 
-function descargarPDF() {
-	if (sales.length === 0) {
-		alert('No hay datos para descargar');
-		return;
-	}
-
-	const doc = new jsPDF('p', 'mm', 'a4');
-
-	const fechaGeneracion = formatearFechaHora();
-
-	// ==========================
-	// CALCULOS
-	// ==========================
-
-	const totalVentas = sales.reduce(
-		(acc, sale) =>
-			acc + Number(sale.precio || 0),
-		0
-	);
-
-	const promedioVenta =
-		sales.length > 0
-			? totalVentas / sales.length
-			: 0;
-
-	const ventaMasAlta =
-		sales.length > 0
-			? [...sales].sort(
-					(a, b) =>
-						Number(b.precio || 0) -
-						Number(a.precio || 0)
-			  )[0]
-			: null;
-
-	// ==========================
-	// HEADER
-	// ==========================
-
-	doc.setFillColor(12, 74, 110);
-
-  doc.rect(
-    0,
-    0,
-    210,
-    40,
-    'F'
-  );
-
-	doc.setTextColor(
-		255,
-		255,
-		255
-	);
-
-	doc.setFontSize(22);
-	doc.setFont(
-		'helvetica',
-		'bold'
-	);
-
-  doc.text(
-    'REPORTE DE VENTAS',
-    105,
-    14,
-    {
-      align: 'center'
+  function descargarPDF() {
+    if (sales.length === 0) {
+      alert('No hay datos para descargar');
+      return;
     }
-  );
 
-doc.setFontSize(11);
-doc.setFont('helvetica', 'normal');
+    const doc = new jsPDF('p', 'mm', 'a4');
 
-doc.text(
-	fechaGeneracion.fecha,
-	105,
-	23,
-	{
-		align: 'center'
-	}
-);
+    const fechaGeneracion = formatearFechaHora();
 
-doc.text(
-	fechaGeneracion.hora,
-	105,
-	29,
-	{
-		align: 'center'
-	}
-);
+    // ==========================
+    // CALCULOS
+    // ==========================
 
-	// ==========================
-	// RESUMEN EJECUTIVO
-	// ==========================
-
-	doc.setTextColor(
-		0,
-		0,
-		0
-	);
-
-	doc.setFontSize(16);
-	doc.setFont(
-		'helvetica',
-		'bold'
-	);
-
-	doc.text(
-		'Resumen Ejecutivo',
-		14,
-		50
-	);
-
-	const cards = [
-		[
-			'Registros',
-			sales.length.toString()
-		],
-
-		[
-			'Total Vendido',
-			`$${totalVentas.toLocaleString(
-				'es-CO'
-			)}`
-		],
-
-		[
-			'Promedio Venta',
-			`$${Math.round(
-				promedioVenta
-			).toLocaleString('es-CO')}`
-		]
-	];
-
-	let x = 14;
-
-	cards.forEach(([titulo, valor]) => {
-		doc.setFillColor(
-			245,
-			247,
-			250
-		);
-
-		doc.roundedRect(
-			x,
-			58,
-			56,
-			24,
-			2,
-			2,
-			'F'
-		);
-
-		doc.setFontSize(9);
-		doc.setFont(
-			'helvetica',
-			'normal'
-		);
-
-		doc.text(
-			titulo,
-			x + 4,
-			67
-		);
-
-		doc.setFontSize(12);
-		doc.setFont(
-			'helvetica',
-			'bold'
-		);
-
-		doc.text(
-			valor,
-			x + 4,
-			76
-		);
-
-		x += 62;
-	});
-
-	// ==========================
-	// INDICADOR CLAVE
-	// ==========================
-
-	doc.setFontSize(14);
-	doc.setFont(
-		'helvetica',
-		'bold'
-	);
-
-	doc.text(
-		'Indicadores Clave',
-		14,
-		98
-	);
-
-	doc.setFillColor(
-		245,
-		247,
-		250
-	);
-
-	doc.roundedRect(
-		14,
-		104,
-		182,
-		18,
-		2,
-		2,
-		'F'
-	);
-
-	doc.setFontSize(8);
-	doc.setFont(
-		'helvetica',
-		'normal'
-	);
-
-	doc.text(
-		'Venta más alta registrada',
-		18,
-		111
-	);
-
-	if (ventaMasAlta) {
-		doc.setFontSize(9);
-		doc.setFont(
-			'helvetica',
-			'bold'
-		);
-
-		doc.text(
-			String(
-				ventaMasAlta.producto
-			).slice(0, 40),
-			18,
-			117
-		);
-
-		doc.text(
-			`$${Number(
-				ventaMasAlta.precio
-			).toLocaleString('es-CO')}`,
-			190,
-			117,
-			{
-				align: 'right'
-			}
-		);
-	}
-
-	// ==========================
-	// TABLA
-	// ==========================
-
-	autoTable(doc, {
-		startY: 130,
-
-		head: [[
-			'Producto',
-			'Precio',
-			'Método',
-			'Vendedor',
-			'Fecha'
-		]],
-
-  body: sales.map((sale) => {
-    const fecha = formatearFechaHora(
-      new Date(sale.fecha.replace(' ', 'T'))
+    const totalVentas = sales.reduce(
+      (acc, sale) =>
+        acc + Number(sale.precio || 0),
+      0
     );
 
-    return [
-      sale.producto,
-      `$${Number(
-        sale.precio || 0
-      ).toLocaleString('es-CO')}`,
-      sale.metodo,
-      sale.vendedor,
-      `${fecha.fecha}\n${fecha.hora}`
+    const promedioVenta =
+      sales.length > 0
+        ? totalVentas / sales.length
+        : 0;
+
+    const ventaMasAlta =
+      sales.length > 0
+        ? [...sales].sort(
+            (a, b) =>
+              Number(b.precio || 0) -
+              Number(a.precio || 0)
+          )[0]
+        : null;
+
+    // ==========================
+    // HEADER
+    // ==========================
+
+    doc.setFillColor(12, 74, 110);
+      doc.rect(0, 0, 210, 42, "F");
+
+      doc.setDrawColor(200, 200, 200);  // Linea Gris clara
+      doc.setLineWidth(0.6);
+      doc.line(0, 42, 210, 42);
+
+      // Titulo
+
+      doc.setTextColor(255,255,255);
+      doc.setFont("helvetica","bold");
+      doc.setFontSize(24);
+
+      doc.text(
+        "REPORTE DE VENTAS",
+        105,
+        16,
+        { align:"center" }
+      );
+
+      doc.setFont("helvetica","normal");
+      doc.setFontSize(10);
+
+      doc.text(
+        "Sistema de Gestión de Inventario",
+        105,
+        24,
+        { align:"center" }
+      );
+
+      doc.text(
+        `${fechaGeneracion.fecha} • ${fechaGeneracion.hora}`,
+        105,
+        31,
+        { align:"center" }
+      );
+
+    // ==========================
+    // RESUMEN EJECUTIVO
+    // ==========================
+
+    doc.setTextColor(12, 74, 110);
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(16);
+
+      doc.text(
+          'Resumen Ejecutivo',
+          14,
+          50
+      );
+
+      // Línea decorativa
+      doc.setDrawColor(12, 74, 110);
+      doc.setLineWidth(0.4);
+      doc.line(14, 52, 196, 52);
+
+    const cards = [
+      [
+        'Registros',
+        sales.length.toString()
+      ],
+
+      [
+        'Total Vendido',
+        `$${totalVentas.toLocaleString(
+          'es-CO'
+        )}`
+      ],
+
+      [
+        'Promedio Venta',
+        `$${Math.round(
+          promedioVenta
+        ).toLocaleString('es-CO')}`
+      ]
     ];
-  }),
 
-		headStyles: {
-			fillColor: [12, 74, 110],
-			fontStyle: 'bold'
-		},
+    let x = 14;
 
-		alternateRowStyles: {
-			fillColor: [245, 247, 250]
-		},
+    cards.forEach(([titulo, valor]) => {
+      // ---------- Sombra ----------
+      doc.setFillColor(228, 232, 236);
 
-		styles: {
-			fontSize: 9,
-			cellPadding: 3,
-			valign: 'middle'
-		},
+      doc.roundedRect(
+        x + 1,
+        59,
+        56,
+        26,
+        3,
+        3,
+        'F'
+      );
 
-		columnStyles: {
-			1: {
-				halign: 'right'
-			}
-		}
-	});
+      // ---------- Tarjeta ----------
+      doc.setFillColor(250, 250, 250);
 
-	// ==========================
-	// FOOTER
-	// ==========================
+      doc.roundedRect(
+        x,
+        58,
+        56,
+        26,
+        3,
+        3,
+        'F'
+      );
 
-	const pageCount =
-		doc.getNumberOfPages();
+      // ---------- Barra superior ----------
+      doc.setFillColor(12, 74, 110);
 
-	for (
-		let i = 1;
-		i <= pageCount;
-		i++
-	) {
-		doc.setPage(i);
+      doc.roundedRect(
+        x,
+        58,
+        56,
+        3,
+        3,
+        3,
+        'F'
+      );
 
-		doc.setTextColor(
-			120,
-			120,
-			120
-		);
+      // ---------- Título ----------
+      doc.setTextColor(130, 130, 130);
 
-		doc.setFontSize(8);
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(9);
+
+      doc.text(
+        titulo,
+        x + 4,
+        68
+      );
+
+      // ---------- Valor ----------
+      doc.setTextColor(12, 74, 110);
+
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(18);
+
+      doc.text(
+        valor,
+        x + 4,
+        79
+      );
+
+      x += 62;
+    });
+
+    // ==========================
+    // INDICADOR PRINCIPAL
+    // ==========================
+
+    doc.setTextColor(12,74,110);
+    doc.setFont('helvetica','bold');
+    doc.setFontSize(15);
 
     doc.text(
-      `${fechaGeneracion.fecha} ${fechaGeneracion.hora}`,
-      14,
-      290
+        'Indicador Principal',
+        14,
+        98
     );
 
-		doc.text(
-			`Página ${i} de ${pageCount}`,
-			170,
-			290
-		);
+    doc.setDrawColor(12,74,110);
+    doc.setLineWidth(.4);
+    doc.line(14,100,196,100);
 
-		doc.setTextColor(
-			0,
-			0,
-			0
-		);
-	}
+    // Sombra
+    doc.setFillColor(228,232,236);
+    doc.roundedRect(
+        15,
+        105,
+        182,
+        22,
+        3,
+        3,
+        'F'
+    );
 
+    // Tarjeta
+    doc.setFillColor(250,250,250);
+    doc.roundedRect(
+        14,
+        104,
+        182,
+        22,
+        3,
+        3,
+        'F'
+    );
+
+    // Barra azul
+    doc.setFillColor(12,74,110);
+    doc.roundedRect(
+        14,
+        104,
+        182,
+        2.5,
+        3,
+        3,
+        'F'
+    );
+
+    if (ventaMasAlta) {
+
+        doc.setTextColor(120,120,120);
+        doc.setFont('helvetica','normal');
+        doc.setFontSize(8);
+
+        doc.text(
+            'Venta con mayor valor registrada',
+            18,
+            112
+        );
+
+        doc.setTextColor(35,35,35);
+        doc.setFont('helvetica','bold');
+        doc.setFontSize(12);
+
+        doc.text(
+            String(ventaMasAlta.producto).slice(0,40),
+            18,
+            120
+        );
+
+        doc.setTextColor(12,74,110);
+        doc.setFont('helvetica','bold');
+        doc.setFontSize(18);
+
+        doc.text(
+            `$${Number(ventaMasAlta.precio).toLocaleString('es-CO')}`,
+            190,
+            119,
+            {
+                align:'right'
+            }
+        );
+
+        doc.setTextColor(120,120,120);
+        doc.setFont('helvetica','normal');
+        doc.setFontSize(8);
+
+        doc.text(
+            'Valor de la venta',
+            190,
+            124,
+            {
+                align:'right'
+            }
+        );
+
+    }
+    // ==========================
+    // TABLA
+    // ==========================
+
+    autoTable(doc, {
+      startY: 130,
+
+      head: [[
+        'Producto',
+        'Precio',
+        'Método',
+        'Vendedor',
+        'Fecha'
+      ]],
+
+    body: sales.map((sale) => {
+      const fecha = formatearFechaHora(
+        new Date(sale.fecha.replace(' ', 'T'))
+      );
+
+      return [
+        sale.producto,
+        `$${Number(
+          sale.precio || 0
+        ).toLocaleString('es-CO')}`,
+        sale.metodo,
+        sale.vendedor,
+        `${fecha.fecha}\n${fecha.hora}`
+      ];
+    }),
+
+      headStyles: {
+        fillColor: [12, 74, 110],
+        textColor: [255, 255, 255],
+        fontStyle: 'bold',
+        fontSize: 10,
+        halign: 'center'
+      },
+
+      styles: {
+        font: 'helvetica',
+        fontSize: 9,
+        cellPadding: 4,
+        lineColor: [225, 230, 235],
+        lineWidth: 0.2,
+        valign: 'middle'
+      },
+
+    });
+
+    // ==========================
+    // FOOTER
+    // ==========================
+
+    const pages = doc.getNumberOfPages();
+
+    for (let i = 1; i <= pages; i++) {
+      doc.setPage(i);
+
+      // Línea superior del footer
+      doc.setDrawColor(220, 220, 220);
+      doc.setLineWidth(0.3);
+      doc.line(14, 285, 196, 285);
+
+      // Texto
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(8);
+      doc.setTextColor(120, 120, 120);
+
+      // Lado izquierdo
+      doc.text(
+          'Sistema de Gestión de Inventario',
+          14,
+          290
+      );
+
+      // Centro
+      doc.text(
+          `${fechaGeneracion.fecha} • ${fechaGeneracion.hora}`,
+          105,
+          290,
+          {
+              align: 'center'
+          }
+      );
+
+      // Lado derecho
+      doc.text(
+          `Página ${i} de ${pages}`,
+          196,
+          290,
+          {
+              align: 'right'
+          }
+      );
+    }
+
+    // ==========================
+    // GUARDAR
+    // ==========================
+
+    doc.save(
+      `reporte-ventas-${new Date()
+        .toISOString()
+        .split('T')[0]}.pdf`
+    );
+  }
+
+
+  // ==========================
+	//  Actualiza la información de la tabla aplicando los filtros seleccionados
 	// ==========================
-	// GUARDAR
-	// ==========================
-
-	doc.save(
-		`reporte-ventas-${new Date()
-			.toISOString()
-			.split('T')[0]}.pdf`
-	);
-}
-
-
-
   export async function actualizarTabla(
     fechaInicio: string,
     fechaFin: string,
     metodoPago = 'todos',
-    vendedor = 'todos'
+    vendedor = 'todos',
+    mostrarToast = false
   ) {
     loading = true;
     error = '';
@@ -510,7 +553,7 @@ doc.text(
 
       sales = resultado;
 
-      if (sales.length === 0) {
+      if (mostrarToast && sales.length === 0) {
         toast.warning(
           'No se encontraron resultados',
           {
@@ -556,7 +599,8 @@ doc.text(
       filtros.fechaInicio,
       filtros.fechaFin,
       filtros.metodoPago,
-      filtros.vendedor
+      filtros.vendedor,
+      true
     );
   }
 </script>

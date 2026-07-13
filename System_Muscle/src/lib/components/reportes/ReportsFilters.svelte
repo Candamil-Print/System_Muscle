@@ -42,24 +42,11 @@
     }
   }
 
-  function inicializarFechas() {
-    const today = new Date();
-    const sevenDaysAgo = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000);
-    
-    fechaFin = today.toISOString().split('T')[0];
-    fechaInicio = sevenDaysAgo.toISOString().split('T')[0];
-  }
+ 
 
   function handleFilter() {
     if (!fechaInicio || !fechaFin) {
       toast.warning('Debes seleccionar ambas fechas');
-      return;
-    }
-
-    if (new Date(fechaFin) < new Date(fechaInicio)) {
-      toast.error(
-        'La fecha final no puede ser menor que la fecha inicial'
-      );
       return;
     }
 
@@ -188,13 +175,11 @@ async function handleDownload() {
 }
 
 onMount(() => {
-  inicializarFechas();
   cargarVendedores();
 
   flatpickr(inicioInput, {
     locale: Spanish,
     dateFormat: 'Y-m-d',
-    defaultDate: fechaInicio,
     allowInput: true,
 
     onChange: (selectedDates) => {
@@ -221,7 +206,6 @@ onMount(() => {
   finPicker = flatpickr(finInput, {
     locale: Spanish,
     dateFormat: 'Y-m-d',
-    defaultDate: fechaFin,
     allowInput: true,
     minDate: fechaInicio,
 

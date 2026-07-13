@@ -1,3 +1,14 @@
+export interface Producto {
+  id_producto: number;
+  nombre: string;
+  tipo_producto: string;
+  precio_costo: number;
+  precio_sugerido: number;
+  imagen_url?: string | null;
+  fecha_creacion: string;
+  activo: number;
+}
+
 export interface ProductoConStock {
   id_producto: number;
   nombre: string;

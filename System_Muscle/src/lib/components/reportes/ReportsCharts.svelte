@@ -242,7 +242,8 @@
 
   async function cargarReportes(
     fechaInicio: string,
-    fechaFin: string
+    fechaFin: string,
+    mostrarToast = false
   ) {
     try {
       loading = true;
@@ -314,6 +315,7 @@
       );
 
       if (
+        mostrarToast &&
         ventasDiarias.length === 0 &&
         productosMasVendidos.length === 0 &&
         ventasPorUsuario.length === 0
@@ -391,7 +393,8 @@
   ) {
     cargarReportes(
       filtros.fechaInicio,
-      filtros.fechaFin
+      filtros.fechaFin,
+      true
     );
   }
 </script>

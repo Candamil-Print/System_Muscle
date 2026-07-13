@@ -1997,7 +1997,7 @@ function descargarReporteEntradas() {
 				// descargarGrafico();
 			}
 	}}
-	class="h-10 w-10 rounded-lg border border-slate-200 flex items-center justify-center hover:bg-slate-50 transition-colors dark:border-[#334156]"
+	class="h-10 w-10 rounded-lg border border-slate-200 flex items-center justify-center hover:bg-slate-50 transition-colors dark:border-[#334156] cursor-pointer "
 	title="Descargar gráfico"
 	>
 	<Download class="w-5 h-5 text-slate-700 dark:text-[#39BDF8]" />

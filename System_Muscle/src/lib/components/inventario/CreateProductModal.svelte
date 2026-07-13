@@ -11,7 +11,8 @@
 
   import { toast } from 'svelte-sonner';
 
-  import { crearProducto } from '$lib/services/api/inventory';
+  import { crearProducto, listarProductos } from '$lib/services/api/inventory';
+  import type { Producto } from '$lib/services/api/inventory';
 
   export let open = false;
   export let onClose: () => void = () => {};
@@ -21,9 +22,11 @@
 
   let loading = false;
 
+  let tiposProducto: string[] = [];
+
   let product = {
     nombre: '',
-    tipo: 'Snacks',
+    tipo: '',
     precioCosto: '',
     precioSugerido: '',
     stockMaximo: ''
@@ -36,7 +39,29 @@
   let fileInput: HTMLInputElement;
   let imageBase64 = '';
 
+  async function cargarTiposProducto() {
+    try {
+      const productos: ProductoConStock[] = await listarProductos();
+
+      tiposProducto = [
+        ...new Set(productos.map((p) => p.tipo_producto))
+      ].sort();
+
+      // Selecciona el primero si existe
+      if (tiposProducto.length > 0) {
+        product.tipo =
+          tiposProducto[0].charAt(0) +
+          tiposProducto[0].slice(1).toLowerCase();
+      }
+
+    } catch (error) {
+      console.error(error);
+      toast.error('No se pudieron cargar los tipos de producto');
+    }
+  }
+
   onMount(() => {
+    cargarTiposProducto();
   let unlisten:
     | (() => void)
     | undefined;
@@ -89,7 +114,7 @@
     // limpiar formulario
     product = {
       nombre: '',
-      tipo: 'Snacks',
+      tipo: '',
       precioCosto: '',
       precioSugerido: '',
       stockMaximo: ''
@@ -376,9 +401,11 @@ async function processImagePath(path: string) {
               id="tipo"
               class="w-full appearance-none rounded-xl border border-slate-200 bg-white dark:bg-[#111827] dark:border-[#334156] dark:text-[#64748B] px-4 py-3 pr-11 text-sm outline-none transition duration-200 focus:border-[#0C4A6E] focus:ring-4 focus:ring-sky-100 focus:scale-[1.01] dark:focus:border-[#39BDF8] dark:focus:ring-4 dark:focus:ring-[#39BDF8]/20 "
             >
-              <option>Snacks</option>
-              <option>Suplementos</option>
-              <option>Bebidas</option>
+              {#each tiposProducto as tipo}
+                <option value={tipo.charAt(0) + tipo.slice(1).toLowerCase()}>
+                  {tipo.charAt(0) + tipo.slice(1).toLowerCase()}
+                </option>
+              {/each}
             </select>
 
             <!-- FLECHA -->

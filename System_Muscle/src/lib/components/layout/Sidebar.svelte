@@ -4,6 +4,7 @@
     import { goto } from '$app/navigation';
     import { invoke } from '@tauri-apps/api/core';
     import { toast } from 'svelte-sonner';
+    import { esAdministrador } from '$lib/utils/session';
 
     let usuario = {
         nombre_completo: '',
@@ -64,22 +65,26 @@ function obtenerIniciales(nombre: string) {
         {
             label: 'Movimientos',
             icon: TrendingUp,
-            href: '/movimientos'
+            href: '/movimientos',
+            admin: true
         },
         {
             label: 'Reportes',
             icon: FileText,
-            href: '/reportes'
+            href: '/reportes',
+            admin: true
         },
         {
             label: 'Historial',
             icon: Clock,
-            href: '/historial'
+            href: '/historial',
+            admin: true
         },
         {
             label: 'Usuarios',
             icon: Users,
-            href: '/users'
+            href: '/users',
+            admin: true
         }
     ];
 
@@ -153,7 +158,7 @@ function obtenerIniciales(nombre: string) {
         </p>
 
         <div class="space-y-2">
-            {#each menu as item}
+            {#each menu.filter(item => !item.admin || esAdministrador()) as item}
                 <a
                     href={item.href}
                     class={`flex w-full items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium transition-all ${

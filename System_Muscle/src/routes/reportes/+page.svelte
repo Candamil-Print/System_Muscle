@@ -37,6 +37,13 @@
     vendedor: 'todos'
   };
 
+  let filtrosEntradas = {
+    fechaInicio: '',
+    fechaFin: '',
+    tipoProducto: 'todos',
+    vendedorEntrada: 'todos'
+  };
+
   let totalIngresado = 0;
   let totalProductos = 0;
   let totalEntradas = 0;
@@ -122,6 +129,13 @@ entradas = movimientos.map(item => ({
   ) {
     filtros = nuevosFiltros;
   }
+
+  function aplicarFiltrosEntradas(
+    nuevosFiltros
+  ) {
+    console.log("Llegaron filtros");
+    filtrosEntradas = nuevosFiltros;
+  }
 </script>
 
 <Toaster
@@ -182,7 +196,9 @@ entradas = movimientos.map(item => ({
 
       {:else}
 
-        <EntriesFilters />
+        <EntriesFilters 
+          onFilter={aplicarFiltrosEntradas}
+        />
 
         <EntriesStats
           {totalIngresado}
@@ -191,10 +207,13 @@ entradas = movimientos.map(item => ({
           {totalEntradas}
         />
 
-        <EntriesCharts />
+        <EntriesCharts 
+          {filtrosEntradas}
+        />
 
         <EntriesTable
           entradas={entradas}
+          {filtrosEntradas}
         />
 
       {/if}
