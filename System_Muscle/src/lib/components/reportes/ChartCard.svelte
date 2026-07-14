@@ -2,6 +2,7 @@
 	import { onMount, onDestroy, afterUpdate } from 'svelte';
 	import Download from 'lucide-svelte/icons/download';
 	import Chart from 'chart.js/auto';
+	import { toast } from 'svelte-sonner';
 	import type { ChartData, ChartType } from 'chart.js';
 	
 
@@ -57,6 +58,33 @@
 		);
 
 		return texto.charAt(0).toUpperCase() + texto.slice(1);
+	}
+
+	function formatearFechaHora(fecha = new Date()) {
+		const fechaTexto = fecha.toLocaleDateString(
+		'es-CO',
+		{
+			day: 'numeric',
+			month: 'long',
+			year: 'numeric'
+		}
+		);
+
+		const horaTexto = fecha.toLocaleTimeString(
+		'es-CO',
+		{
+			hour: 'numeric',
+			minute: '2-digit',
+			hour12: true
+		}
+		);
+
+		return {
+		fecha:
+			fechaTexto.charAt(0).toUpperCase() +
+			fechaTexto.slice(1),
+		hora: horaTexto
+		};
 	}
 
 	function crearGrafico() {
@@ -247,7 +275,7 @@
 	}
 
 	function descargarReporteVentas() {
-
+		try {
 		console.log('REPORT DATA');
 		console.log(reportData);
 
@@ -291,42 +319,52 @@
 				)[0]
 				: null;
 
+		const fechaGeneracion = formatearFechaHora(new Date());
+
 		// ==========================
 		// HEADER
 		// ==========================
 
 		doc.setFillColor(12, 74, 110);
+		doc.rect(0, 0, 210, 42, "F");
 
-		doc.rect(
-			0,
-			0,
-			210,
-			35,
-			'F'
-		);
+		doc.setDrawColor(200, 200, 200);
+		doc.setLineWidth(0.6);
+		doc.line(0, 42, 210, 42);
 
-		doc.setTextColor(255, 255, 255);
+		// Título
 
-		doc.setFontSize(22);
-		doc.setFont('helvetica', 'bold');
+		doc.setTextColor(255,255,255);
+		doc.setFont("helvetica","bold");
+		doc.setFontSize(24);
 
 		doc.text(
-			'REPORTE DE VENTAS',
+			"REPORTE DE VENTAS",
 			105,
-			15,
+			16,
 			{
-				align: 'center'
+				align:"center"
 			}
 		);
 
-		doc.setFontSize(11);
+		doc.setFont("helvetica","normal");
+		doc.setFontSize(10);
 
 		doc.text(
-			`Generado: ${formatearFechaReporte()}`,
+			"Sistema de Gestión de Inventario",
 			105,
-			25,
+			24,
 			{
-				align: 'center'
+				align:"center"
+			}
+		);
+
+		doc.text(
+			`${fechaGeneracion.fecha} • ${fechaGeneracion.hora}`,
+			105,
+			31,
+			{
+				align:"center"
 			}
 		);
 
@@ -334,97 +372,176 @@
 		// RESUMEN EJECUTIVO
 		// ==========================
 
-		doc.setTextColor(0, 0, 0);
-
+		doc.setTextColor(12, 74, 110);
+		doc.setFont("helvetica","bold");
 		doc.setFontSize(16);
-		doc.setFont('helvetica', 'bold');
 
 		doc.text(
-			'Resumen Ejecutivo',
+			"Resumen Ejecutivo",
 			14,
 			50
 		);
 
-		// Tarjetas KPI
+		doc.setDrawColor(12,74,110);
+		doc.setLineWidth(.4);
+		doc.line(
+			14,
+			52,
+			196,
+			52
+		);
 
 		const cards = [
-			[
-				'Total Vendido',
-				`$${totalVendido.toLocaleString(
-					'es-CO'
-				)}`
-			],
-
-			[
-				'Número Ventas',
-				numeroVentas.toString()
-			],
-
-			[
-				'Promedio Diario',
-				`$${Math.round(
-					promedioDiario
-				).toLocaleString('es-CO')}`
-			]
+			{
+				titulo:"Total Vendido",
+				valor:`$${totalVendido.toLocaleString("es-CO")}`
+			},
+			{
+				titulo:"Número Ventas",
+				valor:numeroVentas.toString()
+			},
+			{
+				titulo:"Promedio Diario",
+				valor:`$${Math.round(promedioDiario).toLocaleString("es-CO")}`
+			}
 		];
 
 		let x = 14;
 
-		cards.forEach(([titulo, valor]) => {
-			doc.setFillColor(
-				245,
-				247,
-				250
+		cards.forEach(({titulo,valor})=>{
+
+			// sombra
+			doc.setFillColor(228,232,236);
+
+			doc.roundedRect(
+				x+1,
+				59,
+				56,
+				26,
+				3,
+				3,
+				"F"
 			);
+
+			// tarjeta
+
+			doc.setFillColor(250,250,250);
 
 			doc.roundedRect(
 				x,
 				58,
 				56,
-				24,
-				2,
-				2,
-				'F'
+				26,
+				3,
+				3,
+				"F"
 			);
 
-			doc.setFontSize(9);
-			doc.setFont(
-				'helvetica',
-				'normal'
+			// barra azul
+
+			doc.setFillColor(12,74,110);
+
+			doc.roundedRect(
+				x,
+				58,
+				56,
+				3,
+				3,
+				3,
+				"F"
 			);
+
+			// titulo
+
+			doc.setTextColor(130,130,130);
+			doc.setFont("helvetica","normal");
+			doc.setFontSize(9);
 
 			doc.text(
 				titulo,
-				x + 4,
-				67
+				x+4,
+				68
 			);
 
-			doc.setFontSize(12);
-			doc.setFont(
-				'helvetica',
-				'bold'
-			);
+			// valor
+
+			doc.setTextColor(12,74,110);
+			doc.setFont("helvetica","bold");
+			doc.setFontSize(16);
 
 			doc.text(
 				valor,
-				x + 4,
-				76
+				x+4,
+				79
 			);
 
-			x += 62;
+			x+=62;
+
 		});
 
 	// ==========================
 	// INDICADORES
 	// ==========================
 
-	doc.setFontSize(14);
-	doc.setFont('helvetica', 'bold');
+	doc.setTextColor(12,74,110);
+	doc.setFont("helvetica","bold");
+	doc.setFontSize(15);
 
 	doc.text(
-		'Indicadores Clave',
+		"Indicador Principal",
 		14,
 		98
+	);
+
+	doc.setDrawColor(12,74,110);
+	doc.setLineWidth(.4);
+	doc.line(
+		14,
+		100,
+		196,
+		100
+	);
+
+	// sombra
+
+	doc.setFillColor(228,232,236);
+
+	doc.roundedRect(
+		15,
+		105,
+		182,
+		28,
+		3,
+		3,
+		"F"
+	);
+
+	// tarjeta
+
+	doc.setFillColor(250,250,250);
+
+	doc.roundedRect(
+		14,
+		104,
+		182,
+		28,
+		3,
+		3,
+		"F"
+	);
+
+	// barra azul
+
+	doc.setFillColor(12,74,110);
+
+	doc.roundedRect(
+		14,
+		104,
+		182,
+		2.5,
+		3,
+		3,
+		"F"
 	);
 
 	// ==========================
@@ -434,13 +551,13 @@
 	doc.setFillColor(245, 247, 250);
 
 	doc.roundedRect(
-		14,
-		104,
-		88,
+		18,
+		108,
+		78,
 		18,
 		2,
 		2,
-		'F'
+		"F"
 	);
 
 	doc.setFontSize(8);
@@ -448,8 +565,8 @@
 
 	doc.text(
 		'Día más fuerte',
-		18,
-		111
+		22,
+		114
 	);
 
 	if (diaMasFuerte) {
@@ -460,164 +577,175 @@
 			formatearFechaLarga(
 				diaMasFuerte.fecha
 			),
-			18,
-			117
+			22,
+			121
 		);
 
 		doc.text(
 			`$${Number(
 				diaMasFuerte.total_general
 			).toLocaleString('es-CO')}`,
-			65,
-			117,
+			92,
+			121,
 			{
 				align: 'right'
 			}
 		);
 	}
 
-	// ==========================
-	// DÍA MÁS DÉBIL
-	// ==========================
+		// ==========================
+		// DÍA MÁS DÉBIL
+		// ==========================
 
-	doc.setFillColor(245, 247, 250);
+		doc.setFillColor(245, 247, 250);
 
-	doc.roundedRect(
-		108,
-		104,
-		88,
-		18,
-		2,
-		2,
-		'F'
-	);
-
-	doc.setFontSize(8);
-	doc.setFont('helvetica', 'normal');
-
-	doc.text(
-		'Día más débil',
-		112,
-		111
-	);
-
-	if (diaMasDebil) {
-		doc.setFontSize(9);
-		doc.setFont('helvetica', 'bold');
-
-		doc.text(
-			formatearFechaLarga(
-				diaMasDebil.fecha
-			),
-			112,
-			117
+		doc.roundedRect(
+			114,
+			108,
+			78,
+			18,
+			2,
+			2,
+			"F"
 		);
 
+		doc.setFontSize(8);
+		doc.setFont('helvetica', 'normal');
+
 		doc.text(
-			`$${Number(
-				diaMasDebil.total_general
-			).toLocaleString('es-CO')}`,
-			190,
-			117,
-			{
-				align: 'right'
-			}
+			'Día más débil',
+			118,
+			114
 		);
-	}
-		// ==========================
-		// TABLA
-		// ==========================
 
-		autoTable(doc, {
-			startY: 130,
+		if (diaMasDebil) {
+			doc.setFontSize(9);
+			doc.setFont('helvetica', 'bold');
 
-			head: [[
-				'Fecha',
-				'Número de Ventas',
-				'Total Vendido'
-			]],
-
-			body: reportData.map((v) => [
-				formatearFechaLarga(v.fecha),
-
-				v.numero_ventas ?? 0,
-
-				`$${Number(
-					v.total_general
-				).toLocaleString('es-CO')}`
-			]),
-			headStyles: {
-				fillColor: [12, 74, 110],
-				fontStyle: 'bold'
-			},
-
-			alternateRowStyles: {
-				fillColor: [245, 247, 250]
-			},
-
-			styles: {
-				fontSize: 10,       // antes 9
-			cellPadding: 4,     // antes 2 o 3
-			valign: 'middle'
-			}
-		});
-
-		// ==========================
-		// FOOTER
-		// ==========================
-
-		const pageCount =
-			doc.getNumberOfPages();
-
-		for (
-			let i = 1;
-			i <= pageCount;
-			i++
-		) {
-			doc.setPage(i);
-
-			
-			doc.setTextColor(
-				120,
-				120,
-				120
-			);
-
-
-			doc.setFontSize(8);
-			doc.setFont(
-				'helvetica',
-				'normal'
+			doc.text(
+				formatearFechaLarga(
+					diaMasDebil.fecha
+				),
+				118,
+				121
 			);
 
 			doc.text(
-				`Generado: ${formatearFechaReporte()}`,
-				105,
-				25,
+				`$${Number(
+					diaMasDebil.total_general
+				).toLocaleString('es-CO')}`,
+				188,
+				121,
 				{
-					align: 'center'
+					align: 'right'
 				}
 			);
-
-			doc.text(
-				`Página ${i} de ${pageCount}`,
-				170,
-				290
-			);
-
-			// Restaurar negro para evitar afectar otras páginas
-			doc.setTextColor(
-				0,
-				0,
-				0
-			);
 		}
+			// ==========================
+			// TABLA
+			// ==========================
 
-		doc.save(
-			`reporte-ventas-${new Date()
-				.toISOString()
-				.split('T')[0]}.pdf`
-		);
+			autoTable(doc, {
+				startY: 140,
+
+				head: [[
+					'Fecha',
+					'Número de Ventas',
+					'Total Vendido'
+				]],
+
+				body: reportData.map((v) => [
+					formatearFechaLarga(v.fecha),
+
+					v.numero_ventas ?? 0,
+
+					`$${Number(
+						v.total_general
+					).toLocaleString('es-CO')}`
+				]),
+
+				headStyles:{
+					fillColor:[12,74,110],
+					textColor:[255,255,255],
+					fontStyle:"bold",
+					fontSize:10,
+					halign:"center"
+				},
+
+				alternateRowStyles:{
+					fillColor:[248,249,250]
+				},
+
+				styles:{
+					font:"helvetica",
+					fontSize:9,
+					cellPadding:4,
+					lineColor:[225,230,235],
+					lineWidth:.2,
+					valign:"middle"
+				}
+			});
+
+			// ==========================
+			// FOOTER
+			// ==========================
+
+			const pages = doc.getNumberOfPages();
+
+			for(let i=1;i<=pages;i++){
+
+				doc.setPage(i);
+
+				doc.setDrawColor(220,220,220);
+				doc.setLineWidth(.3);
+
+				doc.line(
+					14,
+					285,
+					196,
+					285
+				);
+
+				doc.setFont("helvetica","normal");
+				doc.setFontSize(8);
+				doc.setTextColor(120,120,120);
+
+				doc.text(
+					"Sistema de Gestión de Inventario",
+					14,
+					290
+				);
+
+				doc.text(
+					`${fechaGeneracion.fecha} • ${fechaGeneracion.hora}`,
+					105,
+					290,
+					{
+						align:"center"
+					}
+				);
+
+				doc.text(
+					`Página ${i} de ${pages}`,
+					196,
+					290,
+					{
+						align:"right"
+					}
+				);
+			}
+
+			doc.save(
+				`reporte-ventas-${new Date()
+					.toISOString()
+					.split('T')[0]}.pdf`
+			);
+
+			toast.success('Reporte descargado correctamente.');
+		} catch (err) {
+			console.error(err);
+			toast.error('Error al generar el reporte.');
+		}
 	}
 
 	onMount(() => {
@@ -639,964 +767,1363 @@
 	chart.update();
 	}
 
+	// ==========================
+    // GENERADOR PDF MARGEN DE GANANCIA
+    // ==========================
 	function descargarReporteMargen() {
-		if (!canvas) return;
+		try {
+			if (!canvas) return;
 
-		const doc = new jsPDF('p', 'mm', 'a4');
+			const doc = new jsPDF('p', 'mm', 'a4');
 
-		// ==========================
-		// CALCULOS
-		// ==========================
+			// ==========================
+			// CALCULOS
+			// ==========================
 
-		const totalVentas = reportData.reduce(
-			(sum, p) => sum + Number(p.total_ventas || 0),
-			0
-		);
-
-		const totalCosto = reportData.reduce(
-			(sum, p) => sum + Number(p.total_costo || 0),
-			0
-		);
-
-		const totalGanancia = reportData.reduce(
-			(sum, p) => sum + Number(p.ganancia_neta || 0),
-			0
-		);
-
-		const margenGeneral =
-			totalVentas > 0
-				? (totalGanancia / totalVentas) * 100
-				: 0;
-
-		const productoMasRentable =
-			reportData.length > 0
-				? [...reportData].sort(
-						(a, b) =>
-							b.ganancia_neta - a.ganancia_neta
-				)[0]
-				: null;
-
-		const productoMayorMargen =
-			reportData.length > 0
-				? [...reportData].sort(
-						(a, b) =>
-							b.margen_porcentaje -
-							a.margen_porcentaje
-				)[0]
-				: null;
-
-		// ==========================
-		// HEADER
-		// ==========================
-
-		doc.setFillColor(12, 74, 110);
-
-		doc.rect(0, 0, 210, 35, 'F');
-
-		doc.setTextColor(255, 255, 255);
-
-		doc.setFontSize(22);
-		doc.setFont('helvetica', 'bold');
-
-		doc.text(
-			'REPORTE DE MÁRGENES',
-			105,
-			15,
-			{ align: 'center' }
-		);
-
-		doc.setFontSize(11);
-
-		doc.text(
-			`Generado: ${formatearFechaReporte()}`,
-			105,
-			25,
-			{
-				align: 'center'
-			}
-		);
-
-		// ==========================
-		// RESUMEN EJECUTIVO
-		// ==========================
-
-		doc.setTextColor(0, 0, 0);
-
-		doc.setFontSize(16);
-		doc.setFont('helvetica', 'bold');
-
-		doc.text(
-			'Resumen Ejecutivo',
-			14,
-			50
-		);
-
-		const cards = [
-			[
-				'Ventas Totales',
-				`$${totalVentas.toLocaleString('es-CO')}`
-			],
-			[
-				'Ganancia Neta',
-				`$${totalGanancia.toLocaleString('es-CO')}`
-			],
-			[
-				'Margen General',
-				`${margenGeneral.toFixed(2)}%`
-			]
-		];
-
-		let x = 14;
-
-		cards.forEach(([titulo, valor]) => {
-			doc.setFillColor(
-				245,
-				247,
-				250
-			);
-
-			doc.roundedRect(
-				x,
-				58,
-				56,
-				24,
-				2,
-				2,
-				'F'
-			);
-
-			doc.setFontSize(9);
-			doc.setFont(
-				'helvetica',
-				'normal'
-			);
-
-			doc.text(
-				titulo,
-				x + 4,
-				67
-			);
-
-			doc.setFontSize(12);
-			doc.setFont(
-				'helvetica',
-				'bold'
-			);
-
-			doc.text(
-				valor,
-				x + 4,
-				76
-			);
-
-			x += 62;
-		});
-
-		// ==========================
-		// INDICADORES
-		// ==========================
-
-		doc.setFontSize(14);
-		doc.setFont(
-			'helvetica',
-			'bold'
-		);
-
-		doc.text(
-			'Indicadores Clave',
-			14,
-			98
-		);
-
-		// Producto más rentable
-
-		doc.setFillColor(
-			245,
-			247,
-			250
-		);
-
-		doc.roundedRect(
-			14,
-			104,
-			88,
-			18,
-			2,
-			2,
-			'F'
-		);
-
-		doc.setFontSize(8);
-		doc.setFont(
-			'helvetica',
-			'normal'
-		);
-
-		doc.text(
-			'Más rentable',
-			18,
-			111
-		);
-
-		if (productoMasRentable) {
-			doc.setFontSize(9);
-			doc.setFont(
-				'helvetica',
-				'bold'
-			);
-
-			doc.text(
-				productoMasRentable.nombre_producto.slice(
-					0,
-					20
-				),
-				18,
-				117
-			);
-
-			doc.text(
-				`$${Number(
-					productoMasRentable.ganancia_neta
-				).toLocaleString('es-CO')}`,
-				95,
-				117,
-				{ align: 'right' }
-			);
-		}
-
-		// Mayor margen %
-
-		doc.setFillColor(
-			245,
-			247,
-			250
-		);
-
-		doc.roundedRect(
-			108,
-			104,
-			88,
-			18,
-			2,
-			2,
-			'F'
-		);
-
-		doc.setFontSize(8);
-		doc.setFont(
-			'helvetica',
-			'normal'
-		);
-
-		doc.text(
-			'Mayor margen',
-			112,
-			111
-		);
-
-		if (productoMayorMargen) {
-			doc.setFontSize(9);
-			doc.setFont(
-				'helvetica',
-				'bold'
-			);
-
-			doc.text(
-				productoMayorMargen.nombre_producto.slice(
-					0,
-					20
-				),
-				112,
-				117
-			);
-
-			doc.text(
-				`${Number(
-					productoMayorMargen.margen_porcentaje
-				).toFixed(2)}%`,
-				190,
-				117,
-				{ align: 'right' }
-			);
-		}
-
-		// ==========================
-		// TABLA
-		// ==========================
-
-	autoTable(doc, {
-	startY: 130,
-
-	head: [[
-		'Producto',
-		'Cantidad',
-		'Ventas',
-		'Costo',
-		'Ganancia',
-		'Margen %'
-	]],
-
-	body: reportData.map((p) => [
-		p.nombre_producto,
-		Number(p.cantidad_vendida || 0),
-
-		`$${Number(
-		p.total_ventas || 0
-		).toLocaleString('es-CO')}`,
-
-		`$${Number(
-		p.total_costo || 0
-		).toLocaleString('es-CO')}`,
-
-		`$${Number(
-		p.ganancia_neta || 0
-		).toLocaleString('es-CO')}`,
-
-		`${Number(
-		p.margen_porcentaje || 0
-		).toFixed(2)}%`
-	]),
-
-	headStyles: {
-		fillColor: [12, 74, 110],
-		fontStyle: 'bold'
-	},
-
-	alternateRowStyles: {
-		fillColor: [245, 247, 250]
-	},
-
-	styles: {
-		fontSize: 10,
-		cellPadding: 4,
-		valign: 'middle'
-	}
-	});
-
-		// ==========================
-		// FOOTER
-		// ==========================
-
-		const pageCount =
-			doc.getNumberOfPages();
-
-		for (
-			let i = 1;
-			i <= pageCount;
-			i++
-		) {
-			doc.setPage(i);
-
-			doc.setTextColor(
-				120,
-				120,
-				120
-			);
-
-			doc.setFontSize(8);
-
-			doc.text(
-				`Generado el ${new Date().toLocaleString('es-CO')}`,
-				14,
-				290
-			);
-
-			doc.text(
-				`Página ${i} de ${pageCount}`,
-				170,
-				290
-			);
-
-			doc.setTextColor(
-				0,
-				0,
+			const totalVentas = reportData.reduce(
+				(sum, p) => sum + Number(p.total_ventas || 0),
 				0
 			);
-		}
 
-		doc.save(
-			`reporte-margen-${new Date()
-				.toISOString()
-				.split('T')[0]}.pdf`
-		);
-	}
-
-	function descargarReporteTopProductos() {
-
-		console.log('TOP 5 GRAFICO');
-		console.log(reportData);
-
-		console.log('TODOS LOS PRODUCTOS');
-		console.log(todosProductosData);
-
-		// Todos los productos para la tabla completa
-		const productos = [
-			...(todosProductosData.length > 0
-				? todosProductosData
-				: reportData)
-		].sort(
-			(a, b) =>
-				Number(b.cantidad_vendida || 0) -
-				Number(a.cantidad_vendida || 0)
-		);
-
-		// Solo Top 5 para la mini tabla
-		const top5 = productos.slice(0, 5);
-
-		const doc = new jsPDF('p', 'mm', 'a4');
-
-		// ==========================
-		// CALCULOS
-		// ==========================
-
-		const totalUnidades = productos.reduce(
-			(sum, p) => sum + Number(p.cantidad_vendida || 0),
-			0
-		);
-
-		const totalVentas = productos.reduce(
-			(sum, p) => sum + Number(p.total_ventas || 0),
-			0
-		);
-
-		const productoTop =
-			productos.length > 0
-				? productos[0]
-				: null;
-
-		// ==========================
-		// HEADER
-		// ==========================
-
-		doc.setFillColor(12, 74, 110);
-		doc.rect(0, 0, 210, 35, 'F');
-
-		doc.setTextColor(255, 255, 255);
-
-		doc.setFontSize(22);
-		doc.setFont('helvetica', 'bold');
-
-		doc.text(
-			'REPORTE DE PRODUCTOS VENDIDOS',
-			105,
-			15,
-			{ align: 'center' }
-		);
-
-		doc.setFontSize(11);
-
-		doc.text(
-			`Generado: ${formatearFechaReporte()}`,
-			105,
-			25,
-			{ align: 'center' }
-		);
-
-		// ==========================
-		// RESUMEN
-		// ==========================
-
-		doc.setTextColor(0, 0, 0);
-
-		doc.setFontSize(16);
-		doc.setFont('helvetica', 'bold');
-
-		doc.text(
-			'Resumen Ejecutivo',
-			14,
-			50
-		);
-
-		const cards = [
-			[
-				'Productos',
-				productos.length.toString()
-			],
-			[
-				'Unidades Vendidas',
-				totalUnidades.toLocaleString('es-CO')
-			],
-			[
-				'Ventas Totales',
-				`$${totalVentas.toLocaleString('es-CO')}`
-			]
-		];
-
-		let x = 14;
-
-		cards.forEach(([titulo, valor]) => {
-			doc.setFillColor(245, 247, 250);
-
-			doc.roundedRect(
-				x,
-				58,
-				56,
-				24,
-				2,
-				2,
-				'F'
+			const totalCosto = reportData.reduce(
+				(sum, p) => sum + Number(p.total_costo || 0),
+				0
 			);
 
-			doc.setFontSize(9);
-			doc.setFont('helvetica', 'normal');
-
-			doc.text(
-				titulo,
-				x + 4,
-				67
+			const totalGanancia = reportData.reduce(
+				(sum, p) => sum + Number(p.ganancia_neta || 0),
+				0
 			);
 
-			doc.setFontSize(12);
+			const margenGeneral =
+				totalVentas > 0
+					? (totalGanancia / totalVentas) * 100
+					: 0;
+
+			const productoMasRentable =
+				reportData.length > 0
+					? [...reportData].sort(
+							(a, b) =>
+								b.ganancia_neta - a.ganancia_neta
+					)[0]
+					: null;
+
+			const productoMayorMargen =
+				reportData.length > 0
+					? [...reportData].sort(
+							(a, b) =>
+								b.margen_porcentaje -
+								a.margen_porcentaje
+					)[0]
+					: null;
+
+			const fechaGeneracion = formatearFechaHora(new Date());
+
+			// ==========================
+			// HEADER
+			// ==========================
+
+			doc.setFillColor(12, 74, 110);
+			doc.rect(0, 0, 210, 35, 'F');
+
+			doc.setTextColor(255, 255, 255);
+			doc.setFontSize(22);
 			doc.setFont('helvetica', 'bold');
 
 			doc.text(
-				valor,
-				x + 4,
-				76
+				'REPORTE DE MÁRGENES',
+				105,
+				15,
+				{ align: 'center' }
 			);
 
-			x += 62;
-		});
-
-		// ==========================
-		// PRODUCTO TOP
-		// ==========================
-
-		doc.setFontSize(14);
-		doc.setFont('helvetica', 'bold');
-
-		doc.text(
-			'Producto Más Vendido',
-			14,
-			98
-		);
-
-		doc.setFillColor(245, 247, 250);
-
-		doc.roundedRect(
-			14,
-			104,
-			182,
-			18,
-			2,
-			2,
-			'F'
-		);
-
-		if (productoTop) {
-			doc.setFontSize(9);
-			doc.setFont('helvetica', 'bold');
-
-			doc.text(
-				productoTop.nombre_producto.slice(0, 40),
-				18,
-				116
-			);
-
-			doc.text(
-				`${productoTop.cantidad_vendida} unidades`,
-				190,
-				116,
-				{ align: 'right' }
-			);
-		}
-
-		// ==========================
-		// MINI TABLA TOP 5
-		// ==========================
-
-		doc.setFontSize(14);
-		doc.setFont('helvetica', 'bold');
-
-		doc.text(
-			'Ranking Top 5 Productos',
-			14,
-			132
-		);
-
-		autoTable(doc, {
-			startY: 138,
-
-			head: [[
-				'#',
-				'Producto',
-				'Cantidad'
-			]],
-
-			body: top5.map((p, index) => [
-				index + 1,
-				p.nombre_producto,
-				Number(p.cantidad_vendida || 0)
-			]),
-
-			headStyles: {
-				fillColor: [12, 74, 110],
-				fontStyle: 'bold'
-			},
-
-			alternateRowStyles: {
-				fillColor: [245, 247, 250]
-			},
-
-			styles: {
-				fontSize: 9,
-				cellPadding: 3,
-				valign: 'middle'
-			}
-		});
-
-		// ==========================
-		// TABLA COMPLETA
-		// ==========================
-
-		const inicioTabla =
-			(doc as any).lastAutoTable.finalY + 12;
-
-		doc.setFontSize(14);
-		doc.setFont('helvetica', 'bold');
-
-		doc.text(
-			'Listado Completo de Productos',
-			14,
-			inicioTabla
-		);
-
-		autoTable(doc, {
-			startY: inicioTabla + 6,
-
-			head: [[
-				'#',
-				'Producto',
-				'Cantidad',
-				'Ventas'
-			]],
-
-			body: productos.map((p, index) => [
-				index + 1,
-				p.nombre_producto,
-				Number(p.cantidad_vendida || 0),
-				`$${Number(
-					p.total_ventas || 0
-				).toLocaleString('es-CO')}`
-			]),
-
-			headStyles: {
-				fillColor: [12, 74, 110],
-				fontStyle: 'bold'
-			},
-
-			alternateRowStyles: {
-				fillColor: [245, 247, 250]
-			},
-
-			styles: {
-				fontSize: 9,
-				cellPadding: 3,
-				valign: 'middle'
-			}
-		});
-
-		// ==========================
-		// FOOTER
-		// ==========================
-
-		const pageCount = doc.getNumberOfPages();
-
-		for (let i = 1; i <= pageCount; i++) {
-
-			doc.setPage(i);
-
-			doc.setTextColor(120, 120, 120);
-
-			doc.setFontSize(8);
+			doc.setFontSize(11);
 
 			doc.text(
 				`Generado: ${formatearFechaReporte()}`,
-				14,
-				290
-			);
-
-			doc.text(
-				`Página ${i} de ${pageCount}`,
-				170,
-				290
-			);
-
-			doc.setTextColor(0, 0, 0);
-		}
-
-		doc.save(
-			`reporte-productos-${new Date()
-				.toISOString()
-				.split('T')[0]}.pdf`
-		);
-	}
-
-	function descargarReporteVentasPorVendedor() {
-
-		const vendedores = reportData ?? [];
-
-		const doc = new jsPDF('p', 'mm', 'a4');
-
-		// ==========================
-		// CALCULOS
-		// ==========================
-
-		const totalVendido = vendedores.reduce(
-			(sum, v) => sum + Number(v.total_vendido || 0),
-			0
-		);
-
-		const totalVentas = vendedores.reduce(
-			(sum, v) => sum + Number(v.numero_ventas || 0),
-			0
-		);
-
-		const vendedorTop =
-			vendedores.length > 0
-				? [...vendedores].sort(
-						(a, b) =>
-							Number(b.total_vendido || 0) -
-							Number(a.total_vendido || 0)
-				)[0]
-				: null;
-
-		const promedioVentas =
-			vendedores.length > 0
-				? totalVendido / vendedores.length
-				: 0;
-
-		// ==========================
-		// HEADER
-		// ==========================
-
-		doc.setFillColor(12, 74, 110);
-
-		doc.rect(0, 0, 210, 35, 'F');
-
-		doc.setTextColor(255, 255, 255);
-
-		doc.setFontSize(22);
-		doc.setFont('helvetica', 'bold');
-
-		doc.text(
-			'REPORTE DE VENTAS POR VENDEDOR',
-			105,
-			15,
-			{ align: 'center' }
-		);
-
-		doc.setFontSize(11);
-
-		doc.text(
-			`Generado: ${formatearFechaReporte()}`,
-			105,
-			25,
-			{ align: 'center' }
-		);
-
-		// ==========================
-		// RESUMEN
-		// ==========================
-
-		doc.setTextColor(0, 0, 0);
-
-		doc.setFontSize(16);
-		doc.setFont('helvetica', 'bold');
-
-		doc.text(
-			'Resumen Ejecutivo',
-			14,
-			50
-		);
-
-		const cards = [
-			[
-				'Vendedores',
-				vendedores.length.toString()
-			],
-			[
-				'Ventas Registradas',
-				totalVentas.toLocaleString('es-CO')
-			],
-			[
-				'Total Vendido',
-				`$${totalVendido.toLocaleString('es-CO')}`
-			]
-		];
-
-		let x = 14;
-
-		cards.forEach(([titulo, valor]) => {
-			doc.setFillColor(245, 247, 250);
-
-			doc.roundedRect(
-				x,
-				58,
-				56,
-				24,
-				2,
-				2,
-				'F'
-			);
-
-			doc.setFontSize(9);
-			doc.setFont('helvetica', 'normal');
-
-			doc.text(
-				titulo,
-				x + 4,
-				67
-			);
-
-			doc.setFontSize(12);
-			doc.setFont('helvetica', 'bold');
-
-			doc.text(
-				valor,
-				x + 4,
-				76
-			);
-
-			x += 62;
-		});
-
-		// ==========================
-		// VENDEDOR TOP
-		// ==========================
-
-		doc.setFontSize(14);
-		doc.setFont('helvetica', 'bold');
-
-		doc.text(
-			'Mejor Vendedor',
-			14,
-			98
-		);
-
-		doc.setFillColor(
-			245,
-			247,
-			250
-		);
-
-		doc.roundedRect(
-			14,
-			104,
-			182,
-			18,
-			2,
-			2,
-			'F'
-		);
-
-		if (vendedorTop) {
-			doc.setFontSize(9);
-			doc.setFont('helvetica', 'bold');
-
-			doc.text(
-				vendedorTop.nombre_usuario,
-				18,
-				116
-			);
-
-			doc.text(
-				`$${Number(
-					vendedorTop.total_vendido
-				).toLocaleString('es-CO')}`,
-				190,
-				116,
+				105,
+				25,
 				{
-					align: 'right'
+					align: 'center'
 				}
 			);
-		}
+			// ==========================
+			// RESUMEN EJECUTIVO
+			// ==========================
 
-		// ==========================
-		// TABLA
-		// ==========================
+			doc.setTextColor(12, 74, 110);
+			doc.setFont("helvetica","bold");
+			doc.setFontSize(16);
 
-		autoTable(doc, {
-			startY: 130,
-
-			head: [[
-				'#',
-				'Vendedor',
-				'Número Ventas',
-				'Total Vendido'
-			]],
-
-			body: vendedores.map((v, index) => [
-				index + 1,
-				v.nombre_usuario,
-				Number(v.numero_ventas || 0),
-				`$${Number(
-					v.total_vendido || 0
-				).toLocaleString('es-CO')}`
-			]),
-
-			headStyles: {
-				fillColor: [12, 74, 110],
-				fontStyle: 'bold'
-			},
-
-			alternateRowStyles: {
-				fillColor: [245, 247, 250]
-			},
-
-			styles: {
-				fontSize: 9,
-				cellPadding: 3,
-				valign: 'middle'
-			}
-		});
-
-		// ==========================
-		// FOOTER
-		// ==========================
-
-		const pageCount =
-			doc.getNumberOfPages();
-
-		for (
-			let i = 1;
-			i <= pageCount;
-			i++
-		) {
-			doc.setPage(i);
-
-			doc.setTextColor(
-				120,
-				120,
-				120
+			doc.text(
+				'Resumen Ejecutivo',
+				14,
+				50
 			);
 
+			doc.setDrawColor(12,74,110);
+			doc.setLineWidth(.4);
+			doc.line(
+				14,
+				52,
+				196,
+				52
+			);
+
+			const cards = [
+				[
+					'Ventas Totales',
+					`$${totalVentas.toLocaleString('es-CO')}`
+				],
+				[
+					'Ganancia Neta',
+					`$${totalGanancia.toLocaleString('es-CO')}`
+				],
+				[
+					'Margen General',
+					`${margenGeneral.toFixed(2)}%`
+				]
+			];
+
+			let x = 14;
+
+			cards.forEach(([titulo, valor]) => {
+
+				// sombra
+				doc.setFillColor(228,232,236);
+
+				doc.roundedRect(
+					x+1,
+					59,
+					56,
+					26,
+					3,
+					3,
+					"F"
+				);
+
+				// tarjeta
+				doc.setFillColor(250,250,250);
+
+				doc.roundedRect(
+					x,
+					58,
+					56,
+					26,
+					3,
+					3,
+					"F"
+				);
+
+				// barra azul
+				doc.setFillColor(12,74,110);
+
+				doc.roundedRect(
+					x,
+					58,
+					56,
+					3,
+					3,
+					3,
+					"F"
+				);
+
+				// titulo
+				doc.setTextColor(130,130,130);
+				doc.setFont("helvetica","normal");
+				doc.setFontSize(9);
+
+				doc.text(
+					titulo,
+					x+4,
+					68
+				);
+
+				// valor
+				doc.setTextColor(12,74,110);
+				doc.setFont("helvetica","bold");
+				doc.setFontSize(16);
+
+				doc.text(
+					valor,
+					x+4,
+					79
+				);
+
+				x+=62;
+			});
+
+			// ==========================
+			// INDICADORES
+			// ==========================
+
+			doc.setTextColor(12,74,110);
+			doc.setFont("helvetica","bold");
+			doc.setFontSize(15);
+
+			doc.text(
+				'Indicadores Clave',
+				14,
+				98
+			);
+
+			doc.setDrawColor(12,74,110);
+			doc.setLineWidth(.4);
+			doc.line(
+				14,
+				100,
+				196,
+				100
+			);
+
+			// sombra
+			doc.setFillColor(228,232,236);
+
+			doc.roundedRect(
+				15,
+				105,
+				182,
+				28,
+				3,
+				3,
+				"F"
+			);
+
+			// tarjeta
+			doc.setFillColor(250,250,250);
+
+			doc.roundedRect(
+				14,
+				104,
+				182,
+				28,
+				3,
+				3,
+				"F"
+			);
+
+			// barra azul
+			doc.setFillColor(12,74,110);
+
+			doc.roundedRect(
+				14,
+				104,
+				182,
+				2.5,
+				3,
+				3,
+				"F"
+			);
+
+			// ==========================
+			// MÁS RENTABLE
+			// ==========================
+
+			doc.setFillColor(245, 247, 250);
+
+			doc.roundedRect(
+				18,
+				108,
+				78,
+				18,
+				2,
+				2,
+				"F"
+			);
+
+			doc.setTextColor(90, 90, 90);
+			doc.setFont("helvetica", "normal");
 			doc.setFontSize(8);
 
 			doc.text(
-				`Generado: ${formatearFechaReporte()}`,
-				14,
-				290
+				"Más rentable",
+				22,
+				114
+			);
+
+			if (productoMasRentable) {
+
+				doc.setTextColor(12,74,110);
+				doc.setFont("helvetica","bold");
+				doc.setFontSize(9);
+
+				doc.text(
+					productoMasRentable.nombre_producto.slice(0,20),
+					22,
+					121
+				);
+
+				doc.text(
+					`$${Number(
+						productoMasRentable.ganancia_neta
+					).toLocaleString("es-CO")}`,
+					92,
+					121,
+					{
+						align:"right"
+					}
+				);
+			}
+
+			// ==========================
+			// MAYOR MARGEN
+			// ==========================
+
+			doc.setFillColor(245,247,250);
+
+			doc.roundedRect(
+				114,
+				108,
+				78,
+				18,
+				2,
+				2,
+				"F"
+			);
+
+			doc.setTextColor(90,90,90);
+			doc.setFont("helvetica","normal");
+			doc.setFontSize(8);
+
+			doc.text(
+				"Mayor margen",
+				118,
+				114
+			);
+
+			if (productoMayorMargen) {
+
+				doc.setTextColor(12,74,110);
+				doc.setFont("helvetica","bold");
+				doc.setFontSize(9);
+
+				doc.text(
+					productoMayorMargen.nombre_producto.slice(0,20),
+					118,
+					121
+				);
+
+				doc.text(
+					`${Number(
+						productoMayorMargen.margen_porcentaje
+					).toFixed(2)}%`,
+					188,
+					121,
+					{
+						align:"right"
+					}
+				);
+			}
+
+			// ==========================
+			// TABLA
+			// ==========================
+
+			autoTable(doc, {
+				startY: 140,
+
+				head: [[
+					'Producto',
+					'Cantidad',
+					'Ventas',
+					'Costo',
+					'Ganancia',
+					'Margen %'
+				]],
+
+				body: reportData.map((p) => [
+					p.nombre_producto,
+					Number(p.cantidad_vendida || 0),
+
+					`$${Number(
+					p.total_ventas || 0
+					).toLocaleString('es-CO')}`,
+
+					`$${Number(
+					p.total_costo || 0
+					).toLocaleString('es-CO')}`,
+
+					`$${Number(
+					p.ganancia_neta || 0
+					).toLocaleString('es-CO')}`,
+
+					`${Number(
+					p.margen_porcentaje || 0
+					).toFixed(2)}%`
+				]),
+
+				headStyles:{
+					fillColor:[12,74,110],
+					textColor:[255,255,255],
+					fontStyle:"bold",
+					fontSize:10,
+					halign:"center"
+				},
+
+				alternateRowStyles:{
+					fillColor:[248,249,250]
+				},
+
+				styles:{
+					font:"helvetica",
+					fontSize:9,
+					cellPadding:4,
+					lineColor:[225,230,235],
+					lineWidth:.2,
+					valign:"middle"
+				}
+			});
+
+			// ==========================
+			// FOOTER
+			// ==========================
+
+			const pages = doc.getNumberOfPages();
+
+			for(let i=1;i<=pages;i++){
+
+				doc.setPage(i);
+
+				doc.setDrawColor(220,220,220);
+				doc.setLineWidth(.3);
+
+				doc.line(
+					14,
+					285,
+					196,
+					285
+				);
+
+				doc.setFont("helvetica","normal");
+				doc.setFontSize(8);
+				doc.setTextColor(120,120,120);
+
+				doc.text(
+					"Sistema de Gestión de Inventario",
+					14,
+					290
+				);
+
+				doc.text(
+					`${fechaGeneracion.fecha} • ${fechaGeneracion.hora}`,
+					105,
+					290,
+					{
+						align:"center"
+					}
+				);
+
+				doc.text(
+					`Página ${i} de ${pages}`,
+					196,
+					290,
+					{
+						align:"right"
+					}
+				);
+			}
+
+			doc.save(
+				`reporte-margen-${new Date()
+					.toISOString()
+					.split('T')[0]}.pdf`
+			);
+
+			toast.success('Reporte descargado correctamente.');
+
+		} catch (err) {
+			console.error(err);
+			toast.error('Error al generar el reporte.');
+		}
+	}
+
+	// ==========================
+    // GENERADOR PDF TOP PRODUCTOS VENDIDOS
+    // ==========================
+	function descargarReporteTopProductos() {
+		try {
+			console.log('TOP 5 GRAFICO');
+			console.log(reportData);
+
+			console.log('TODOS LOS PRODUCTOS');
+			console.log(todosProductosData);
+
+			// Todos los productos para la tabla completa
+			const productos = [
+				...(todosProductosData.length > 0
+					? todosProductosData
+					: reportData)
+			].sort(
+				(a, b) =>
+					Number(b.cantidad_vendida || 0) -
+					Number(a.cantidad_vendida || 0)
+			);
+
+			// Solo Top 5 para la mini tabla
+			const top5 = productos.slice(0, 5);
+
+			const doc = new jsPDF('p', 'mm', 'a4');
+
+			// ==========================
+			// CALCULOS
+			// ==========================
+
+			const totalUnidades = productos.reduce(
+				(sum, p) => sum + Number(p.cantidad_vendida || 0),
+				0
+			);
+
+			const totalVentas = productos.reduce(
+				(sum, p) => sum + Number(p.total_ventas || 0),
+				0
+			);
+
+			const productoTop =
+				productos.length > 0
+					? productos[0]
+					: null;
+
+			const fechaGeneracion = formatearFechaHora(new Date());
+
+			// ==========================
+			// HEADER
+			// ==========================
+
+			doc.setFillColor(12, 74, 110);
+			doc.rect(0, 0, 210, 42, "F");
+
+			doc.setDrawColor(200, 200, 200);
+			doc.setLineWidth(0.6);
+			doc.line(0, 42, 210, 42);
+
+			// Título
+			doc.setTextColor(255,255,255);
+			doc.setFont("helvetica","bold");
+			doc.setFontSize(24);
+
+			doc.text(
+				'REPORTE DE PRODUCTOS VENDIDOS',
+				105,
+				16,
+				{ align: 'center' }
+			);
+
+			doc.setFont("helvetica","normal");
+			doc.setFontSize(10);
+
+			doc.text(
+				"Sistema de Gestión de Inventario",
+				105,
+				24,
+				{
+					align:"center"
+				}
 			);
 
 			doc.text(
-				`Página ${i} de ${pageCount}`,
-				170,
-				290
+				`${fechaGeneracion.fecha} • ${fechaGeneracion.hora}`,
+				105,
+				31,
+				{
+					align:"center"
+				}
 			);
 
-			doc.setTextColor(
-				0,
-				0,
+			// ==========================
+			// RESUMEN EJECUTIVO
+			// ==========================
+
+			doc.setTextColor(12, 74, 110);
+			doc.setFont("helvetica","bold");
+			doc.setFontSize(16);
+
+			doc.text(
+				'Resumen Ejecutivo',
+				14,
+				50
+			);
+
+			const cards = [
+				[
+					'Productos',
+					productos.length.toString()
+				],
+				[
+					'Unidades Vendidas',
+					totalUnidades.toLocaleString('es-CO')
+				],
+				[
+					'Ventas Totales',
+					`$${totalVentas.toLocaleString('es-CO')}`
+				]
+			];
+
+			let x = 14;
+
+			cards.forEach(([titulo, valor]) => {
+				// sombra
+				doc.setFillColor(228,232,236);
+
+				doc.roundedRect(
+					x+1,
+					59,
+					56,
+					26,
+					3,
+					3,
+					"F"
+				);
+
+				// tarjeta
+				doc.setFillColor(250,250,250);
+
+				doc.roundedRect(
+					x,
+					58,
+					56,
+					26,
+					3,
+					3,
+					"F"
+				);
+
+				// barra azul
+
+				doc.setFillColor(12,74,110);
+
+				doc.roundedRect(
+					x,
+					58,
+					56,
+					3,
+					3,
+					3,
+					"F"
+				);
+
+				// titulo
+
+				doc.setTextColor(130,130,130);
+				doc.setFont("helvetica","normal");
+				doc.setFontSize(9);
+
+				doc.text(
+					titulo,
+					x+4,
+					68
+				);
+
+				// valor
+
+				doc.setTextColor(12,74,110);
+				doc.setFont("helvetica","bold");
+				doc.setFontSize(16);
+
+				doc.text(
+					valor,
+					x+4,
+					79
+				);
+
+				x+=62;
+
+			});
+
+			// ==========================
+			// PRODUCTO TOP
+			// ==========================
+
+			doc.setTextColor(12, 74, 110);
+			doc.setFont("helvetica", "bold");
+			doc.setFontSize(15);
+
+			doc.text(
+				"Producto Más Vendido",
+				14,
+				98
+			);
+
+			doc.setDrawColor(12, 74, 110);
+			doc.setLineWidth(.4);
+
+			doc.line(
+				14,
+				100,
+				196,
+				100
+			);
+
+			// ==========================
+			// CONTENEDOR
+			// ==========================
+
+			// sombra
+			doc.setFillColor(228, 232, 236);
+
+			doc.roundedRect(
+				15,
+				105,
+				182,
+				28,
+				3,
+				3,
+				"F"
+			);
+
+			// tarjeta
+			doc.setFillColor(250, 250, 250);
+
+			doc.roundedRect(
+				14,
+				104,
+				182,
+				28,
+				3,
+				3,
+				"F"
+			);
+
+			// barra azul
+			doc.setFillColor(12, 74, 110);
+
+			doc.roundedRect(
+				14,
+				104,
+				182,
+				2.5,
+				3,
+				3,
+				"F"
+			);
+
+			// ==========================
+			// TARJETA INTERNA
+			// ==========================
+
+			doc.setFillColor(245, 247, 250);
+
+			doc.roundedRect(
+				18,
+				108,
+				174,
+				18,
+				2,
+				2,
+				"F"
+			);
+
+			// título
+			doc.setTextColor(130, 130, 130);
+			doc.setFont("helvetica", "normal");
+			doc.setFontSize(8);
+
+			doc.text(
+				"Producto más vendido",
+				22,
+				114
+			);
+
+			if (productoTop) {
+
+				// nombre
+				doc.setTextColor(12, 74, 110);
+				doc.setFont("helvetica", "bold");
+				doc.setFontSize(9);
+
+				doc.text(
+					productoTop.nombre_producto.slice(0, 38),
+					22,
+					121
+				);
+
+				// cantidad
+				doc.text(
+					`${productoTop.cantidad_vendida} unidades`,
+					188,
+					121,
+					{
+						align: "right"
+					}
+				);
+			}
+			
+			// ==========================
+			// MINI TABLA TOP 5
+			// ==========================
+
+			doc.setFontSize(14);
+			doc.setFont('helvetica', 'bold');
+
+			doc.text(
+				'Ranking Top 5 Productos',
+				14,
+				148
+			);
+
+			autoTable(doc, {
+				startY: 153,
+
+				head: [[
+					'#',
+					'Producto',
+					'Cantidad'
+				]],
+
+				body: top5.map((p, index) => [
+					index + 1,
+					p.nombre_producto,
+					Number(p.cantidad_vendida || 0)
+				]),
+
+				headStyles:{
+					fillColor:[12,74,110],
+					textColor:[255,255,255],
+					fontStyle:"bold",
+					fontSize:10,
+					halign:"center"
+				},
+
+				alternateRowStyles:{
+					fillColor:[248,249,250]
+				},
+
+				styles:{
+					font:"helvetica",
+					fontSize:9,
+					cellPadding:4,
+					lineColor:[225,230,235],
+					lineWidth:.2,
+					valign:"middle"
+				}
+			});
+
+			// ==========================
+			// TABLA COMPLETA
+			// ==========================
+
+			const inicioTabla =
+				(doc as any).lastAutoTable.finalY + 12;
+
+			doc.setFontSize(14);
+			doc.setFont('helvetica', 'bold');
+
+			doc.text(
+				'Listado Completo de Productos',
+				14,
+				inicioTabla
+			);
+
+			autoTable(doc, {
+				startY: inicioTabla + 6,
+
+				head: [[
+					'#',
+					'Producto',
+					'Cantidad',
+					'Ventas'
+				]],
+
+				body: productos.map((p, index) => [
+					index + 1,
+					p.nombre_producto,
+					Number(p.cantidad_vendida || 0),
+					`$${Number(
+						p.total_ventas || 0
+					).toLocaleString('es-CO')}`
+				]),
+
+				headStyles:{
+					fillColor:[12,74,110],
+					textColor:[255,255,255],
+					fontStyle:"bold",
+					fontSize:10,
+					halign:"center"
+				},
+
+				alternateRowStyles:{
+					fillColor:[248,249,250]
+				},
+
+				styles:{
+					font:"helvetica",
+					fontSize:9,
+					cellPadding:4,
+					lineColor:[225,230,235],
+					lineWidth:.2,
+					valign:"middle"
+				}
+			});
+
+			// ==========================
+			// FOOTER
+			// ==========================
+
+			const pages = doc.getNumberOfPages();
+
+			for(let i=1;i<=pages;i++){
+
+				doc.setPage(i);
+
+				doc.setDrawColor(220,220,220);
+				doc.setLineWidth(.3);
+
+				doc.line(
+					14,
+					285,
+					196,
+					285
+				);
+
+				doc.setFont("helvetica","normal");
+				doc.setFontSize(8);
+				doc.setTextColor(120,120,120);
+
+				doc.text(
+					"Sistema de Gestión de Inventario",
+					14,
+					290
+				);
+
+				doc.text(
+					`${fechaGeneracion.fecha} • ${fechaGeneracion.hora}`,
+					105,
+					290,
+					{
+						align:"center"
+					}
+				);
+
+				doc.text(
+					`Página ${i} de ${pages}`,
+					196,
+					290,
+					{
+						align:"right"
+					}
+				);
+			}
+
+			doc.save(
+				`reporte-productos-${new Date()
+					.toISOString()
+					.split('T')[0]}.pdf`
+			);
+
+			toast.success('Reporte descargado correctamente.');
+
+		} catch (err) {
+			console.error(err);
+			toast.error('Error al generar el reporte.');
+		}
+	}
+
+
+	// ==========================
+	// GENERADOR PDF VENTAS POR VENDEDOR
+	// ==========================
+	function descargarReporteVentasPorVendedor() {
+		try {
+			const vendedores = reportData ?? [];
+
+			const doc = new jsPDF('p', 'mm', 'a4');
+
+			// ==========================
+			// CALCULOS
+			// ==========================
+
+			const totalVendido = vendedores.reduce(
+				(sum, v) => sum + Number(v.total_vendido || 0),
 				0
 			);
-		}
 
-		doc.save(
-			`reporte-vendedores-${new Date()
-				.toISOString()
-				.split('T')[0]}.pdf`
-		);
+			const totalVentas = vendedores.reduce(
+				(sum, v) => sum + Number(v.numero_ventas || 0),
+				0
+			);
+
+			const vendedorTop =
+				vendedores.length > 0
+					? [...vendedores].sort(
+							(a, b) =>
+								Number(b.total_vendido || 0) -
+								Number(a.total_vendido || 0)
+					)[0]
+					: null;
+
+			const promedioVentas =
+				vendedores.length > 0
+					? totalVendido / vendedores.length
+					: 0;
+
+			const fechaGeneracion = formatearFechaHora(new Date());
+
+			// ==========================
+			// HEADER
+			// ==========================
+
+			doc.setFillColor(12, 74, 110);
+			doc.rect(0, 0, 210, 42, "F");
+
+			doc.setDrawColor(200, 200, 200);
+			doc.setLineWidth(0.6);
+			doc.line(0, 42, 210, 42);
+
+			// Título
+			doc.setTextColor(255,255,255);
+			doc.setFont("helvetica","bold");
+			doc.setFontSize(24);
+
+			doc.text(
+				'REPORTE DE VENTAS POR VENDEDOR',
+				105,
+				15,
+				{ align: 'center' }
+			);
+
+			doc.setFont("helvetica","normal");
+			doc.setFontSize(10);
+
+			doc.text(
+				"Sistema de Gestión de Inventario",
+				105,
+				24,
+				{
+					align:"center"
+				}
+			);
+
+			doc.text(
+				`${fechaGeneracion.fecha} • ${fechaGeneracion.hora}`,
+				105,
+				31,
+				{
+					align:"center"
+				}
+			);
+
+			// ==========================
+			// RESUMEN
+			// ==========================
+
+			doc.setTextColor(12, 74, 110);
+			doc.setFont("helvetica","bold");
+			doc.setFontSize(16);
+
+			doc.text(
+				'Resumen Ejecutivo',
+				14,
+				50
+			);
+
+			doc.setDrawColor(12,74,110);
+			doc.setLineWidth(.4);
+			doc.line(
+				14,
+				52,
+				196,
+				52
+			);
+
+			const cards = [
+				[
+					'Vendedores',
+					vendedores.length.toString()
+				],
+				[
+					'Ventas Registradas',
+					totalVentas.toLocaleString('es-CO')
+				],
+				[
+					'Total Vendido',
+					`$${totalVendido.toLocaleString('es-CO')}`
+				]
+			];
+
+			let x = 14;
+
+			cards.forEach(([titulo, valor]) => {
+				// sombra
+				doc.setFillColor(228,232,236);
+
+				doc.roundedRect(
+					x+1,
+					59,
+					56,
+					26,
+					3,
+					3,
+					"F"
+				);
+
+				// tarjeta
+				doc.setFillColor(250,250,250);
+
+				doc.roundedRect(
+					x,
+					58,
+					56,
+					26,
+					3,
+					3,
+					"F"
+				);
+
+				// barra azul
+				doc.setFillColor(12,74,110);
+
+				doc.roundedRect(
+					x,
+					58,
+					56,
+					3,
+					3,
+					3,
+					"F"
+				);
+
+				// titulo
+				doc.setTextColor(130,130,130);
+				doc.setFont("helvetica","normal");
+				doc.setFontSize(9);
+
+				doc.text(
+					titulo,
+					x+4,
+					68
+				);
+
+				// valor
+				doc.setTextColor(12,74,110);
+				doc.setFont("helvetica","bold");
+				doc.setFontSize(16);
+
+				doc.text(
+					valor,
+					x+4,
+					79
+				);
+
+				x+=62;
+
+			});
+
+			// ==========================
+			// VENDEDOR TOP
+			// ==========================
+
+			doc.setTextColor(12, 74, 110);
+			doc.setFont("helvetica", "bold");
+			doc.setFontSize(15);
+
+			doc.text(
+				"Mejor Vendedor",
+				14,
+				98
+			);
+
+			doc.setDrawColor(12, 74, 110);
+			doc.setLineWidth(.4);
+
+			doc.line(
+				14,
+				100,
+				196,
+				100
+			);
+
+			// ==========================
+			// CONTENEDOR
+			// ==========================
+
+			// sombra
+			doc.setFillColor(228, 232, 236);
+
+			doc.roundedRect(
+				15,
+				105,
+				182,
+				28,
+				3,
+				3,
+				"F"
+			);
+
+			// tarjeta
+			doc.setFillColor(250, 250, 250);
+
+			doc.roundedRect(
+				14,
+				104,
+				182,
+				28,
+				3,
+				3,
+				"F"
+			);
+
+			// barra azul
+			doc.setFillColor(12, 74, 110);
+
+			doc.roundedRect(
+				14,
+				104,
+				182,
+				2.5,
+				3,
+				3,
+				"F"
+			);
+
+			// ==========================
+			// TARJETA INTERNA
+			// ==========================
+
+			doc.setFillColor(245, 247, 250);
+
+			doc.roundedRect(
+				18,
+				108,
+				174,
+				18,
+				2,
+				2,
+				"F"
+			);
+
+			// título
+			doc.setTextColor(130, 130, 130);
+			doc.setFont("helvetica", "normal");
+			doc.setFontSize(8);
+
+			doc.text(
+				"Vendedor con mayores ventas",
+				22,
+				114
+			);
+
+			if (vendedorTop) {
+
+				// nombre
+				doc.setTextColor(12, 74, 110);
+				doc.setFont("helvetica", "bold");
+				doc.setFontSize(9);
+
+				doc.text(
+					vendedorTop.nombre_usuario,
+					22,
+					121
+				);
+
+				// total vendido
+				doc.text(
+					`$${Number(
+						vendedorTop.total_vendido
+					).toLocaleString("es-CO")}`,
+					188,
+					121,
+					{
+						align: "right"
+					}
+				);
+			}
+			// ==========================
+			// TABLA
+			// ==========================
+
+			autoTable(doc, {
+				startY: 140,
+
+				head: [[
+					'#',
+					'Vendedor',
+					'Número Ventas',
+					'Total Vendido'
+				]],
+
+				body: vendedores.map((v, index) => [
+					index + 1,
+					v.nombre_usuario,
+					Number(v.numero_ventas || 0),
+					`$${Number(
+						v.total_vendido || 0
+					).toLocaleString('es-CO')}`
+				]),
+
+				headStyles:{
+					fillColor:[12,74,110],
+					textColor:[255,255,255],
+					fontStyle:"bold",
+					fontSize:10,
+					halign:"center"
+				},
+
+				alternateRowStyles:{
+					fillColor:[248,249,250]
+				},
+
+				styles:{
+					font:"helvetica",
+					fontSize:9,
+					cellPadding:4,
+					lineColor:[225,230,235],
+					lineWidth:.2,
+					valign:"middle"
+				}
+			});
+
+			// ==========================
+			// FOOTER
+			// ==========================
+
+			const pageCount =
+				doc.getNumberOfPages();
+
+			for (
+				let i = 1;
+				i <= pageCount;
+				i++
+			) {
+				doc.setPage(i);
+
+				doc.setTextColor(
+					120,
+					120,
+					120
+				);
+
+				doc.setFontSize(8);
+
+				doc.text(
+					`Generado: ${formatearFechaReporte()}`,
+					14,
+					290
+				);
+
+				doc.text(
+					`Página ${i} de ${pageCount}`,
+					170,
+					290
+				);
+
+				doc.setTextColor(
+					0,
+					0,
+					0
+				);
+			}
+
+			doc.save(
+				`reporte-vendedores-${new Date()
+					.toISOString()
+					.split('T')[0]}.pdf`
+			);
+
+ 			toast.success('Reporte descargado correctamente.');
+
+		} catch (err) {
+			console.error(err);
+			toast.error('Error al generar el reporte.');
+		}
 	}
 
 function descargarReporteEntradas() {
@@ -1979,8 +2506,8 @@ function descargarReporteEntradas() {
 
 	<button
 		on:click={() => {
-				if (title === 'Top 5 Productos Vendidos') {
-			descargarReporteTopProductos();
+			if (title === 'Top 5 Productos Vendidos') {
+				descargarReporteTopProductos();
 			}
 			else if (title === 'Reporte de Margen de Ganancias') {
 				descargarReporteMargen();

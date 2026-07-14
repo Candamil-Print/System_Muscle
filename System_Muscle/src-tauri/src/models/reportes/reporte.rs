@@ -29,6 +29,8 @@ pub struct ProductoMasVendido {
     pub tipo_producto: String,
     pub cantidad_vendida: i32,
     pub total_ventas: f64,
+    pub metodo_pago: String,
+    pub vendedor: String,
 }
 
 /// Producto con stock bajo (vista `vista_productos_stock_bajo`)
@@ -160,4 +162,43 @@ pub struct VentaDetallePorTurno {
     pub metodo_pago: String,
     pub id_caja: i32,
     pub caja_inicial: f64,
+    pub caja_inicial_hora: String,
+    pub caja_final: Option<f64>,
+    pub caja_final_hora: Option<String>,
+    pub caja_total: Option<f64>,
+    pub total_efectivo: f64,
+    pub total_transferencia: f64,
+    pub total_final: f64,
+}
+
+/// Reporte consolidado de ventas para un rango de fechas.
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct ReporteConsolidadoVentas {
+    pub fecha_inicio: String,
+    pub fecha_fin: String,
+    pub productos_mas_vendidos: Vec<ProductoMasVendido>,
+    pub metodos_pago: Vec<VentasPorMetodoPago>,
+    pub ventas_por_vendedor: Vec<VentasPorUsuario>,
+}
+
+/// Reporte detallado de ventas para exportación / visualización
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct ReporteVentasDetallado {
+    pub id_venta: i32,
+    pub fecha: String,
+    pub vendedor: String,
+    pub producto: String,
+    pub cantidad: i32,
+    pub precio_unitario: f64,
+    pub subtotal: f64,
+    pub metodo_pago: String,
+    pub id_caja: i32,
+    pub caja_inicial_valor: f64,
+    pub caja_inicial_hora: String,
+    pub caja_final_valor: Option<f64>,
+    pub caja_final_hora: Option<String>,
+    pub total_efectivo: f64,
+    pub total_transferencia: f64,
+    pub total_final: f64,
+    pub caja_total: Option<f64>,
 }

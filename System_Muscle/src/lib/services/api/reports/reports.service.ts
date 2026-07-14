@@ -11,8 +11,10 @@ import type {
 	VentasPorMetodoPago,
     ResumenVentasRango,
 	ReporteCaja,
-	ReporteMargenGanancia
+	ReporteMargenGanancia,
+	ReporteVentasDetallado
 } from './reports.types';
+
 
 // ==========================
 // DASHBOARD
@@ -146,6 +148,20 @@ export async function obtenerMargenGanancia(
 	fechaFin: string
 ): Promise<ReporteMargenGanancia> {
 	return await invoke('reporte_margen_ganancia', {
+		fechaInicio,
+		fechaFin
+	});
+}
+
+
+// ==========================
+// REPORTE DETALLADO DE LAS VENTAS
+// ==========================
+export async function obtenerReporteVentasDetallado(
+  fechaInicio: string,
+  fechaFin: string
+): Promise<ReporteVentasDetallado[]> {
+  	return await invoke('reporte_ventas_detallado', {
 		fechaInicio,
 		fechaFin
 	});

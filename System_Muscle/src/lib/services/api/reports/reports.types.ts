@@ -105,3 +105,23 @@ export interface ReporteMargenGanancia {
 	margen_porcentaje: number;
 	productos: DetalleMargenProducto[];
 }
+
+export interface ReporteVentasDetallado {
+  id_venta: number;
+  fecha: string;
+  vendedor: string;
+  producto: string;
+  cantidad: number;
+  precio_unitario: number;
+  subtotal: number;
+  metodo_pago: string;
+  id_caja: number;
+  caja_inicial_valor: number;
+  caja_inicial_hora: string;
+  caja_final_valor: number | null;
+  caja_final_hora: string | null;
+  total_efectivo: number;
+  total_transferencia: number;
+  total_final: number;
+  caja_total: number | null;
+}

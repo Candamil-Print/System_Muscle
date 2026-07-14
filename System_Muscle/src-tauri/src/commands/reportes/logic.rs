@@ -2,7 +2,8 @@ use rusqlite::Connection;
 use crate::models::reportes::reporte::{
     DashboardResumen, DetalleMargenProducto, ProductoMasVendido, ReporteCaja, ReporteEntradasProducto,
     ReporteInventario, ReporteMargenGanancia, ReporteStockBajo, ResumenVentasDiario, ResumenVentasRango,
-    VentasPorMetodoPago, VentasPorUsuario, VentasPorTurno, VentaDetallePorTurno,
+    VentasPorMetodoPago, VentasPorUsuario, VentasPorTurno, VentaDetallePorTurno, ReporteConsolidadoVentas,
+    ReporteVentasDetallado,
 };
 
 fn validar_rango_fechas(fecha_inicio: &str, fecha_fin: &str) -> Result<(), String> {
@@ -123,10 +124,14 @@ pub fn productos_mas_vendidos_logic(
         .prepare(
             r#"SELECT dv.id_producto, p.nombre, p.tipo_producto,
                       SUM(dv.cantidad) AS cantidad_vendida,
-                      SUM(dv.subtotal) AS total_ventas
+                      SUM(dv.subtotal) AS total_ventas,
+                      COALESCE(GROUP_CONCAT(DISTINCT mp.nombre), '') AS metodo_pago,
+                      COALESCE(GROUP_CONCAT(DISTINCT u.nombre_completo), '') AS vendedor
                FROM detalle_venta dv
                INNER JOIN ventas v ON dv.id_venta = v.id_venta
                INNER JOIN productos p ON dv.id_producto = p.id_producto
+               INNER JOIN metodos_pago mp ON dv.metodo_pago = mp.id_metodo
+               INNER JOIN usuarios u ON v.id_usuario = u.id_usuario
                WHERE DATE(v.fecha) BETWEEN DATE(?1) AND DATE(?2)
                GROUP BY dv.id_producto
                ORDER BY cantidad_vendida DESC
@@ -142,6 +147,8 @@ pub fn productos_mas_vendidos_logic(
                 tipo_producto: row.get(2)?,
                 cantidad_vendida: row.get(3)?,
                 total_ventas: row.get(4)?,
+                metodo_pago: row.get(5)?,
+                vendedor: row.get(6)?,
             })
         })
         .map_err(|e| e.to_string())?;
@@ -613,7 +620,14 @@ pub fn ventas_por_turno_detalle_logic(conn: &Connection, id_turno: i32) -> Resul
             dv.subtotal,
             mp.nombre as metodo_pago,
             c.id_caja,
-            c.monto_apertura as caja_inicial
+            c.monto_apertura as caja_inicial,
+            c.fecha_apertura as caja_inicial_hora,
+            c.monto_cierre as caja_final,
+            c.fecha_cierre as caja_final_hora,
+            (c.monto_cierre + c.monto_apertura) as caja_total,
+            c.total_efectivo,
+            c.total_transferencia,
+            (c.total_efectivo + c.total_transferencia) as total_final
         FROM ventas v
         INNER JOIN turnos t ON v.id_turno = t.id_turno
         INNER JOIN usuarios u ON v.id_usuario = u.id_usuario
@@ -638,6 +652,13 @@ pub fn ventas_por_turno_detalle_logic(conn: &Connection, id_turno: i32) -> Resul
             metodo_pago: row.get(7)?,
             id_caja: row.get(8)?,
             caja_inicial: row.get(9)?,
+            caja_inicial_hora: row.get(10)?,
+            caja_final: row.get(11)?,
+            caja_final_hora: row.get(12)?,
+            caja_total: row.get(13)?,
+            total_efectivo: row.get(14)?,
+            total_transferencia: row.get(15)?,
+            total_final: row.get(16)?,
         })
     }).map_err(|e| e.to_string())?;
     
@@ -661,4 +682,94 @@ pub fn ventas_del_turno_actual_logic(conn: &Connection) -> Result<Vec<VentasPorT
     } else {
         Ok(Vec::new())
     }
+}
+
+/// Obtener reporte consolidado de ventas: productos más vendidos, métodos de pago y vendedor
+pub fn reporte_consolidado_ventas_logic(
+    conn: &Connection,
+    fecha_inicio: &str,
+    fecha_fin: &str,
+    limite_productos: i32,
+) -> Result<ReporteConsolidadoVentas, String> {
+    validar_rango_fechas(fecha_inicio, fecha_fin)?;
+
+    let productos_mas_vendidos = productos_mas_vendidos_logic(conn, fecha_inicio, fecha_fin, limite_productos)?;
+    let metodos_pago = ventas_por_metodo_pago_logic(conn, fecha_inicio, fecha_fin)?;
+    let ventas_por_vendedor = ventas_por_usuario_reporte_logic(conn, fecha_inicio, fecha_fin)?;
+
+    Ok(ReporteConsolidadoVentas {
+        fecha_inicio: fecha_inicio.to_string(),
+        fecha_fin: fecha_fin.to_string(),
+        productos_mas_vendidos,
+        metodos_pago,
+        ventas_por_vendedor,
+    })
+}
+
+/// Reporte detallado de ventas por rango de fechas
+pub fn reporte_ventas_detallado_logic(
+    conn: &Connection,
+    fecha_inicio: &str,
+    fecha_fin: &str,
+) -> Result<Vec<ReporteVentasDetallado>, String> {
+    validar_rango_fechas(fecha_inicio, fecha_fin)?;
+
+    let mut stmt = conn.prepare(
+        r#"
+        SELECT 
+            v.id_venta,
+            v.fecha,
+            u.nombre_completo as vendedor,
+            p.nombre as producto,
+            dv.cantidad,
+            dv.precio_unitario,
+            dv.subtotal,
+            mp.nombre as metodo_pago,
+            c.id_caja,
+            c.monto_apertura as caja_inicial_valor,
+            c.fecha_apertura as caja_inicial_hora,
+            c.monto_cierre as caja_final_valor,
+            c.fecha_cierre as caja_final_hora,
+            c.total_efectivo,
+            c.total_transferencia,
+            (c.total_efectivo + c.total_transferencia) as total_final,
+            (c.monto_cierre + c.monto_apertura) as caja_total
+        FROM ventas v
+        INNER JOIN usuarios u ON v.id_usuario = u.id_usuario
+        INNER JOIN detalle_venta dv ON v.id_venta = dv.id_venta
+        INNER JOIN productos p ON dv.id_producto = p.id_producto
+        INNER JOIN metodos_pago mp ON dv.metodo_pago = mp.id_metodo
+        INNER JOIN caja c ON v.id_caja = c.id_caja
+        WHERE DATE(v.fecha) BETWEEN DATE(?1) AND DATE(?2)
+        ORDER BY v.fecha DESC
+        "#
+    ).map_err(|e| e.to_string())?;
+
+    let rows = stmt.query_map(rusqlite::params![fecha_inicio, fecha_fin], |row| {
+        Ok(ReporteVentasDetallado {
+            id_venta: row.get(0)?,
+            fecha: row.get(1)?,
+            vendedor: row.get(2)?,
+            producto: row.get(3)?,
+            cantidad: row.get(4)?,
+            precio_unitario: row.get(5)?,
+            subtotal: row.get(6)?,
+            metodo_pago: row.get(7)?,
+            id_caja: row.get(8)?,
+            caja_inicial_valor: row.get(9)?,
+            caja_inicial_hora: row.get(10)?,
+            caja_final_valor: row.get(11)?,
+            caja_final_hora: row.get(12)?,
+            total_efectivo: row.get(13)?,
+            total_transferencia: row.get(14)?,
+            total_final: row.get(15)?,
+            caja_total: row.get(16)?,
+        })
+    }).map_err(|e| e.to_string())?;
+
+    let mut resultados = Vec::new();
+    for row in rows {
+        resultados.push(row.map_err(|e| e.to_string())?);
+    }
+    Ok(resultados)
 }

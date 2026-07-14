@@ -100,7 +100,7 @@ fn test_resumen_ventas_rango() {
     )
     .unwrap();
 
-    let hoy = chrono::Local::now().format("%Y-%m-%d").to_string();
+    let hoy = chrono::Utc::now().format("%Y-%m-%d").to_string();
     let resumen = resumen_ventas_rango_logic(&conn, &hoy, &hoy).unwrap();
     assert!(resumen.numero_ventas >= 1);
     assert!(resumen.total_general >= 50000.0);
@@ -134,9 +134,12 @@ fn test_productos_mas_vendidos() {
     )
     .unwrap();
 
-    let hoy = chrono::Local::now().format("%Y-%m-%d").to_string();
+    let hoy = chrono::Utc::now().format("%Y-%m-%d").to_string();
     let top = productos_mas_vendidos_logic(&conn, &hoy, &hoy, 10).unwrap();
-    assert!(top.iter().any(|p| p.id_producto == id_producto && p.cantidad_vendida == 8));
+    let item = top.iter().find(|p| p.id_producto == id_producto).unwrap();
+    assert_eq!(item.cantidad_vendida, 8);
+    assert_eq!(item.metodo_pago, "TRANSFERENCIA");
+    assert!(!item.vendedor.is_empty());
 
     limpiar_producto(&conn, id_producto);
     limpiar_caja(&conn, id_caja);
@@ -162,7 +165,7 @@ fn test_reporte_entradas_rango() {
     let nombre = nombre_unico("ReporteTest Entrada");
     let id = crear_producto_con_stock(&conn, &nombre, 25);
 
-    let hoy = chrono::Local::now().format("%Y-%m-%d").to_string();
+    let hoy = chrono::Utc::now().format("%Y-%m-%d").to_string();
     let entradas = reporte_entradas_rango_logic(&conn, &hoy, &hoy).unwrap();
     let item = entradas.iter().find(|e| e.id_producto == id).unwrap();
     assert_eq!(item.cantidad_ingresada, 25);
@@ -174,7 +177,7 @@ fn test_reporte_entradas_rango() {
 fn test_ventas_por_metodo_pago_reporte() {
     println!("\n📊 TEST: Ventas por método de pago");
     let conn = get_db_connection().unwrap();
-    let hoy = chrono::Local::now().format("%Y-%m-%d").to_string();
+    let hoy = chrono::Utc::now().format("%Y-%m-%d").to_string();
     let metodos = ventas_por_metodo_pago_logic(&conn, &hoy, &hoy).unwrap();
     assert!(metodos.iter().all(|m| m.id_metodo == 1 || m.id_metodo == 2));
 }
@@ -244,7 +247,7 @@ fn test_reporte_margen_ganancia() {
     )
     .unwrap();
 
-    let hoy = chrono::Local::now().format("%Y-%m-%d").to_string();
+    let hoy = chrono::Utc::now().format("%Y-%m-%d").to_string();
     let reporte = reporte_margen_ganancia_logic(&conn, &hoy, &hoy).unwrap();
 
     // Verificaciones consolidadas
@@ -287,4 +290,109 @@ fn test_reporte_margen_ganancia() {
     limpiar_producto(&conn, id_prod_2);
     limpiar_caja(&conn, id_caja);
 }
+
+#[test]
+fn test_reporte_consolidado_ventas() {
+    println!("\n📊 TEST: Reporte Consolidado de Ventas");
+    let conn = get_db_connection().unwrap();
+    let id_caja = crear_caja_abierta(&conn);
+    let nombre_prod = nombre_unico("ReporteTest Consolidado");
+    let id_producto = crear_producto_con_stock(&conn, &nombre_prod, 10);
+
+    // Registrar una venta
+    registrar_venta_logic(
+        &conn,
+        &NuevaVenta {
+            id_usuario: 1,
+            id_caja,
+            id_turno: None,
+            lineas: vec![LineaVenta {
+                id_producto,
+                cantidad: 3,
+                precio_unitario: 12000.0,
+                metodo_pago: 1, // EFECTIVO
+            }],
+        },
+    )
+    .unwrap();
+
+    let hoy = chrono::Utc::now().format("%Y-%m-%d").to_string();
+    let reporte = reporte_consolidado_ventas_logic(&conn, &hoy, &hoy, 5).unwrap();
+
+    // Verificaciones
+    assert_eq!(reporte.fecha_inicio, hoy);
+    assert_eq!(reporte.fecha_fin, hoy);
+
+    // Debe contener el producto más vendido
+    let top_prod = reporte.productos_mas_vendidos.iter().find(|p| p.id_producto == id_producto);
+    assert!(top_prod.is_some());
+    let tp = top_prod.unwrap();
+    assert_eq!(tp.cantidad_vendida, 3);
+    assert_eq!(tp.total_ventas, 36000.0);
+
+    // Debe contener las ventas por método de pago (EFECTIVO es ID 1)
+    let mp = reporte.metodos_pago.iter().find(|m| m.id_metodo == 1);
+    assert!(mp.is_some());
+    assert!(mp.unwrap().total >= 36000.0);
+
+    // Debe contener las ventas por vendedor (usuario ID 1)
+    let vendedor = reporte.ventas_por_vendedor.iter().find(|u| u.id_usuario == 1);
+    assert!(vendedor.is_some());
+    assert!(vendedor.unwrap().total_vendido >= 36000.0);
+
+    println!("   ✅ Reporte consolidado verificado con éxito");
+
+    // Limpieza
+    limpiar_producto(&conn, id_producto);
+    limpiar_caja(&conn, id_caja);
+}
+
+#[test]
+fn test_reporte_ventas_detallado() {
+    println!("\n📊 TEST: Reporte Ventas Detallado (vista_reporte_ventas)");
+    let conn = get_db_connection().unwrap();
+    let id_caja = crear_caja_abierta(&conn);
+    let nombre_prod = nombre_unico("ReporteTest Detallado");
+    let id_producto = crear_producto_con_stock(&conn, &nombre_prod, 10);
+
+    // Registrar una venta
+    registrar_venta_logic(
+        &conn,
+        &NuevaVenta {
+            id_usuario: 1,
+            id_caja,
+            id_turno: None,
+            lineas: vec![LineaVenta {
+                id_producto,
+                cantidad: 4,
+                precio_unitario: 15000.0,
+                metodo_pago: 1, // EFECTIVO
+            }],
+        },
+    )
+    .unwrap();
+
+    let hoy = chrono::Utc::now().format("%Y-%m-%d").to_string();
+    let reporte = reporte_ventas_detallado_logic(&conn, &hoy, &hoy).unwrap();
+
+    // Verificaciones
+    assert!(!reporte.is_empty());
+    let sale = reporte.iter().find(|s| s.id_caja == id_caja).unwrap();
+    assert_eq!(sale.producto, nombre_prod);
+    assert_eq!(sale.cantidad, 4);
+    assert_eq!(sale.precio_unitario, 15000.0);
+    assert_eq!(sale.metodo_pago, "EFECTIVO");
+    assert!(!sale.vendedor.is_empty());
+    assert_eq!(sale.caja_inicial_valor, 0.0);
+    assert!(!sale.caja_inicial_hora.is_empty());
+    assert!(sale.total_efectivo >= 60000.0);
+    assert_eq!(sale.total_final, sale.total_efectivo + sale.total_transferencia);
+
+    println!("   ✅ Reporte de ventas detallado verificado con éxito");
+
+    // Limpieza
+    limpiar_producto(&conn, id_producto);
+    limpiar_caja(&conn, id_caja);
+}
+
 

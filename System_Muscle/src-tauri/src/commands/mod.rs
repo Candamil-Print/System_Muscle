@@ -26,6 +26,8 @@ pub use productos::logic::{
     listar_productos_logic,
     buscar_productos_logic,
     eliminar_producto_logic,
+    activar_producto_logic,
+    desactivar_producto_logic,
 };
 
 // Modulo de stock
@@ -97,6 +99,8 @@ pub use reportes::logic::{
     ventas_por_turno_logic,
     ventas_por_turno_detalle_logic,
     ventas_del_turno_actual_logic,
+    reporte_consolidado_ventas_logic,
+    reporte_ventas_detallado_logic,
 };
 
 // Modulo de caja
@@ -748,6 +752,16 @@ pub fn reporte_margen_ganancia(
 }
 
 #[tauri::command]
+pub fn reporte_ventas_detallado(
+    state: State<'_, DbState>,
+    fecha_inicio: String,
+    fecha_fin: String,
+) -> Result<Vec<crate::models::reportes::reporte::ReporteVentasDetallado>, String> {
+    let conn = state.conn.lock().unwrap();
+    reporte_ventas_detallado_logic(&conn, &fecha_inicio, &fecha_fin)
+}
+
+#[tauri::command]
 pub fn ventas_por_turno(
     state: State<'_, DbState>,
     solo_abiertos: bool,
@@ -866,3 +880,74 @@ pub use reportes_entrada::logic::{
     entradas_por_tipo_producto_logic,
     dashboard_entradas_logic,
 };
+
+// Comandos Tauri para reportes de entrada
+#[tauri::command]
+pub fn resumen_entradas_por_producto(
+    state: State<'_, DbState>,
+    fecha_inicio: String,
+    fecha_fin: String,
+) -> Result<Vec<crate::models::reportes_entrada::reporte_entrada::ResumenEntradasProducto>, String> {
+    let conn = state.conn.lock().unwrap();
+    resumen_entradas_por_producto_logic(&conn, &fecha_inicio, &fecha_fin)
+}
+
+#[tauri::command]
+pub fn totales_entradas_rango(
+    state: State<'_, DbState>,
+    fecha_inicio: String,
+    fecha_fin: String,
+) -> Result<crate::models::reportes_entrada::reporte_entrada::TotalesEntradas, String> {
+    let conn = state.conn.lock().unwrap();
+    totales_entradas_rango_logic(&conn, &fecha_inicio, &fecha_fin)
+}
+
+#[tauri::command]
+pub fn entradas_por_dia(
+    state: State<'_, DbState>,
+    fecha_inicio: String,
+    fecha_fin: String,
+) -> Result<Vec<crate::models::reportes_entrada::reporte_entrada::EntradasPorDia>, String> {
+    let conn = state.conn.lock().unwrap();
+    entradas_por_dia_logic(&conn, &fecha_inicio, &fecha_fin)
+}
+
+#[tauri::command]
+pub fn entradas_por_usuario(
+    state: State<'_, DbState>,
+    fecha_inicio: String,
+    fecha_fin: String,
+) -> Result<Vec<crate::models::reportes_entrada::reporte_entrada::EntradasPorUsuario>, String> {
+    let conn = state.conn.lock().unwrap();
+    entradas_por_usuario_logic(&conn, &fecha_inicio, &fecha_fin)
+}
+
+#[tauri::command]
+pub fn entradas_por_tipo_producto(
+    state: State<'_, DbState>,
+    fecha_inicio: String,
+    fecha_fin: String,
+) -> Result<Vec<crate::models::reportes_entrada::reporte_entrada::EntradasPorTipoProducto>, String> {
+    let conn = state.conn.lock().unwrap();
+    entradas_por_tipo_producto_logic(&conn, &fecha_inicio, &fecha_fin)
+}
+
+#[tauri::command]
+pub fn dashboard_entradas(
+    state: State<'_, DbState>,
+) -> Result<crate::models::reportes_entrada::reporte_entrada::DashboardEntradas, String> {
+    let conn = state.conn.lock().unwrap();
+    dashboard_entradas_logic(&conn)
+}
+
+// Comando Tauri para reporte consolidado de ventas
+#[tauri::command]
+pub fn reporte_consolidado_ventas(
+    state: State<'_, DbState>,
+    fecha_inicio: String,
+    fecha_fin: String,
+    limite_productos: i32,
+) -> Result<crate::models::reportes::reporte::ReporteConsolidadoVentas, String> {
+    let conn = state.conn.lock().unwrap();
+    reporte_consolidado_ventas_logic(&conn, &fecha_inicio, &fecha_fin, limite_productos)
+}

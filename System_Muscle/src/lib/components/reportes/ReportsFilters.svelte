@@ -8,7 +8,7 @@
   import jsPDF from 'jspdf';
   import autoTable from 'jspdf-autotable';
 
-  import { obtenerVentasPorUsuario, obtenerProductosMasVendidos, obtenerVentasPorMetodoPago } from '$lib/services/api/reports/reports.service';
+  import { obtenerVentasPorUsuario, obtenerReporteVentasDetallado } from '$lib/services/api/reports/reports.service';
   import type { VentasPorUsuario } from '$lib/services/api/reports/reports.types';
 
   import flatpickr from 'flatpickr';
@@ -57,120 +57,328 @@
       vendedor
     });
   }
-
+  
 async function handleDownload() {
   try {
-    toast.info('Generando reporte...');
+    if (!fechaInicio || !fechaFin) {
+      toast.warning('Debes seleccionar ambas fechas');
+      return;
+    }
 
-    const [
-      productos,
-      ventasPorUsuario,
-      ventasPorMetodo
-    ] = await Promise.all([
-      obtenerProductosMasVendidos(
-        fechaInicio,
-        fechaFin,
-        100
-      ),
-      obtenerVentasPorUsuario(
-        fechaInicio,
-        fechaFin
-      ),
-      obtenerVentasPorMetodoPago(
-        fechaInicio,
-        fechaFin
-      )
-    ]);
+    const reporte = await obtenerReporteVentasDetallado(
+      fechaInicio,
+      fechaFin
+    );
 
-    if (productos.length === 0) {
+    // Aplicar filtros seleccionados
+    let datos = [...reporte];
+
+    if (metodoPago !== 'todos') {
+      datos = datos.filter(
+        item =>
+          item.metodo_pago.toLowerCase() ===
+          metodoPago.toLowerCase()
+      );
+    }
+
+    if (vendedor !== 'todos') {
+      const nombreVendedor = vendedores.find(
+        v => String(v.id_usuario) === String(vendedor)
+      )?.nombre_usuario;
+
+      if (nombreVendedor) {
+        datos = datos.filter(
+          item => item.vendedor === nombreVendedor
+        );
+      }
+    }
+
+    if (datos.length === 0) {
       toast.warning(
-        'No hay datos para generar el reporte'
+        'No hay datos para generar el reporte.'
       );
       return;
     }
 
-    const doc = new jsPDF();
+    const doc = new jsPDF({
+      orientation: 'landscape'
+    });
 
-    doc.setFontSize(18);
+    const ahora = new Date();
+
+    const fechaGeneracion = {
+      fecha: ahora.toLocaleDateString("es-CO"),
+      hora: ahora.toLocaleTimeString("es-CO", {
+        hour: "2-digit",
+        minute: "2-digit"
+      })
+    };
+
+    // ==========================
+    // HEADER
+    // ==========================
+
+    // Fondo azul
+    doc.setFillColor(12, 74, 110);
+    doc.rect(0, 0, 297, 42, "F");
+
+    // Línea inferior
+    doc.setDrawColor(200, 200, 200);
+    doc.setLineWidth(0.6);
+    doc.line(0, 42, 297, 42);
+
+    // Título
+    doc.setTextColor(255, 255, 255);
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(24);
+
     doc.text(
-      'Reporte de Ventas',
-      14,
-      20
+      "REPORTE DETALLADO DE VENTAS",
+      148.5,
+      16,
+      { align: "center" }
     );
 
+    // Subtítulo
+    doc.setFont("helvetica", "normal");
     doc.setFontSize(10);
 
     doc.text(
-      `Fecha inicio: ${fechaInicio}`,
-      14,
-      30
+      "Sistema de Gestión de Inventario",
+      148.5,
+      24,
+      { align: "center" }
     );
 
+    // Fecha generación
     doc.text(
-      `Fecha fin: ${fechaFin}`,
-      14,
-      36
+      `${fechaGeneracion.fecha} • ${fechaGeneracion.hora}`,
+      148.5,
+      31,
+      { align: "center" }
     );
+
+    // ==========================
+    // FILTROS APLICADOS
+    // ==========================
+
+    // Título
+    doc.setTextColor(12,74,110);
+    doc.setFont("helvetica","bold");
+    doc.setFontSize(15);
+
+    doc.text(
+      "Filtros aplicados",
+      14,
+      54
+    );
+
+    // Línea decorativa
+    doc.setDrawColor(12,74,110);
+    doc.setLineWidth(0.4);
+    doc.line(14,56,283,56);
+
+    // Sombra
+    doc.setFillColor(228,232,236);
+    doc.roundedRect(
+      15,
+      61,
+      268,
+      24,
+      3,
+      3,
+      "F"
+    );
+
+    // Tarjeta
+    doc.setFillColor(250,250,250);
+    doc.roundedRect(
+      14,
+      60,
+      268,
+      24,
+      3,
+      3,
+      "F"
+    );
+
+    // Barra azul superior
+    doc.setFillColor(12,74,110);
+    doc.roundedRect(
+      14,
+      60,
+      268,
+      3,
+      3,
+      3,
+      "F"
+    );
+
+    // Texto
+    doc.setTextColor(70,70,70);
+    doc.setFont("helvetica","normal");
+    doc.setFontSize(10);
+
+    doc.text(`Fecha inicio: ${fechaInicio}`,20,71);
+
+    doc.text(`Fecha fin: ${fechaFin}`,20,78);
 
     doc.text(
       `Método de pago: ${
-        metodoPago === 'todos'
-          ? 'Todos'
+        metodoPago === "todos"
+          ? "Todos"
           : metodoPago
       }`,
-      14,
-      42
+      120,
+      71
     );
 
     doc.text(
       `Vendedor: ${
-        vendedor === 'todos'
-          ? 'Todos'
+        vendedor === "todos"
+          ? "Todos"
           : vendedores.find(
-              v =>
-                String(v.id_usuario) ===
-                String(vendedor)
-            )?.nombre_usuario ||
-            vendedor
+              v => String(v.id_usuario) === String(vendedor)
+            )?.nombre_usuario ?? vendedor
       }`,
-      14,
-      48
+      120,
+      78
     );
 
     autoTable(doc, {
-      startY: 60,
+      startY: 92,
+
+      styles: {
+        fontSize: 7,
+        cellPadding: 2
+      },
+
+      headStyles: {
+        fillColor: [12, 74, 110]
+      },
 
       head: [[
+        'Venta',
+        'Fecha',
+        'Vendedor',
         'Producto',
-        'Cantidad Vendida',
-        'Total Ventas'
+        'Cant.',
+        'P. Unit.',
+        'Subtotal',
+        'Pago',
+        'Caja',
+        'Apertura',
+        'Hora Apertura',
+        'Cierre',
+        'Hora Cierre',
+        'Efectivo',
+        'Transferencia',
+        'Total',
+        'Caja Total'
       ]],
 
-      body: productos.map(
-        producto => [
-          producto.nombre_producto,
-          producto.cantidad_vendida,
-          `$${producto.total_ventas.toLocaleString(
-            'es-CO'
-          )}`
-        ]
-      )
+      body: datos.map(item => [
+        item.id_venta,
+        item.fecha,
+        item.vendedor,
+        item.producto,
+        item.cantidad,
+        `$${item.precio_unitario.toLocaleString('es-CO')}`,
+        `$${item.subtotal.toLocaleString('es-CO')}`,
+        item.metodo_pago,
+        item.id_caja,
+        `$${item.caja_inicial_valor.toLocaleString('es-CO')}`,
+        item.caja_inicial_hora,
+        item.caja_final_valor == null
+          ? '-'
+          : `$${item.caja_final_valor.toLocaleString('es-CO')}`,
+        item.caja_final_hora ?? '-',
+        `$${item.total_efectivo.toLocaleString('es-CO')}`,
+        `$${item.total_transferencia.toLocaleString('es-CO')}`,
+        `$${item.total_final.toLocaleString('es-CO')}`,
+        item.caja_total == null
+          ? '-'
+          : `$${item.caja_total.toLocaleString('es-CO')}`
+      ]),
+
+      headStyles:{
+        fillColor:[12,74,110],
+        textColor:[255,255,255],
+        fontStyle:"bold",
+        fontSize:9,
+        halign:"center"
+      },
+
+      alternateRowStyles:{
+        fillColor:[248,249,250]
+      },
+
+      styles:{
+        font:"helvetica",
+        fontSize:7,
+        cellPadding:2.5,
+        lineColor:[225,230,235],
+        lineWidth:.2,
+        valign:"middle"
+      }
     });
 
+    // ==========================
+    // FOOTER
+    // ==========================
+
+    const pages = doc.getNumberOfPages();
+
+    for (let i = 1; i <= pages; i++) {
+
+      doc.setPage(i);
+
+      // Línea superior
+      doc.setDrawColor(220, 220, 220);
+      doc.setLineWidth(0.3);
+      doc.line(14, 198, 283, 198);
+
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(8);
+      doc.setTextColor(120, 120, 120);
+
+      // Izquierda
+      doc.text(
+        "Sistema de Gestión de Inventario",
+        14,
+        204
+      );
+
+      // Centro
+      doc.text(
+        `${fechaGeneracion.fecha} • ${fechaGeneracion.hora}`,
+        148.5,
+        204,
+        {
+          align: "center"
+        }
+      );
+
+      // Derecha
+      doc.text(
+        `Página ${i} de ${pages}`,
+        283,
+        204,
+        {
+          align: "right"
+        }
+      );
+    }
+
     doc.save(
-      `reporte-ventas-${fechaInicio}-${fechaFin}.pdf`
+      `reporte-detallado-${fechaInicio}-${fechaFin}.pdf`
     );
 
-    toast.success(
-      'Reporte descargado correctamente'
-    );
+    toast.success('Reporte descargado correctamente.');
 
-  } catch (error) {
-    console.error(error);
-
-    toast.error(
-      'Error al generar el reporte'
-    );
+  } catch (err) {
+    console.error(err);
+    toast.error('Error al generar el reporte.');
   }
 }
 
