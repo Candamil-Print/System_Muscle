@@ -103,6 +103,8 @@ pub fn run() {
             commands::entradas_por_usuario,
             commands::entradas_por_tipo_producto,
             commands::dashboard_entradas,
+            commands::reporte_entrada_detallado,
+            commands::stock_actual_y_minimo,
             // Caja
             commands::abrir_caja,
             commands::cerrar_caja,

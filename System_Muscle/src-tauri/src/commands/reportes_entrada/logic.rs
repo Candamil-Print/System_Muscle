@@ -1,7 +1,7 @@
 use rusqlite::Connection;
 use crate::models::reportes_entrada::reporte_entrada::{
     DashboardEntradas, EntradasPorDia, EntradasPorTipoProducto, EntradasPorUsuario,
-    ResumenEntradasProducto, TotalesEntradas,
+    ResumenEntradasProducto, TotalesEntradas, ReporteEntradaDetallado, StockActualMinimo,
 };
 
 fn validar_rango_fechas(fecha_inicio: &str, fecha_fin: &str) -> Result<(), String> {
@@ -269,4 +269,85 @@ pub fn dashboard_entradas_logic(conn: &Connection) -> Result<DashboardEntradas, 
         cantidad_ingresada_semana,
         productos_con_entradas_hoy,
     })
+}
+
+/// Reporte detallado de entradas en un rango de fechas.
+pub fn reporte_entrada_detallado_logic(
+    conn: &Connection,
+    fecha_inicio: &str,
+    fecha_fin: &str,
+) -> Result<Vec<ReporteEntradaDetallado>, String> {
+    validar_rango_fechas(fecha_inicio, fecha_fin)?;
+
+    let mut stmt = conn
+        .prepare(
+            r#"SELECT 
+                me.id_movimiento,
+                me.fecha,
+                u.nombre_completo as usuario,
+                p.nombre as producto,
+                p.tipo_producto,
+                me.cantidad
+            FROM movimientos_entrada me
+            INNER JOIN usuarios u ON me.id_usuario = u.id_usuario
+            INNER JOIN productos p ON me.id_producto = p.id_producto
+            WHERE DATE(me.fecha) BETWEEN DATE(?1) AND DATE(?2)
+            ORDER BY me.fecha DESC"#,
+        )
+        .map_err(|e| e.to_string())?;
+
+    let rows = stmt
+        .query_map(rusqlite::params![fecha_inicio, fecha_fin], |row| {
+            Ok(ReporteEntradaDetallado {
+                id_movimiento: row.get(0)?,
+                fecha: row.get(1)?,
+                usuario: row.get(2)?,
+                producto: row.get(3)?,
+                tipo_producto: row.get(4)?,
+                cantidad: row.get(5)?,
+            })
+        })
+        .map_err(|e| e.to_string())?;
+
+    let mut lista = Vec::new();
+    for item in rows {
+        lista.push(item.map_err(|e| e.to_string())?);
+    }
+    Ok(lista)
+}
+
+/// Obtiene el stock actual y mínimo de todos los productos activos.
+pub fn stock_actual_y_minimo_logic(conn: &Connection) -> Result<Vec<StockActualMinimo>, String> {
+    let mut stmt = conn
+        .prepare(
+            r#"SELECT 
+                p.id_producto,
+                p.nombre as nombre_producto,
+                p.tipo_producto,
+                COALESCE(s.stock_actual, 0) as stock_actual,
+                COALESCE(s.stock_minimo, 0) as stock_minimo
+            FROM productos p
+            LEFT JOIN stock s ON p.id_producto = s.id_producto
+            WHERE p.activo = 1
+            ORDER BY p.nombre ASC"#,
+        )
+        .map_err(|e| e.to_string())?;
+
+    let rows = stmt
+        .query_map([], |row| {
+            Ok(StockActualMinimo {
+                id_producto: row.get(0)?,
+                nombre_producto: row.get(1)?,
+                tipo_producto: row.get(2)?,
+                stock_actual: row.get(3)?,
+                stock_minimo: row.get(4)?,
+            })
+        })
+        .map_err(|e| e.to_string())?;
+
+    let mut lista = Vec::new();
+    for item in rows {
+        lista.push(item.map_err(|e| e.to_string())?);
+    }
+    Ok(lista)
 }

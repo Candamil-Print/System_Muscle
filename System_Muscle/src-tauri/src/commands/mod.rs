@@ -159,7 +159,7 @@ use crate::models::caja::caja::{NuevaCaja, CierreCaja};
 use crate::models::historial::historial::{NuevaAccion, FiltroHistorial};
 use crate::models::turnos::turno::{NuevoTurno, Turno, TurnoDetalle, FiltroTurno};
 #[allow(unused_imports)]
-use crate::models::reportes_entrada::reporte_entrada::{ResumenEntradasProducto, TotalesEntradas, EntradasPorDia, EntradasPorUsuario, EntradasPorTipoProducto, DashboardEntradas};
+use crate::models::reportes_entrada::reporte_entrada::{ResumenEntradasProducto, TotalesEntradas, EntradasPorDia, EntradasPorUsuario, EntradasPorTipoProducto, DashboardEntradas, ReporteEntradaDetallado, StockActualMinimo};
 
 // Comandos de utilidad
 #[tauri::command]
@@ -879,6 +879,8 @@ pub use reportes_entrada::logic::{
     entradas_por_usuario_logic,
     entradas_por_tipo_producto_logic,
     dashboard_entradas_logic,
+    reporte_entrada_detallado_logic,
+    stock_actual_y_minimo_logic,
 };
 
 // Comandos Tauri para reportes de entrada
@@ -938,6 +940,24 @@ pub fn dashboard_entradas(
 ) -> Result<crate::models::reportes_entrada::reporte_entrada::DashboardEntradas, String> {
     let conn = state.conn.lock().unwrap();
     dashboard_entradas_logic(&conn)
+}
+
+#[tauri::command]
+pub fn reporte_entrada_detallado(
+    state: State<'_, DbState>,
+    fecha_inicio: String,
+    fecha_fin: String,
+) -> Result<Vec<crate::models::reportes_entrada::reporte_entrada::ReporteEntradaDetallado>, String> {
+    let conn = state.conn.lock().unwrap();
+    reporte_entrada_detallado_logic(&conn, &fecha_inicio, &fecha_fin)
+}
+
+#[tauri::command]
+pub fn stock_actual_y_minimo(
+    state: State<'_, DbState>,
+) -> Result<Vec<crate::models::reportes_entrada::reporte_entrada::StockActualMinimo>, String> {
+    let conn = state.conn.lock().unwrap();
+    stock_actual_y_minimo_logic(&conn)
 }
 
 // Comando Tauri para reporte consolidado de ventas

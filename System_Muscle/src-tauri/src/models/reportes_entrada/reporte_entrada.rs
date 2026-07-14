@@ -57,3 +57,24 @@ pub struct DashboardEntradas {
     pub cantidad_ingresada_semana: i32,
     pub productos_con_entradas_hoy: i32,
 }
+
+/// Reporte detallado de entradas para exportación / visualización
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct ReporteEntradaDetallado {
+    pub id_movimiento: i32,
+    pub fecha: String,
+    pub usuario: String,
+    pub producto: String,
+    pub tipo_producto: String,
+    pub cantidad: i32,
+}
+
+/// Stock actual y mínimo de un producto
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct StockActualMinimo {
+    pub id_producto: i32,
+    pub nombre_producto: String,
+    pub tipo_producto: String,
+    pub stock_actual: i32,
+    pub stock_minimo: i32,
+}
