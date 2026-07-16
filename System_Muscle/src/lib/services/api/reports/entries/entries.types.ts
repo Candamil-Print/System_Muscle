@@ -68,3 +68,26 @@ export interface StockActualMinimo {
   stock_actual: number;
   stock_minimo: number;
 }
+
+// Resumen diario de entradas (sin rango de fechas)
+export interface ResumenEntradasDiario {
+  fecha: string;
+  numero_movimientos: number;
+  cantidad_total_ingresada: number;
+  productos_distintos: number;
+}
+
+// Dashboard general de entradas (sin rango de fechas)
+export interface DashboardEntradasGeneral {
+  fecha: string;
+  entradas_hoy: number;
+  cantidad_ingresada_hoy: number;
+  entradas_semana: number;
+  cantidad_ingresada_semana: number;
+  entradas_mes: number;
+  cantidad_ingresada_mes: number;
+  productos_con_entradas_hoy: number;
+  total_movimientos: number;
+  total_cantidad_ingresada: number;
+  productos_distintos: number;
+}

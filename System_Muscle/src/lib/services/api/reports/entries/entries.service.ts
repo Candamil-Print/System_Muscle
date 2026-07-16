@@ -7,6 +7,8 @@ import type {
   EntradasPorUsuario,
   EntradasPorTipoProducto,
   DashboardEntradas,
+  DashboardEntradasGeneral,
+  ResumenEntradasDiario,
   ReporteEntradaDetallado,
   StockActualMinimo
 } from './entries.types';
@@ -65,23 +67,13 @@ export async function totalesEntradasRango(
  * Entradas por día
  */
 export async function entradasPorDia(
-  fechaInicio: string,
-  fechaFin: string
+  fechaInicio = '',
+  fechaFin = ''
 ): Promise<EntradasPorDia[]> {
-
-  console.log("Antes del invoke");
-
-  const data = await invoke<EntradasPorDia[]>(
-    'entradas_por_dia',
-    {
-      fechaInicio,
-      fechaFin
-    }
-  );
-
-  console.log("Respuesta:", data);
-
-  return data;
+  return await invoke('entradas_por_dia', {
+    fechaInicio,
+    fechaFin
+  });
 }
 
 /**
@@ -113,25 +105,13 @@ export async function entradasPorUsuario(
  * Entradas por tipo de producto
  */
 export async function entradasPorTipoProducto(
-  fechaInicio: string,
-  fechaFin: string
+  fechaInicio = '',
+  fechaFin = ''
 ): Promise<EntradasPorTipoProducto[]> {
-  try {
-    return await invoke<EntradasPorTipoProducto[]>(
-      'entradas_por_tipo_producto',
-      {
-        fechaInicio,
-        fechaFin
-      }
-    );
-  } catch (error) {
-    console.error(
-      'Error obteniendo entradas por tipo de producto:',
-      error
-    );
-
-    return [];
-  }
+  return await invoke('entradas_por_tipo_producto', {
+    fechaInicio,
+    fechaFin
+  });
 }
 
 /**
@@ -186,6 +166,60 @@ export async function stockActualYMinimo(): Promise<StockActualMinimo[]> {
   } catch (error) {
     console.error(
       'Error obteniendo stock actual y mínimo:',
+      error
+    );
+
+    return [];
+  }
+}
+
+/**
+ * Resumen diario de entradas
+ */
+export async function resumenEntradasDiario(): Promise<ResumenEntradasDiario[]> {
+  try {
+    return await invoke<ResumenEntradasDiario[]>(
+      'resumen_entradas_diario'
+    );
+  } catch (error) {
+    console.error(
+      'Error obteniendo resumen diario de entradas:',
+      error
+    );
+
+    return [];
+  }
+}
+
+/**
+ * Dashboard general de entradas
+ */
+export async function dashboardEntradasGeneral(): Promise<DashboardEntradasGeneral | null> {
+  try {
+    return await invoke<DashboardEntradasGeneral>(
+      'dashboard_entradas_general'
+    );
+  } catch (error) {
+    console.error(
+      'Error obteniendo dashboard general de entradas:',
+      error
+    );
+
+    return null;
+  }
+}
+
+/**
+ * Resumen de entradas por producto (histórico)
+ */
+export async function resumenEntradasPorProductoTotal(): Promise<ResumenEntradasProducto[]> {
+  try {
+    return await invoke<ResumenEntradasProducto[]>(
+      'resumen_entradas_por_producto_total'
+    );
+  } catch (error) {
+    console.error(
+      'Error obteniendo resumen histórico de entradas por producto:',
       error
     );
 

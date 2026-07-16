@@ -41,21 +41,27 @@
 
 	let historialEntradas: any[] = [];
 
+
+    // Se define variables para PFD
 	$: reporteEntradas = entradasPorDia.labels.map((fecha, index) => ({
         fecha,
         total_entradas: entradasPorDia.datasets[0].data[index]
     }));
 
+    $: reporteEntradasTipo = entradasPorTipo.labels.map((tipo, index) => ({
+        tipo_producto: tipo,
+        cantidad_total_ingresada:
+            entradasPorTipo.datasets[0]?.data[index] ?? 0
+    }));
+
+    $: reporteStock = stockComparacion.labels.map((producto, index) => ({
+        nombre_producto: producto,
+        stock_actual: stockComparacion.datasets[0]?.data[index] ?? 0,
+        stock_minimo: stockComparacion.datasets[1]?.data[index] ?? 0
+    }));
+
     async function cargarGraficas() {
         try {
-            const hoy = new Date();
-
-            const hace30Dias = new Date();
-            hace30Dias.setDate(hoy.getDate() - 30);
-
-            const fechaInicio = hace30Dias.toISOString().split('T')[0];
-            const fechaFin = hoy.toISOString().split('T')[0];
-
             const [
                 movimientos,
                 graficaDias,
@@ -63,22 +69,10 @@
                 resumenProductos,
                 stockProducto
             ] = await Promise.all([
-                reporteEntradaDetallado(
-                    fechaInicio,
-                    fechaFin
-                ),
-                obtenerEntradasPorDia(
-                    fechaInicio,
-                    fechaFin
-                ),
-                entradasPorTipoProducto(
-                    fechaInicio,
-                    fechaFin
-                ),
-                resumenEntradasPorProducto(
-                    fechaInicio,
-                    fechaFin
-                ),
+                reporteEntradaDetallado(),
+                obtenerEntradasPorDia(),
+                entradasPorTipoProducto(),
+                resumenEntradasPorProducto(),
                 stockActualYMinimo()
             ]);
 
@@ -334,6 +328,7 @@
     title="Entradas por Tipo"
     type="pie"
     data={entradasPorTipo}
+    reportData={reporteEntradasTipo}
 />
 
 <ChartCard
@@ -346,6 +341,7 @@
     title="Stock Actual vs Stock Mínimo"
     type="bar"
     data={stockComparacion}
+    reportData={reporteStock}
 />
 
 

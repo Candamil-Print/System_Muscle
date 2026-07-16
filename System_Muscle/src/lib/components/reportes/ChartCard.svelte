@@ -2126,375 +2126,1385 @@
 		}
 	}
 
+	// ==========================
+	// PDF DE REPORTE ENTRADA
+	// ==========================
+
+// ==========================
+// GENERADOR PDF ENTRADAS POR DÍA
+// ==========================
 function descargarReporteEntradas() {
-	console.log('ENTRADAS DATA');
-	console.log(reportData);
-
-	if (
-		!reportData ||
-		!reportData.labels ||
-		!reportData.datasets?.length
-	) {
-		alert('No hay datos para generar el reporte.');
-		return;
-	}
-
-	// ==========================
-	// CONVERTIR DATOS DEL GRÁFICO
-	// ==========================
-
-	const entradas = reportData.labels.map(
-		(fecha: string, index: number) => ({
-			fecha,
-			total: Number(
-				reportData.datasets[0].data[index] || 0
-			)
-		})
-	);
-
-	console.log('ENTRADAS FORMATEADAS');
-	console.log(entradas);
-
-	const doc = new jsPDF('p', 'mm', 'a4');
-
-	// ==========================
-	// CÁLCULOS
-	// ==========================
-
-	const totalEntradas = entradas.reduce(
-		(sum, item) => sum + item.total,
-		0
-	);
-
-	const promedioDiario =
-		entradas.length > 0
-			? totalEntradas / entradas.length
-			: 0;
-
-	const diaMasAlto =
-		entradas.length > 0
-			? [...entradas].sort(
-					(a, b) => b.total - a.total
-			  )[0]
-			: null;
-
-	const diaMasBajo =
-		entradas.length > 0
-			? [...entradas].sort(
-					(a, b) => a.total - b.total
-			  )[0]
-			: null;
-
-	// ==========================
-	// HEADER
-	// ==========================
-
-	doc.setFillColor(12, 74, 110);
-
-	doc.rect(
-		0,
-		0,
-		210,
-		35,
-		'F'
-	);
-
-	doc.setTextColor(255, 255, 255);
-
-	doc.setFontSize(22);
-	doc.setFont('helvetica', 'bold');
-
-	doc.text(
-		'REPORTE DE ENTRADAS',
-		105,
-		15,
-		{ align: 'center' }
-	);
-
-	doc.setFontSize(11);
-
-	doc.text(
-		`Generado: ${formatearFechaReporte()}`,
-		105,
-		25,
-		{ align: 'center' }
-	);
-
-	// ==========================
-	// RESUMEN EJECUTIVO
-	// ==========================
-
-	doc.setTextColor(0, 0, 0);
-
-	doc.setFontSize(16);
-	doc.setFont('helvetica', 'bold');
-
-	doc.text(
-		'Resumen Ejecutivo',
-		14,
-		50
-	);
-
-	const cards = [
-		[
-			'Total Entradas',
-			totalEntradas.toLocaleString('es-CO')
-		],
-		[
-			'Días Analizados',
-			entradas.length.toString()
-		],
-		[
-			'Promedio Diario',
-			Math.round(promedioDiario).toLocaleString('es-CO')
-		]
-	];
-
-	let x = 14;
-
-	cards.forEach(([titulo, valor]) => {
-		doc.setFillColor(
-			245,
-			247,
-			250
-		);
-
-		doc.roundedRect(
-			x,
-			58,
-			56,
-			24,
-			2,
-			2,
-			'F'
-		);
-
-		doc.setFontSize(9);
-		doc.setFont(
-			'helvetica',
-			'normal'
-		);
-
-		doc.text(
-			titulo,
-			x + 4,
-			67
-		);
-
-		doc.setFontSize(12);
-		doc.setFont(
-			'helvetica',
-			'bold'
-		);
-
-		doc.text(
-			String(valor),
-			x + 4,
-			76
-		);
-
-		x += 62;
-	});
-
-	// ==========================
-	// INDICADORES
-	// ==========================
-
-	doc.setFontSize(14);
-	doc.setFont('helvetica', 'bold');
-
-	doc.text(
-		'Indicadores Clave',
-		14,
-		98
-	);
-
-	// Día con más entradas
-
-	doc.setFillColor(
-		245,
-		247,
-		250
-	);
-
-	doc.roundedRect(
-		14,
-		104,
-		88,
-		18,
-		2,
-		2,
-		'F'
-	);
-
-	doc.setFontSize(8);
-	doc.setFont('helvetica', 'normal');
-
-	doc.text(
-		'Día con más entradas',
-		18,
-		111
-	);
-
-	if (diaMasAlto) {
-		doc.setFontSize(9);
-		doc.setFont(
-			'helvetica',
-			'bold'
-		);
-
-		doc.text(
-			diaMasAlto.fecha,
-			18,
-			117
-		);
-
-		doc.text(
-			diaMasAlto.total.toLocaleString('es-CO'),
-			90,
-			117,
-			{
-				align: 'right'
-			}
-		);
-	}
-
-	// Día con menos entradas
-
-	doc.setFillColor(
-		245,
-		247,
-		250
-	);
-
-	doc.roundedRect(
-		108,
-		104,
-		88,
-		18,
-		2,
-		2,
-		'F'
-	);
-
-	doc.setFontSize(8);
-	doc.setFont('helvetica', 'normal');
-
-	doc.text(
-		'Día con menos entradas',
-		112,
-		111
-	);
-
-	if (diaMasBajo) {
-		doc.setFontSize(9);
-		doc.setFont(
-			'helvetica',
-			'bold'
-		);
-
-		doc.text(
-			diaMasBajo.fecha,
-			112,
-			117
-		);
-
-		doc.text(
-			diaMasBajo.total.toLocaleString('es-CO'),
-			190,
-			117,
-			{
-				align: 'right'
-			}
-		);
-	}
-
-	// ==========================
-	// TABLA
-	// ==========================
-
-	autoTable(doc, {
-		startY: 130,
-
-		head: [[
-			'Fecha',
-			'Total Entradas'
-		]],
-
-		body: entradas.map((item) => [
-			item.fecha,
-			item.total.toLocaleString('es-CO')
-		]),
-
-		headStyles: {
-			fillColor: [12, 74, 110],
-			fontStyle: 'bold'
-		},
-
-		alternateRowStyles: {
-			fillColor: [245, 247, 250]
-		},
-
-		styles: {
-			fontSize: 10,
-			cellPadding: 4,
-			valign: 'middle'
+	try {
+		if (!reportData || reportData.length === 0) {
+			toast.error("No hay datos para generar el reporte.");
+			return;
 		}
-	});
 
-	// ==========================
-	// FOOTER
-	// ==========================
+		// ==========================
+		// CONVERTIR DATOS DEL GRÁFICO
+		// ==========================
 
-	const pageCount =
-		doc.getNumberOfPages();
+		const entradas = reportData.map((item) => ({
+			fecha: item.fecha,
+			total: Number(item.total_entradas)
+		}));
 
-	for (
-		let i = 1;
-		i <= pageCount;
-		i++
-	) {
-		doc.setPage(i);
+		const doc = new jsPDF('p', 'mm', 'a4');
 
-		doc.setTextColor(
-			120,
-			120,
-			120
+		// ==========================
+		// CÁLCULOS
+		// ==========================
+
+		const totalEntradas = entradas.reduce(
+			(sum, item) => sum + item.total,
+			0
 		);
 
-		doc.setFontSize(8);
-		doc.setFont(
-			'helvetica',
-			'normal'
+		const promedioDiario =
+			entradas.length > 0
+				? totalEntradas / entradas.length
+				: 0;
+
+		const diaMasAlto =
+			entradas.length > 0
+				? [...entradas].sort(
+						(a, b) => b.total - a.total
+				)[0]
+				: null;
+
+		const diaMasBajo =
+			entradas.length > 0
+				? [...entradas].sort(
+						(a, b) => a.total - b.total
+				)[0]
+				: null;
+
+		const fechaGeneracion = formatearFechaHora(new Date());
+
+		// ==========================
+		// HEADER
+		// ==========================
+
+		doc.setFillColor(12, 74, 110);
+		doc.rect(0, 0, 210, 35, 'F');
+
+		doc.setTextColor(255, 255, 255);
+		doc.setFontSize(22);
+		doc.setFont('helvetica', 'bold');
+
+		doc.text(
+			'REPORTE DE ENTRADAS',
+			105,
+			15,
+			{ align: 'center' }
 		);
+
+		doc.setFontSize(11);
 
 		doc.text(
 			`Generado: ${formatearFechaReporte()}`,
 			105,
-			285,
+			25,
 			{
 				align: 'center'
 			}
 		);
 
+		// ==========================
+		// RESUMEN EJECUTIVO
+		// ==========================
+
+		doc.setTextColor(12, 74, 110);
+		doc.setFont("helvetica","bold");
+		doc.setFontSize(16);
+
 		doc.text(
-			`Página ${i} de ${pageCount}`,
-			170,
-			290
+			'Resumen Ejecutivo',
+			14,
+			50
 		);
 
-		doc.setTextColor(
-			0,
-			0,
+		doc.setDrawColor(12,74,110);
+		doc.setLineWidth(.4);
+		doc.line(
+			14,
+			52,
+			196,
+			52
+		);
+
+		const cards = [
+			[
+				'Total Entradas',
+				totalEntradas.toLocaleString('es-CO')
+			],
+			[
+				'Días Analizados',
+				entradas.length.toString()
+			],
+			[
+				'Promedio Diario',
+				Math.round(promedioDiario).toLocaleString('es-CO')
+			]
+		];
+
+		let x = 14;
+
+		cards.forEach(([titulo, valor]) => {
+			// sombra
+			doc.setFillColor(228,232,236);
+
+			doc.roundedRect(
+				x+1,
+				59,
+				56,
+				26,
+				3,
+				3,
+				"F"
+			);
+
+			// tarjeta
+			doc.setFillColor(250,250,250);
+
+			doc.roundedRect(
+				x,
+				58,
+				56,
+				26,
+				3,
+				3,
+				"F"
+			);
+
+			// barra azul
+			doc.setFillColor(12,74,110);
+
+			doc.roundedRect(
+				x,
+				58,
+				56,
+				3,
+				3,
+				3,
+				"F"
+			);
+
+			// titulo
+			doc.setTextColor(130,130,130);
+			doc.setFont("helvetica","normal");
+			doc.setFontSize(9);
+
+			doc.text(
+				titulo,
+				x+4,
+				68
+			);
+
+			// valor
+			doc.setTextColor(12,74,110);
+			doc.setFont("helvetica","bold");
+			doc.setFontSize(16);
+
+			doc.text(
+				valor,
+				x+4,
+				79
+			);
+
+			x+=62;
+
+		});
+
+		// ==========================
+		// INDICADORES
+		// ==========================
+
+		doc.setTextColor(12,74,110);
+		doc.setFont("helvetica","bold");
+		doc.setFontSize(15);
+
+		doc.text(
+			"Indicadores Clave",
+			14,
+			98
+		);
+
+		doc.setDrawColor(12,74,110);
+		doc.setLineWidth(.4);
+		doc.line(
+			14,
+			100,
+			196,
+			100
+		);
+
+		// ==========================
+		// CONTENEDOR
+		// ==========================
+
+		// sombra
+		doc.setFillColor(228,232,236);
+
+		doc.roundedRect(
+			15,
+			105,
+			182,
+			28,
+			3,
+			3,
+			"F"
+		);
+
+		// tarjeta
+		doc.setFillColor(250,250,250);
+
+		doc.roundedRect(
+			14,
+			104,
+			182,
+			28,
+			3,
+			3,
+			"F"
+		);
+
+		// barra azul
+		doc.setFillColor(12,74,110);
+
+		doc.roundedRect(
+			14,
+			104,
+			182,
+			2.5,
+			3,
+			3,
+			"F"
+		);
+
+		// ==========================
+		// DÍA CON MÁS ENTRADAS
+		// ==========================
+
+		doc.setFillColor(245,247,250);
+
+		doc.roundedRect(
+			18,
+			108,
+			78,
+			18,
+			2,
+			2,
+			"F"
+		);
+
+		doc.setTextColor(90,90,90);
+		doc.setFont("helvetica","normal");
+		doc.setFontSize(8);
+
+		doc.text(
+			"Día con más entradas",
+			22,
+			114
+		);
+
+		if (diaMasAlto) {
+
+			doc.setTextColor(12,74,110);
+			doc.setFont("helvetica","bold");
+			doc.setFontSize(9);
+
+			doc.text(
+				diaMasAlto.fecha,
+				22,
+				121
+			);
+
+			doc.text(
+				diaMasAlto.total.toLocaleString("es-CO"),
+				92,
+				121,
+				{
+					align:"right"
+				}
+			);
+		}
+
+		// ==========================
+		// DÍA CON MENOS ENTRADAS
+		// ==========================
+
+		doc.setFillColor(245,247,250);
+
+		doc.roundedRect(
+			114,
+			108,
+			78,
+			18,
+			2,
+			2,
+			"F"
+		);
+
+		doc.setTextColor(90,90,90);
+		doc.setFont("helvetica","normal");
+		doc.setFontSize(8);
+
+		doc.text(
+			"Día con menos entradas",
+			118,
+			114
+		);
+
+		if (diaMasBajo) {
+
+			doc.setTextColor(12,74,110);
+			doc.setFont("helvetica","bold");
+			doc.setFontSize(9);
+
+			doc.text(
+				diaMasBajo.fecha,
+				118,
+				121
+			);
+
+			doc.text(
+				diaMasBajo.total.toLocaleString("es-CO"),
+				188,
+				121,
+				{
+					align:"right"
+				}
+			);
+		}
+
+		// ==========================
+		// TABLA
+		// ==========================
+
+		autoTable(doc, {
+			startY: 140,
+
+			head: [[
+				'Fecha',
+				'Total Entradas'
+			]],
+
+			body: entradas.map((item) => [
+				item.fecha,
+				item.total.toLocaleString('es-CO')
+			]),
+
+			headStyles:{
+				fillColor:[12,74,110],
+				textColor:[255,255,255],
+				fontStyle:"bold",
+				fontSize:10,
+				halign:"center"
+			},
+
+			alternateRowStyles:{
+				fillColor:[248,249,250]
+			},
+
+			styles:{
+				font:"helvetica",
+				fontSize:9,
+				cellPadding:4,
+				lineColor:[225,230,235],
+				lineWidth:.2,
+				valign:"middle"
+			}
+		});
+
+		// ==========================
+		// FOOTER
+		// ==========================
+
+		const pages = doc.getNumberOfPages();
+
+		for(let i=1;i<=pages;i++){
+
+			doc.setPage(i);
+
+			doc.setDrawColor(220,220,220);
+			doc.setLineWidth(.3);
+
+			doc.line(
+				14,
+				285,
+				196,
+				285
+			);
+
+			doc.setFont("helvetica","normal");
+			doc.setFontSize(8);
+			doc.setTextColor(120,120,120);
+
+			doc.text(
+				"Sistema de Gestión de Inventario",
+				14,
+				290
+			);
+
+			doc.text(
+				`${fechaGeneracion.fecha} • ${fechaGeneracion.hora}`,
+				105,
+				290,
+				{
+					align:"center"
+				}
+			);
+
+			doc.text(
+				`Página ${i} de ${pages}`,
+				196,
+				290,
+				{
+					align:"right"
+				}
+			);
+		}
+
+		doc.save(
+			`reporte-entradas-${new Date()
+				.toISOString()
+				.split('T')[0]}.pdf`
+		);
+
+		toast.success('Reporte descargado correctamente.');
+
+	} catch (err) {
+		console.error(err);
+		toast.error('Error al generar el reporte.');
+	}
+}
+
+// ==========================
+// GENERADOR PDF ENTRADAS POR TIPO
+// ==========================
+
+function descargarReporteEntradasPorTipo() {
+	try{
+		if (!reportData || reportData.length === 0) {
+			toast.error("No hay datos para generar el reporte.");
+			return;
+		}
+
+		const tipos = reportData.map(item => ({
+			tipo: item.tipo_producto,
+			total: Number(item.cantidad_total_ingresada)
+		}));
+
+		const doc = new jsPDF("p","mm","a4");
+
+		// ==========================
+		// CÁLCULOS
+		// ==========================
+
+		const totalEntradas = tipos.reduce(
+			(sum,item)=>sum+item.total,
 			0
 		);
-	}
 
-	doc.save(
-		`reporte-entradas-${new Date()
-			.toISOString()
-			.split('T')[0]}.pdf`
-	);
+		const totalTipos = tipos.length;
+
+		const promedio =
+			totalTipos > 0
+				? totalEntradas / totalTipos
+				: 0;
+
+		const tipoMasIngresado =
+			[...tipos].sort(
+				(a,b)=>b.total-a.total
+			)[0];
+
+		const tipoMenosIngresado =
+			[...tipos].sort(
+				(a,b)=>a.total-b.total
+			)[0];
+
+		const fechaGeneracion = formatearFechaHora(new Date());
+
+		// ==========================
+		// HEADER
+		// ==========================
+
+		doc.setFillColor(12, 74, 110);
+		doc.rect(0, 0, 210, 35, 'F');
+
+		doc.setTextColor(255, 255, 255);
+		doc.setFontSize(22);
+		doc.setFont('helvetica', 'bold');
+
+		doc.text(
+			'REPORTE ENTRADAS POR TIPO',
+			105,
+			15,
+			{ align: 'center' }
+		);
+
+		doc.setFontSize(11);
+
+		doc.text(
+			`Generado: ${formatearFechaReporte()}`,
+			105,
+			25,
+			{
+				align: 'center'
+			}
+		);
+
+		// ==========================
+		// RESUMEN EJECUTIVO
+		// ==========================
+
+		doc.setTextColor(12, 74, 110);
+		doc.setFont("helvetica","bold");
+		doc.setFontSize(16);
+
+		doc.text(
+			'Resumen Ejecutivo',
+			14,
+			50
+		);
+
+		doc.setDrawColor(12,74,110);
+		doc.setLineWidth(.4);
+		doc.line(
+			14,
+			52,
+			196,
+			52
+		);
+
+		const cards = [
+			[
+				"Total Entradas",
+				totalEntradas.toLocaleString("es-CO")
+			],
+
+			[
+				"Tipos de Producto",
+				totalTipos.toString()
+			],
+
+			[
+				"Promedio por Tipo",
+				Math.round(promedio).toLocaleString("es-CO")
+			]
+		];
+
+		let x = 14;
+
+		cards.forEach(([titulo, valor]) => {
+
+			// sombra
+			doc.setFillColor(228,232,236);
+
+			doc.roundedRect(
+				x+1,
+				59,
+				56,
+				26,
+				3,
+				3,
+				"F"
+			);
+
+			// tarjeta
+			doc.setFillColor(250,250,250);
+
+			doc.roundedRect(
+				x,
+				58,
+				56,
+				26,
+				3,
+				3,
+				"F"
+			);
+
+			// barra azul
+			doc.setFillColor(12,74,110);
+
+			doc.roundedRect(
+				x,
+				58,
+				56,
+				3,
+				3,
+				3,
+				"F"
+			);
+
+			// titulo
+			doc.setTextColor(130,130,130);
+			doc.setFont("helvetica","normal");
+			doc.setFontSize(9);
+
+			doc.text(
+				titulo,
+				x+4,
+				68
+			);
+
+			// valor
+			doc.setTextColor(12,74,110);
+			doc.setFont("helvetica","bold");
+			doc.setFontSize(16);
+
+			doc.text(
+				valor,
+				x+4,
+				79
+			);
+
+			x+=62;
+		});
+
+		// ==========================
+		// INDICADORES
+		// ==========================
+
+		doc.setTextColor(12,74,110);
+		doc.setFont("helvetica","bold");
+		doc.setFontSize(15);
+
+		doc.text(
+			"Indicadores Clave",
+			14,
+			98
+		);
+
+		doc.setDrawColor(12,74,110);
+		doc.setLineWidth(.4);
+
+		doc.line(
+			14,
+			100,
+			196,
+			100
+		);
+
+		// ==========================
+		// CONTENEDOR
+		// ==========================
+
+		// sombra
+		doc.setFillColor(228,232,236);
+
+		doc.roundedRect(
+			15,
+			105,
+			182,
+			28,
+			3,
+			3,
+			"F"
+		);
+
+		// tarjeta
+		doc.setFillColor(250,250,250);
+
+		doc.roundedRect(
+			14,
+			104,
+			182,
+			28,
+			3,
+			3,
+			"F"
+		);
+
+		// barra azul
+		doc.setFillColor(12,74,110);
+
+		doc.roundedRect(
+			14,
+			104,
+			182,
+			2.5,
+			3,
+			3,
+			"F"
+		);
+
+		// ==========================
+		// TIPO MÁS INGRESADO
+		// ==========================
+
+		doc.setFillColor(245,247,250);
+
+		doc.roundedRect(
+			18,
+			108,
+			78,
+			18,
+			2,
+			2,
+			"F"
+		);
+
+		doc.setTextColor(90,90,90);
+		doc.setFont("helvetica","normal");
+		doc.setFontSize(8);
+
+		doc.text(
+			"Tipo más ingresado",
+			22,
+			114
+		);
+
+		if (tipoMasIngresado) {
+
+			doc.setTextColor(12,74,110);
+			doc.setFont("helvetica","bold");
+			doc.setFontSize(9);
+
+			doc.text(
+				tipoMasIngresado.tipo,
+				22,
+				121
+			);
+
+			doc.text(
+				tipoMasIngresado.total.toLocaleString("es-CO"),
+				92,
+				121,
+				{
+					align:"right"
+				}
+			);
+		}
+
+		// ==========================
+		// TIPO MENOS INGRESADO
+		// ==========================
+
+		doc.setFillColor(245,247,250);
+
+		doc.roundedRect(
+			114,
+			108,
+			78,
+			18,
+			2,
+			2,
+			"F"
+		);
+
+		doc.setTextColor(90,90,90);
+		doc.setFont("helvetica","normal");
+		doc.setFontSize(8);
+
+		doc.text(
+			"Tipo menos ingresado",
+			118,
+			114
+		);
+
+		if (tipoMenosIngresado) {
+
+			doc.setTextColor(12,74,110);
+			doc.setFont("helvetica","bold");
+			doc.setFontSize(9);
+
+			doc.text(
+				tipoMenosIngresado.tipo,
+				118,
+				121
+			);
+
+			doc.text(
+				tipoMenosIngresado.total.toLocaleString("es-CO"),
+				188,
+				121,
+				{
+					align:"right"
+				}
+			);
+		}
+
+		// ==========================
+		// TABLA
+		// ==========================
+		autoTable(doc,{
+
+			startY:140,
+
+			head:[[
+				"Tipo de Producto",
+				"Cantidad Ingresada"
+			]],
+
+			body:tipos.map(item=>[
+				item.tipo,
+				item.total.toLocaleString("es-CO")
+			]),
+
+			headStyles:{
+				fillColor:[12,74,110],
+				textColor:[255,255,255],
+				fontStyle:"bold",
+				fontSize:10,
+				halign:"center"
+			},
+
+			alternateRowStyles:{
+				fillColor:[248,249,250]
+			},
+
+			styles:{
+				font:"helvetica",
+				fontSize:9,
+				cellPadding:4,
+				lineColor:[225,230,235],
+				lineWidth:.2,
+				valign:"middle"
+			}
+		});
+
+		// ==========================
+		// FOOTER
+		// ==========================
+
+		const pages = doc.getNumberOfPages();
+
+		for(let i=1;i<=pages;i++){
+
+			doc.setPage(i);
+
+			doc.setDrawColor(220,220,220);
+			doc.setLineWidth(.3);
+
+			doc.line(
+				14,
+				285,
+				196,
+				285
+			);
+
+			doc.setFont("helvetica","normal");
+			doc.setFontSize(8);
+			doc.setTextColor(120,120,120);
+
+			doc.text(
+				"Sistema de Gestión de Inventario",
+				14,
+				290
+			);
+
+			doc.text(
+				`${fechaGeneracion.fecha} • ${fechaGeneracion.hora}`,
+				105,
+				290,
+				{
+					align:"center"
+				}
+			);
+
+			doc.text(
+				`Página ${i} de ${pages}`,
+				196,
+				290,
+				{
+					align:"right"
+				}
+			);
+		}
+
+		doc.save(
+			`reporte-margen-${new Date()
+				.toISOString()
+				.split('T')[0]}.pdf`
+		);
+
+		toast.success('Reporte descargado correctamente.');
+
+	} catch (err) {
+		console.error(err);
+		toast.error('Error al generar el reporte.');
+	}
+}
+
+// ==========================
+// GENERADOR PDF ENTRADAS PRODUCTOS INGRESADOS
+// ==========================
+
+function descargarReporteProductosIngresados() {
+    try{
+
+	} catch (err) {
+		console.error(err);
+		toast.error('Error al generar el reporte.');
+	}
+}
+
+// ==========================
+// GENERADOR PDF ENTRADAS STOCK ACTUAL VS MINIMO
+// ==========================
+
+function descargarReporteStockActual() {
+    try{
+		if (!reportData || reportData.length === 0) {
+			toast.error("No hay datos para generar el reporte.");
+			return;
+		}
+
+		const stock = reportData.map(item => ({
+			producto: item.nombre_producto,
+			actual: Number(item.stock_actual),
+			minimo: Number(item.stock_minimo)
+		}));
+
+		const doc = new jsPDF("p","mm","a4");
+
+		// ==========================
+		// CÁLCULOS
+		// ==========================
+
+		const totalProductos = stock.length;
+
+		const totalStockActual = stock.reduce(
+			(sum,item)=>sum+item.actual,
+			0
+		);
+
+		const totalStockMinimo = stock.reduce(
+			(sum,item)=>sum+item.minimo,
+			0
+		);
+
+		const productoMenorStock =
+			[...stock].sort(
+				(a,b)=>a.actual-b.actual
+			)[0];
+
+		const productoMayorStock =
+			[...stock].sort(
+				(a,b)=>b.actual-a.actual
+			)[0];
+
+		const productoMayorDeficit =
+			[...stock].sort(
+				(a, b) =>
+					(b.minimo - b.actual) -
+					(a.minimo - a.actual)
+    		)[0];
+		const fechaGeneracion =
+			formatearFechaHora(new Date());
+		
+		// ==========================
+		// HEADER
+		// ==========================
+
+		doc.setFillColor(12, 74, 110);
+		doc.rect(0, 0, 210, 35, 'F');
+
+		doc.setTextColor(255, 255, 255);
+		doc.setFontSize(22);
+		doc.setFont('helvetica', 'bold');
+
+		doc.text(
+			'REPORTE DE MÁRGENES',
+			105,
+			15,
+			{ align: 'center' }
+		);
+
+		doc.setFontSize(11);
+
+		doc.text(
+			`Generado: ${formatearFechaReporte()}`,
+			105,
+			25,
+			{
+				align: 'center'
+			}
+		);
+
+		// ==========================
+		// RESUMEN EJECUTIVO
+		// ==========================
+
+		doc.setTextColor(12, 74, 110);
+		doc.setFont("helvetica","bold");
+		doc.setFontSize(16);
+
+		doc.text(
+			'Resumen Ejecutivo',
+			14,
+			50
+		);
+
+		doc.setDrawColor(12,74,110);
+		doc.setLineWidth(.4);
+		doc.line(
+			14,
+			52,
+			196,
+			52
+		);
+
+		const cards = [
+
+			[
+				"Productos",
+				totalProductos.toString()
+			],
+
+			[
+				"Stock Actual",
+				totalStockActual.toLocaleString("es-CO")
+			],
+
+			[
+				"Stock Mínimo",
+				totalStockMinimo.toLocaleString("es-CO")
+			]
+		];
+
+		let x = 14;
+
+		cards.forEach(([titulo, valor]) => {
+
+			// sombra
+			doc.setFillColor(228,232,236);
+
+			doc.roundedRect(
+				x+1,
+				59,
+				56,
+				26,
+				3,
+				3,
+				"F"
+			);
+
+			// tarjeta
+			doc.setFillColor(250,250,250);
+
+			doc.roundedRect(
+				x,
+				58,
+				56,
+				26,
+				3,
+				3,
+				"F"
+			);
+
+			// barra azul
+			doc.setFillColor(12,74,110);
+
+			doc.roundedRect(
+				x,
+				58,
+				56,
+				3,
+				3,
+				3,
+				"F"
+			);
+
+			// titulo
+			doc.setTextColor(130,130,130);
+			doc.setFont("helvetica","normal");
+			doc.setFontSize(9);
+
+			doc.text(
+				titulo,
+				x+4,
+				68
+			);
+
+			// valor
+			doc.setTextColor(12,74,110);
+			doc.setFont("helvetica","bold");
+			doc.setFontSize(16);
+
+			doc.text(
+				valor,
+				x+4,
+				79
+			);
+
+			x+=62;
+		});
+
+		// ==========================
+		// INDICADORES
+		// ==========================
+
+		doc.setTextColor(12,74,110);
+		doc.setFont("helvetica","bold");
+		doc.setFontSize(15);
+
+		doc.text(
+			"Indicadores Clave",
+			14,
+			98
+		);
+
+		doc.setDrawColor(12,74,110);
+		doc.setLineWidth(.4);
+
+		doc.line(
+			14,
+			100,
+			196,
+			100
+		);
+
+		// ==========================
+		// CONTENEDOR
+		// ==========================
+
+		// sombra
+		doc.setFillColor(228,232,236);
+
+		doc.roundedRect(
+			15,
+			105,
+			182,
+			28,
+			3,
+			3,
+			"F"
+		);
+
+		// tarjeta
+		doc.setFillColor(250,250,250);
+
+		doc.roundedRect(
+			14,
+			104,
+			182,
+			28,
+			3,
+			3,
+			"F"
+		);
+
+		// barra azul
+		doc.setFillColor(12,74,110);
+
+		doc.roundedRect(
+			14,
+			104,
+			182,
+			2.5,
+			3,
+			3,
+			"F"
+		);
+
+		// ==========================
+		// MENOR STOCK ACTUAL
+		// ==========================
+
+		doc.setFillColor(245,247,250);
+
+		doc.roundedRect(
+			18,
+			108,
+			78,
+			18,
+			2,
+			2,
+			"F"
+		);
+
+		doc.setTextColor(90,90,90);
+		doc.setFont("helvetica","normal");
+		doc.setFontSize(8);
+
+		doc.text(
+			"Menor stock",
+			22,
+			114
+		);
+
+		if (productoMenorStock) {
+
+			doc.setTextColor(12,74,110);
+			doc.setFont("helvetica","bold");
+			doc.setFontSize(9);
+
+			doc.text(
+				productoMenorStock.producto.slice(0,20),
+				22,
+				121
+			);
+
+			doc.text(
+				`${productoMenorStock.actual}`,
+				92,
+				121,
+				{
+					align:"right"
+				}
+			);
+		}
+
+		// ==========================
+		// MAYOR DÉFICIT
+		// ==========================
+
+		doc.setFillColor(245,247,250);
+
+		doc.roundedRect(
+			114,
+			108,
+			78,
+			18,
+			2,
+			2,
+			"F"
+		);
+
+		doc.setTextColor(90,90,90);
+		doc.setFont("helvetica","normal");
+		doc.setFontSize(8);
+
+		doc.text(
+			"Mayor déficit",
+			118,
+			114
+		);
+
+		if (productoMayorDeficit) {
+
+			const deficit =
+				Math.max(
+					0,
+					Number(productoMayorDeficit.minimo) -
+					Number(productoMayorDeficit.actual)
+				);
+
+			doc.setTextColor(12,74,110);
+			doc.setFont("helvetica","bold");
+			doc.setFontSize(9);
+
+			doc.text(
+				productoMayorDeficit.producto.slice(0,20),
+				118,
+				121
+			);
+
+			doc.text(
+				`${deficit} Uni`,
+				188,
+				121,
+				{
+					align:"right"
+				}
+			);
+		}
+
+		// ==========================
+		// TABLA
+		// ==========================
+
+		autoTable(doc,{
+
+			startY:140,
+
+			head:[[
+				"Producto",
+				"Stock Actual",
+				"Stock Mínimo"
+			]],
+
+			body:stock.map(item=>[
+				item.producto,
+				item.actual.toLocaleString("es-CO"),
+				item.minimo.toLocaleString("es-CO")
+			]),
+
+			headStyles:{
+				fillColor:[12,74,110],
+				textColor:[255,255,255],
+				fontStyle:"bold",
+				fontSize:10,
+				halign:"center"
+			},
+
+			alternateRowStyles:{
+				fillColor:[248,249,250]
+			},
+
+			styles:{
+				font:"helvetica",
+				fontSize:9,
+				cellPadding:4,
+				lineColor:[225,230,235],
+				lineWidth:.2
+			}
+		});
+
+		// ==========================
+		// FOOTER
+		// ==========================
+
+		const pages = doc.getNumberOfPages();
+
+		for(let i=1;i<=pages;i++){
+
+			doc.setPage(i);
+
+			doc.setDrawColor(220,220,220);
+			doc.setLineWidth(.3);
+
+			doc.line(
+				14,
+				285,
+				196,
+				285
+			);
+
+			doc.setFont("helvetica","normal");
+			doc.setFontSize(8);
+			doc.setTextColor(120,120,120);
+
+			doc.text(
+				"Sistema de Gestión de Inventario",
+				14,
+				290
+			);
+
+			doc.text(
+				`${fechaGeneracion.fecha} • ${fechaGeneracion.hora}`,
+				105,
+				290,
+				{
+					align:"center"
+				}
+			);
+
+			doc.text(
+				`Página ${i} de ${pages}`,
+				196,
+				290,
+				{
+					align:"right"
+				}
+			);
+		}
+
+		doc.save(
+			`reporte-stock-${new Date()
+				.toISOString()
+				.split("T")[0]}.pdf`
+		);
+
+		toast.success("Reporte descargado correctamente.");
+
+	} catch (err) {
+		console.error(err);
+		toast.error('Error al generar el reporte.');
+	}
 }
 </script>
 
@@ -2518,8 +3528,14 @@ function descargarReporteEntradas() {
 			else if (title === 'Ventas por Vendedor') {
 				descargarReporteVentasPorVendedor();
 			}
-			else if (title === 'Entradas por Día')
-				descargarReporteEntradas()
+			else if (title === 'Entradas por Día') {
+				descargarReporteEntradas();
+			}
+			else if (title === 'Entradas por Tipo') {
+				descargarReporteEntradasPorTipo();
+			}
+			else if (title === 'Stock Actual vs Stock Mínimo')
+				descargarReporteStockActual();
 			else {
 				// descargarGrafico();
 			}
