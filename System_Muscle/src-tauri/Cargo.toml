@@ -4,6 +4,8 @@ version = "0.1.0"
 description = "A Tauri App"
 authors = ["you"]
 edition = "2021"
+default-run = "system_muscle"
+
 
 [lib]
 name = "system_muscle_lib"
