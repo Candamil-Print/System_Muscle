@@ -96,6 +96,9 @@ pub fn run() {
             commands::ventas_del_turno_actual,
             commands::reporte_consolidado_ventas,
             commands::reporte_ventas_detallado,
+            commands::resumen_entradas_diario,
+            commands::dashboard_entradas_general,
+            commands::resumen_entradas_por_producto,
             // Reportes de entrada
             commands::resumen_entradas_por_producto,
             commands::totales_entradas_rango,
