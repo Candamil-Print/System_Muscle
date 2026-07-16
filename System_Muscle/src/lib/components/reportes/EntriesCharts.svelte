@@ -4,11 +4,11 @@
 	import ChartCard from '$lib/components/reportes/ChartCard.svelte';
 
 	import {
-		obtenerReporteInventario
-	} from '$lib/services/api/reports/reports.service';
-
-	import {
-		listarMovimientosEntrada
+		entradasPorDia as obtenerEntradasPorDia,
+        entradasPorTipoProducto,
+        reporteEntradaDetallado,
+        stockActualYMinimo,
+        resumenEntradasPorProducto
 	} from '$lib/services/api/reports/entries/entries.service';
 
 
@@ -23,13 +23,6 @@
 	};
 
 	$: console.log('ENTRADAS POR DIA:', entradasPorDia);
-
-    export let filtrosEntradas = {
-        fechaInicio: '',
-        fechaFin: '',
-        tipoProducto: 'todos',
-        vendedorEntrada: 'todos'
-    };
 
 	let entradasPorTipo: ChartData = {
 		labels: [],
@@ -52,50 +45,52 @@
         fecha,
         total_entradas: entradasPorDia.datasets[0].data[index]
     }));
-	
 
     async function cargarGraficas() {
         try {
-            const [movimientos, inventario] =
-                await Promise.all([
-                    listarMovimientosEntrada(),
-                    obtenerReporteInventario()
-                ]);
+            const hoy = new Date();
+
+            const hace30Dias = new Date();
+            hace30Dias.setDate(hoy.getDate() - 30);
+
+            const fechaInicio = hace30Dias.toISOString().split('T')[0];
+            const fechaFin = hoy.toISOString().split('T')[0];
+
+            const [
+                movimientos,
+                graficaDias,
+                graficaTipo,
+                resumenProductos,
+                stockProducto
+            ] = await Promise.all([
+                reporteEntradaDetallado(
+                    fechaInicio,
+                    fechaFin
+                ),
+                obtenerEntradasPorDia(
+                    fechaInicio,
+                    fechaFin
+                ),
+                entradasPorTipoProducto(
+                    fechaInicio,
+                    fechaFin
+                ),
+                resumenEntradasPorProducto(
+                    fechaInicio,
+                    fechaFin
+                ),
+                stockActualYMinimo()
+            ]);
+
+            console.log("graficaDias", graficaDias);
+            console.log("graficaTipo:", graficaTipo);
+            console.log("grafica Ingresos:", resumenProductos);
+            console.log("Stock:", stockProducto);
 
             // =====================
             // APLICAR FILTROS A LOS MOVIMIENTOS ENTRADA
             // =====================
-            const movimientosFiltrados = movimientos.filter((m) => {
-
-                const fecha = m.fecha.split(' ')[0];
-
-                if (
-                    filtrosEntradas.fechaInicio &&
-                    filtrosEntradas.fechaFin &&
-                    (fecha < filtrosEntradas.fechaInicio ||
-                    fecha > filtrosEntradas.fechaFin)
-                ) {
-                    return false;
-                }
-
-                if (
-                    filtrosEntradas.vendedorEntrada !== 'todos' &&
-                    String(m.id_usuario) !== String(filtrosEntradas.vendedorEntrada)
-                ) {
-                    return false;
-                }
-
-                if (
-                    filtrosEntradas.tipoProducto !== 'todos' &&
-                    m.tipo_producto.toLowerCase() !==
-                    filtrosEntradas.tipoProducto.toLowerCase()
-                ) {
-                    return false;
-                }
-
-                return true;
-            });
-
+            
             const dark =
                 document.documentElement.classList.contains('dark');
 
@@ -103,7 +98,7 @@
             // HISTORIAL DE ENTRADAS
             // =====================
 
-            historialEntradas = [...movimientosFiltrados]
+            historialEntradas = [...movimientos]
                 .sort(
                     (a, b) =>
                         new Date(b.fecha).getTime() -
@@ -134,23 +129,18 @@
             // ENTRADAS POR DÍA
             // =====================
 
-            const porDia: Record<string, number> = {};
-
-            movimientosFiltrados.forEach((m) => {
-                const fecha = new Date(m.fecha).toLocaleDateString('es-CO');
-
-                porDia[fecha] =
-                    (porDia[fecha] || 0) + m.cantidad;
-            });
-
             entradasPorDia = {
-                labels: Object.keys(porDia),
+                labels: graficaDias.map(item =>
+                    new Date(item.fecha).toLocaleDateString('es-CO')
+                ),
 
                 datasets: [
                     {
                         label: 'Entradas',
 
-                        data: Object.values(porDia),
+                        data: graficaDias.map(
+                            item => item.cantidad_total_ingresada
+                        ),
 
                         borderColor: dark
                             ? '#39BDF8'
@@ -185,21 +175,12 @@
             // ENTRADAS POR TIPO
             // =====================
 
-            const porTipo: Record<string, number> = {};
-
-            movimientosFiltrados.forEach((m) => {
-                porTipo[m.tipo_producto] =
-                    (porTipo[m.tipo_producto] || 0) +
-                    m.cantidad;
-            });
-
             entradasPorTipo = {
-                labels: Object.keys(porTipo),
-
+                labels: graficaTipo.map(item => item.tipo_producto),
                 datasets: [
                     {
-                        data: Object.values(porTipo),
-
+                        label: 'Tipo de Producto',
+                        data: graficaTipo.map(item => item.cantidad_total_ingresada),
                         backgroundColor: [
                             '#0c4a6e',
                             '#1565a0',
@@ -216,25 +197,25 @@
             // ÚLTIMOS 5 MOVIMIENTOS
             // =====================
 
-            const ultimosProductos = [...movimientosFiltrados]
-                .sort(
-                    (a, b) =>
-                        new Date(b.fecha).getTime() -
-                        new Date(a.fecha).getTime()
-                )
-                .slice(0, 5);
+           const topProductos = [...resumenProductos]
+            .sort(
+                (a, b) =>
+                    b.cantidad_total_ingresada -
+                    a.cantidad_total_ingresada
+            )
+            .slice(0, 5);
 
             productosIngresados = {
-                labels: ultimosProductos.map(
-                    (m) => m.nombre_producto
+                labels: topProductos.map(
+                    item => item.nombre_producto
                 ),
 
                 datasets: [
                     {
-                        label: 'Unidades Ingresadas',
+                        label: 'Cantidad Ingresada',
 
-                        data: ultimosProductos.map(
-                            (m) => m.cantidad
+                        data: topProductos.map(
+                            item => item.cantidad_total_ingresada
                         ),
 
                         backgroundColor: [
@@ -253,24 +234,11 @@
             };
 
             // =====================
-            // Aplicar filtros al inventario según
-            // los movimientos seleccionados
-            // =====================
-
-            const productosFiltrados = new Set(
-                movimientosFiltrados.map(m => m.id_producto)
-            );
-
-            const inventarioFiltrado = inventario.filter(item =>
-                productosFiltrados.has(item.id_producto)
-            );
-
-            // =====================
             // STOCK ACTUAL VS MÍNIMO
             // TOP 5 MENOR STOCK
             // =====================
 
-            const top5Stock = inventarioFiltrado
+            const top5Stock = [...stockProducto]
                 .sort(
                     (a, b) =>
                         Number(a.stock_actual) -
@@ -280,7 +248,7 @@
 
             stockComparacion = {
                 labels: top5Stock.map(
-                    (item) => item.nombre
+                    (item) => item.nombre_producto
                 ),
 
                 datasets: [
@@ -315,7 +283,6 @@
             };
 
             console.log('Movimientos:', movimientos);
-            console.log('Inventario:', inventario);
         } catch (error) {
             console.error(
                 'Error cargando gráficas:',
@@ -350,12 +317,6 @@
     // Recarga las gráficas cuando cambian los filtros
     // =====================
 
-    $: if (
-        filtrosEntradas.fechaInicio &&
-        filtrosEntradas.fechaFin
-    ) {
-        cargarGraficas();
-    }
 
 
 </script>
@@ -386,7 +347,6 @@
     type="bar"
     data={stockComparacion}
 />
-
 
 
 </div>

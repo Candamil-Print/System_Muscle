@@ -1,106 +1,26 @@
 import { invoke } from '@tauri-apps/api/core';
 
 import type {
-  MovimientoEntrada,
-  MovimientoEntradaDetalle
+  ResumenEntradasProducto,
+  TotalesEntradas,
+  EntradasPorDia,
+  EntradasPorUsuario,
+  EntradasPorTipoProducto,
+  DashboardEntradas,
+  ReporteEntradaDetallado,
+  StockActualMinimo
 } from './entries.types';
 
-export async function obtenerMovimiento(
-  id: number
-): Promise<MovimientoEntrada | null> {
-  try {
-    return await invoke<MovimientoEntrada>(
-      'obtener_movimiento',
-      { id }
-    );
-  } catch (error) {
-    console.error(
-      'Error obteniendo movimiento:',
-      error
-    );
-
-    return null;
-  }
-}
-
-export async function listarMovimientosEntrada(): Promise<
-  MovimientoEntradaDetalle[]
-> {
-  try {
-    return await invoke<
-      MovimientoEntradaDetalle[]
-    >(
-      'listar_movimientos_entrada'
-    );
-  } catch (error) {
-    console.error(
-      'Error listando movimientos:',
-      error
-    );
-
-    return [];
-  }
-}
-
-export async function movimientosPorProducto(
-  idProducto: number
-): Promise<
-  MovimientoEntradaDetalle[]
-> {
-  try {
-    return await invoke<
-      MovimientoEntradaDetalle[]
-    >(
-      'movimientos_por_producto',
-      {
-        idProducto
-      }
-    );
-  } catch (error) {
-    console.error(
-      'Error obteniendo movimientos por producto:',
-      error
-    );
-
-    return [];
-  }
-}
-
-export async function movimientosPorUsuario(
-  idUsuario: number
-): Promise<
-  MovimientoEntradaDetalle[]
-> {
-  try {
-    return await invoke<
-      MovimientoEntradaDetalle[]
-    >(
-      'movimientos_por_usuario',
-      {
-        idUsuario
-      }
-    );
-  } catch (error) {
-    console.error(
-      'Error obteniendo movimientos por usuario:',
-      error
-    );
-
-    return [];
-  }
-}
-
-export async function movimientosPorRangoFechas(
+/**
+ * Resumen de entradas por producto
+ */
+export async function resumenEntradasPorProducto(
   fechaInicio: string,
   fechaFin: string
-): Promise<
-  MovimientoEntradaDetalle[]
-> {
+): Promise<ResumenEntradasProducto[]> {
   try {
-    return await invoke<
-      MovimientoEntradaDetalle[]
-    >(
-      'movimientos_por_rango_fechas',
+    return await invoke<ResumenEntradasProducto[]>(
+      'resumen_entradas_por_producto',
       {
         fechaInicio,
         fechaFin
@@ -108,7 +28,7 @@ export async function movimientosPorRangoFechas(
     );
   } catch (error) {
     console.error(
-      'Error obteniendo movimientos por rango:',
+      'Error obteniendo resumen de entradas por producto:',
       error
     );
 
@@ -116,22 +36,159 @@ export async function movimientosPorRangoFechas(
   }
 }
 
-export async function totalEntradasPorProducto(
-  idProducto: number
-): Promise<number> {
+/**
+ * Totales de entradas
+ */
+export async function totalesEntradasRango(
+  fechaInicio: string,
+  fechaFin: string
+): Promise<TotalesEntradas | null> {
   try {
-    return await invoke<number>(
-      'total_entradas_por_producto',
+    return await invoke<TotalesEntradas>(
+      'totales_entradas_rango',
       {
-        idProducto
+        fechaInicio,
+        fechaFin
       }
     );
   } catch (error) {
     console.error(
-      'Error obteniendo total de entradas:',
+      'Error obteniendo totales de entradas:',
       error
     );
 
-    return 0;
+    return null;
+  }
+}
+
+/**
+ * Entradas por día
+ */
+export async function entradasPorDia(
+  fechaInicio: string,
+  fechaFin: string
+): Promise<EntradasPorDia[]> {
+
+  console.log("Antes del invoke");
+
+  const data = await invoke<EntradasPorDia[]>(
+    'entradas_por_dia',
+    {
+      fechaInicio,
+      fechaFin
+    }
+  );
+
+  console.log("Respuesta:", data);
+
+  return data;
+}
+
+/**
+ * Entradas por usuario
+ */
+export async function entradasPorUsuario(
+  fechaInicio: string,
+  fechaFin: string
+): Promise<EntradasPorUsuario[]> {
+  try {
+    return await invoke<EntradasPorUsuario[]>(
+      'entradas_por_usuario',
+      {
+        fechaInicio,
+        fechaFin
+      }
+    );
+  } catch (error) {
+    console.error(
+      'Error obteniendo entradas por usuario:',
+      error
+    );
+
+    return [];
+  }
+}
+
+/**
+ * Entradas por tipo de producto
+ */
+export async function entradasPorTipoProducto(
+  fechaInicio: string,
+  fechaFin: string
+): Promise<EntradasPorTipoProducto[]> {
+  try {
+    return await invoke<EntradasPorTipoProducto[]>(
+      'entradas_por_tipo_producto',
+      {
+        fechaInicio,
+        fechaFin
+      }
+    );
+  } catch (error) {
+    console.error(
+      'Error obteniendo entradas por tipo de producto:',
+      error
+    );
+
+    return [];
+  }
+}
+
+/**
+ * Dashboard de entradas
+ */
+export async function dashboardEntradas(): Promise<DashboardEntradas | null> {
+  try {
+    return await invoke<DashboardEntradas>(
+      'dashboard_entradas'
+    );
+  } catch (error) {
+    console.error(
+      'Error obteniendo dashboard de entradas:',
+      error
+    );
+
+    return null;
+  }
+}
+
+/**
+ * Reporte detallado de entradas
+ */
+export async function reporteEntradaDetallado(
+  fechaInicio: string,
+  fechaFin: string
+): Promise<ReporteEntradaDetallado[]> {
+  try {
+    const data = await invoke<ReporteEntradaDetallado[]>(
+      "reporte_entrada_detallado",
+      {
+        fechaInicio,
+        fechaFin
+      }
+    );
+
+    return data;
+  } catch (error) {
+    console.error("Error obteniendo reporte detallado:", error);
+    return [];
+  }
+}
+
+/**
+ * Stock actual y mínimo
+ */
+export async function stockActualYMinimo(): Promise<StockActualMinimo[]> {
+  try {
+    return await invoke<StockActualMinimo[]>(
+      'stock_actual_y_minimo'
+    );
+  } catch (error) {
+    console.error(
+      'Error obteniendo stock actual y mínimo:',
+      error
+    );
+
+    return [];
   }
 }

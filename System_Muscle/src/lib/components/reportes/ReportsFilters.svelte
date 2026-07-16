@@ -37,6 +37,9 @@
       const fin = today.toISOString().split('T')[0];
 
       vendedores = await obtenerVentasPorUsuario(inicio, fin);
+
+      console.log("Vendedores:", vendedores);
+      console.table(vendedores);
     } catch (err) {
       console.error('Error cargando vendedores:', err);
     }

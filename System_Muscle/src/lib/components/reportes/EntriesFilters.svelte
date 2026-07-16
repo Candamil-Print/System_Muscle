@@ -6,11 +6,8 @@
     import CalendarDays from 'lucide-svelte/icons/calendar-days';
     import { ChevronDown } from 'lucide-svelte';
 
-    import { obtenerVentasPorUsuario } from '$lib/services/api/reports/reports.service';
-    import type { VentasPorUsuario } from '$lib/services/api/reports/reports.types';
+    import {  entradasPorUsuario, resumenEntradasPorProducto } from '$lib/services/api/reports/entries/entries.service';
 
-    import { listarProductos } from '$lib/services/api/inventory/inventory.service';
-    import type { Producto } from '$lib/services/api/inventory/inventory.types';
 
     import flatpickr from 'flatpickr';
     import { Spanish } from 'flatpickr/dist/l10n/es.js';
@@ -26,16 +23,16 @@
     // ==========================
     // Propiedades recibidas desde el componente padre
     // ==========================
-    export let onFilter: (filters: { fechaInicio: string; fechaFin: string; tipoProducto: string; vendedorEntrada: string }) => void = () => {};
+    export let onFilter: (filters: { fechaInicio: string; fechaFin: string; tipoProducto: string; vendedor: string }) => void = () => {};
 
     export let loading = false;
 
     let fechaInicio = '';
     let fechaFin = '';
     let tipoProducto = 'todos';
-    let vendedorEntrada = 'todos';
+    let vendedor = 'todos';
 
-    let vendedoresEntrada: VentasPorUsuario[] = [];
+    let vendedoresEntrada: EntradasPorUsuario[] = [];
 
     let tiposProducto: string[] = [];
 
@@ -43,17 +40,30 @@
     // Obtiene los tipos de producto registrados para llenar elnselector de filtros
     // ==========================
     async function cargarTiposProducto() {
-        try {
-            const productos: ProductoConStock[] = await listarProductos();
+    try {
+        const today = new Date();
+        const treintaDiasAgo = new Date(
+            today.getTime() - 30 * 24 * 60 * 60 * 1000
+        );
 
-            tiposProducto = [
-                ...new Set(productos.map(p => p.tipo_producto))
-            ].sort();
+        const inicio = treintaDiasAgo.toISOString().split('T')[0];
+        const fin = today.toISOString().split('T')[0];
 
-        } catch (err) {
-            console.error('Error cargando tipos de producto:', err);
-        }
+        const resumen = await resumenEntradasPorProducto(
+            inicio,
+            fin
+        );
+
+        tiposProducto = [
+            ...new Set(
+                resumen.map(r => r.tipo_producto)
+            )
+        ].sort();
+
+    } catch (err) {
+        console.error('Error cargando tipos de producto:', err);
     }
+}
 
     // ==========================
     // Obtiene los vendedores que tienen movimientos registrados para llenar el selector
@@ -66,7 +76,9 @@
         const inicio = treintaDiasAgo.toISOString().split('T')[0];
         const fin = today.toISOString().split('T')[0];
 
-        vendedoresEntrada = await obtenerVentasPorUsuario(inicio, fin);
+        vendedoresEntrada = await  entradasPorUsuario(inicio, fin);
+        console.log("Vendedores obtenidos filtro dos:", vendedoresEntrada);
+        console.table(vendedoresEntrada);
         } catch (err) {
         console.error('Error cargando vendedores:', err);
         }
@@ -86,7 +98,7 @@
         fechaInicio,
         fechaFin,
         tipoProducto,
-        vendedorEntrada
+        vendedor
         });
     }
 
@@ -217,7 +229,7 @@
             </label>
 
             <select
-                bind:value={vendedorEntrada}
+                bind:value={vendedor}
                 class="h-11 w-full rounded-xl border mt-2 border-slate-200 px-4 pr-10 text-sm outline-none focus:border-cyan-600 appearance-none bg-transparent dark:border-[#334156] dark:text-white"
             >
                 <option value="todos">Todos</option>

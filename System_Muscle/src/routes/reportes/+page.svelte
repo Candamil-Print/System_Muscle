@@ -25,7 +25,9 @@
   } from '$lib/data/reportsData';
 
   import {
-    listarMovimientosEntrada
+    reporteEntradaDetallado,
+    totalesEntradasRango,
+    stockActualYMinimo
   } from '$lib/services/api/reports/entries/entries.service';
 
   let activeTab = 'ventas';
@@ -41,7 +43,7 @@
     fechaInicio: '',
     fechaFin: '',
     tipoProducto: 'todos',
-    vendedorEntrada: 'todos'
+    vendedor: 'todos'
   };
 
   let totalIngresado = 0;
@@ -53,74 +55,86 @@
 
   async function cargarEstadisticasEntradas() {
     try {
-      const movimientos =
-        await listarMovimientosEntrada();
+      const [
+        movimientos,
+        totales,
+        stock
+      ] = await Promise.all([
+        reporteEntradaDetallado(
+            filtrosEntradas.fechaInicio,
+            filtrosEntradas.fechaFin
+        ),
+        totalesEntradasRango(
+          filtrosEntradas.fechaInicio,
+          filtrosEntradas.fechaFin
+        ),
+        stockActualYMinimo()
+      ]);
+       
 
-         console.log('TODOS LOS MOVIMIENTOS:');
-    console.log(movimientos);
+      console.log('PRIMER MOVIMIENTO:');
+      console.log(movimientos[0]);
 
-    console.log('PRIMER MOVIMIENTO:');
-    console.log(movimientos[0]);
-
-    movimientos.forEach((m) => {
-    console.log({
+      movimientos.forEach((m) => {
+        console.log({
         id: m.id_movimiento,
         fecha: m.fecha,
-        id_usuario: m.id_usuario,
-        nombre_usuario: m.nombre_usuario
-    });
+        usuario: m.usuario,
+        producto: m.producto,
+        tipo: m.tipo_producto,
+        cantidad: m.cantidad
+      });
 });
 
       // Estadísticas
-      totalEntradas =
-        movimientos.length;
+      if (totales) {
+          totalEntradas = totales.numero_movimientos;
 
-      totalIngresado =
-        movimientos.reduce(
-          (sum, item) =>
-            sum + Number(item.cantidad),
-          0
-        );
+          totalIngresado =
+              totales.cantidad_total_ingresada;
 
-      totalProductos =
-        new Set(
-          movimientos.map(
-            item => item.id_producto
-          )
-        ).size;
+          totalProductos =
+              totales.productos_distintos;
+      }
 
-      // Por ahora fijo hasta crear el servicio
-      stockBajo = 0;
+      stockBajo = stock.filter(
+          item => item.stock_actual <= item.stock_minimo
+      ).length;
 
       // Tabla de historial
-entradas = movimientos.map(item => ({
-  id: item.id_movimiento,
+      entradas = movimientos.map(item => ({
+        id: item.id_movimiento,
 
-  producto: item.nombre_producto,
+        producto: item.producto,
 
-  cantidad: `${item.cantidad} Uni`,
+        cantidad: `${item.cantidad} Uni`,
 
-  fecha: new Date(item.fecha).toLocaleString(
-    'es-CO',
-    {
-      dateStyle: 'short',
-      timeStyle: 'short'
-    }
-  ),
+        fecha: new Date(item.fecha).toLocaleString('es-CO', {
+          dateStyle: 'short',
+          timeStyle: 'short'
+        }),
 
-  recibe: item.nombre_usuario,
+        recibe: item.usuario,
 
-  tipo: item.tipo_producto
-}));
-    } catch (error) {
-      console.error(
-        'Error cargando estadísticas:',
-        error
-      );
-    }
-  }
+        tipo: item.tipo_producto
+      }));
+          } catch (error) {
+            console.error(
+              'Error cargando estadísticas:',
+              error
+            );
+          }
+        }
 
   onMount(() => {
+    const hoy = new Date();
+
+    const hace30Dias = new Date();
+    hace30Dias.setDate(hoy.getDate() - 30);
+
+    filtrosEntradas.fechaInicio = hace30Dias.toISOString().split('T')[0];
+    filtrosEntradas.fechaFin = hoy.toISOString().split('T')[0];
+
     cargarEstadisticasEntradas();
   });
 
@@ -130,11 +144,14 @@ entradas = movimientos.map(item => ({
     filtros = nuevosFiltros;
   }
 
-  function aplicarFiltrosEntradas(
-    nuevosFiltros
-  ) {
-    console.log("Llegaron filtros");
+  async function aplicarFiltrosEntradas(nuevosFiltros) {
+
+    console.log("FILTROS RECIBIDOS");
+    console.log(nuevosFiltros);
+
     filtrosEntradas = nuevosFiltros;
+
+    await cargarEstadisticasEntradas();
   }
 </script>
 

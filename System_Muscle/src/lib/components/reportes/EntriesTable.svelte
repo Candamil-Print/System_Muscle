@@ -7,7 +7,7 @@
     import jsPDF from 'jspdf';
     import autoTable from 'jspdf-autotable';
 
-    import { listarMovimientosEntrada } from '$lib/services/api/reports/entries/entries.service';
+    import { reporteEntradaDetallado } from '$lib/services/api/reports/entries/entries.service';
 
    
     // Propiedades recibidas desde el componente padre
@@ -17,7 +17,7 @@
         fechaInicio: '',
         fechaFin: '',
         tipoProducto: 'todos',
-        vendedorEntrada: 'todos'
+        vendedor: 'todos'
     }
 
     // Variables de control del componente
@@ -475,7 +475,7 @@
         fechaInicio: string,
         fechaFin: string,
         tipoProducto = 'todos',
-        vendedorEntrada = 'todos',
+        vendedor = 'todos',
         mostrarToast = false
     ) {
         loading = true;
@@ -483,64 +483,45 @@
         currentPage = 1;
 
         try {
-            // Obtener todos los movimientos registrados
-            const historialEntradas = await listarMovimientosEntrada();
 
-            console.log("Filtros:", {
+            const resultado = await reporteEntradaDetallado(
                 fechaInicio,
-                fechaFin,
-                tipoProducto,
-                vendedorEntrada
-            });
+                fechaFin
+            );
 
-            // Aplicar filtros seleccionados
-            const resultado = historialEntradas.filter((entrada) => {
+            entradas = resultado
+                .filter((entrada) => {
 
-                const fechaEntrada = entrada.fecha.split(' ')[0];
+                    if (
+                        tipoProducto !== 'todos' &&
+                        entrada.tipo_producto.toLowerCase() !== tipoProducto.toLowerCase()
+                    ) {
+                        return false;
+                    }
 
-                // Filtro por fecha
-                if (
-                    fechaEntrada < fechaInicio ||
-                    fechaEntrada > fechaFin
-                ) {
-                    return false;
-                }
+                    if (
+                        vendedor !== 'todos' &&
+                        entrada.usuario !== vendedor
+                    ) {
+                        return false;
+                    }
 
-                // Filtro por vendedor
-                if (
-                    vendedorEntrada !== 'todos' &&
-                    String(entrada.id_usuario) !== String(vendedorEntrada)
-                ) {
-                    return false;
-                }
+                    return true;
 
-                // Filtro por tipo
-                if (
-                    tipoProducto !== 'todos' &&
-                    entrada.tipo_producto.toLowerCase() !== tipoProducto.toLowerCase()
-                ) {
-                    return false;
-                }
+                })
+                .map((entrada) => ({
+                    id: entrada.id_movimiento,
+                    producto: entrada.producto,
+                    cantidad: `${entrada.cantidad} Uni`,
+                    fecha: entrada.fecha,
+                    recibe: entrada.usuario,
+                    tipo: entrada.tipo_producto
+                }));
 
-                return true;
-            }).map((entrada) => ({
-                id: `${entrada.id_movimiento}-${entrada.id_producto}`,
-                producto: entrada.nombre_producto,
-                cantidad: `${entrada.cantidad} Uni`,
-                fecha: entrada.fecha,
-                recibe: entrada.nombre_usuario,
-                tipo: entrada.tipo_producto
-            }));
-
-            entradas = resultado;
-
-            console.log("Entradas dentro de EntriesTable:", entradas.length);
-
-            if (mostrarToast && resultado.length === 0) {
+            if (mostrarToast && entradas.length === 0) {
                 toast.warning(
                     'No se encontraron resultados',
                     {
-                        id: 'sin-resultados-tabla',
                         description:
                             'No existen entradas para los filtros seleccionados.'
                     }
@@ -562,14 +543,28 @@
     onMount(async () => {
         loading = true;
 
-        const historial = await listarMovimientosEntrada();
+        const hoy = new Date();
+
+        const hace30Dias = new Date();
+        hace30Dias.setDate(hoy.getDate() - 30);
+
+        const fechaInicio = hace30Dias.toISOString().split('T')[0];
+        const fechaFin = hoy.toISOString().split('T')[0];
+
+        filtrosEntradas.fechaInicio = fechaInicio;
+        filtrosEntradas.fechaFin = fechaFin;
+
+        const historial = await reporteEntradaDetallado(
+            fechaInicio,
+            fechaFin
+        );
 
         entradas = historial.map(entrada => ({
-            id: `${entrada.id_movimiento}-${entrada.id_producto}`,
-            producto: entrada.nombre_producto,
+            id: entrada.id_movimiento,
+            producto: entrada.producto,
             cantidad: `${entrada.cantidad} Uni`,
             fecha: entrada.fecha,
-            recibe: entrada.nombre_usuario,
+            recibe: entrada.usuario,
             tipo: entrada.tipo_producto
         }));
 
@@ -588,7 +583,7 @@
         filtrosEntradas.fechaInicio,
         filtrosEntradas.fechaFin,
         filtrosEntradas.tipoProducto,
-        filtrosEntradas.vendedorEntrada,
+        filtrosEntradas.vendedor,
         true
         );
     }
