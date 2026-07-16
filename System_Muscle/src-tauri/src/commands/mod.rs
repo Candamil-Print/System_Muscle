@@ -101,6 +101,9 @@ pub use reportes::logic::{
     ventas_del_turno_actual_logic,
     reporte_consolidado_ventas_logic,
     reporte_ventas_detallado_logic,
+    dashboard_ventas_general_logic,
+    resumen_ventas_por_producto_logic,
+    ventas_por_metodo_pago_total_logic,
 
 };
 
@@ -788,6 +791,29 @@ pub fn ventas_del_turno_actual(
     reportes::logic::ventas_del_turno_actual_logic(&conn)
 }
 
+#[tauri::command]
+pub fn dashboard_ventas_general(
+    state: State<'_, DbState>,
+) -> Result<crate::models::reportes::reporte::DashboardVentasGeneral, String> {
+    let conn = state.conn.lock().unwrap();
+    reportes::logic::dashboard_ventas_general_logic(&conn)
+}
+
+#[tauri::command]
+pub fn resumen_ventas_por_producto(
+    state: State<'_, DbState>,
+) -> Result<Vec<crate::models::reportes::reporte::ResumenVentasProducto>, String> {
+    let conn = state.conn.lock().unwrap();
+    reportes::logic::resumen_ventas_por_producto_logic(&conn)
+}
+
+#[tauri::command]
+pub fn ventas_por_metodo_pago_total(
+    state: State<'_, DbState>,
+) -> Result<Vec<crate::models::reportes::reporte::VentasPorMetodoPagoTotal>, String> {
+    let conn = state.conn.lock().unwrap();
+    reportes::logic::ventas_por_metodo_pago_total_logic(&conn)
+}
 
 // Comandos de turnos
 #[tauri::command]

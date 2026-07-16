@@ -1,5 +1,46 @@
 use serde::{Deserialize, Serialize};
 
+/// Dashboard general de ventas (sin rango de fechas)
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct DashboardVentasGeneral {
+    pub fecha: String,
+    pub ventas_hoy: i32,
+    pub total_vendido_hoy: f64,
+    pub ventas_semana: i32,
+    pub total_vendido_semana: f64,
+    pub ventas_mes: i32,
+    pub total_vendido_mes: f64,
+    pub total_ventas: i32,
+    pub total_general: f64,
+    pub total_efectivo: f64,
+    pub total_transferencia: f64,
+    pub productos_distintos_vendidos: i32,
+    pub numero_metodos_pago: i32,
+    pub numero_vendedores: i32,
+}
+
+/// Resumen de ventas por producto (sin rango de fechas)
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct ResumenVentasProducto {
+    pub id_producto: i32,
+    pub nombre_producto: String,
+    pub tipo_producto: String,
+    pub cantidad_vendida: i32,
+    pub total_ventas: f64,
+    pub numero_ventas: i32,
+    pub metodos_pago: String,
+    pub vendedores: String,
+}
+
+/// Ventas por método de pago (total general)
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct VentasPorMetodoPagoTotal {
+    pub id_metodo: i32,
+    pub nombre_metodo: String,
+    pub cantidad_lineas: i32,
+    pub total: f64,
+}
+
 /// Resumen diario de ventas (vista `vista_resumen_ventas_diario`)
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct ResumenVentasDiario {
