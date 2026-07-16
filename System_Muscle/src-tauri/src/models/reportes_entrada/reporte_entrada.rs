@@ -1,5 +1,30 @@
 use serde::{Deserialize, Serialize};
 
+/// Resumen diario de entradas (sin rango de fechas)
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct ResumenEntradasDiario {
+    pub fecha: String,
+    pub numero_movimientos: i32,
+    pub cantidad_total_ingresada: i32,
+    pub productos_distintos: i32,
+}
+
+/// Dashboard de entradas (sin rango de fechas)
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct DashboardEntradasGeneral {
+    pub fecha: String,
+    pub entradas_hoy: i32,
+    pub cantidad_ingresada_hoy: i32,
+    pub entradas_semana: i32,
+    pub cantidad_ingresada_semana: i32,
+    pub entradas_mes: i32,
+    pub cantidad_ingresada_mes: i32,
+    pub productos_con_entradas_hoy: i32,
+    pub total_movimientos: i32,
+    pub total_cantidad_ingresada: i32,
+    pub productos_distintos: i32,
+}
+
 /// Resumen de entradas agrupado por producto en un rango de fechas
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct ResumenEntradasProducto {

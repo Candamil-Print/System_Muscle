@@ -336,3 +336,4 @@ fn test_flujo_completo_reportes_entrada() {
 
     println!("\n   ✅ FLUJO COMPLETO EXITOSO");
 }
+

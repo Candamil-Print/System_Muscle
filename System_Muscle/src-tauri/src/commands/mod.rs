@@ -101,6 +101,10 @@ pub use reportes::logic::{
     ventas_del_turno_actual_logic,
     reporte_consolidado_ventas_logic,
     reporte_ventas_detallado_logic,
+    dashboard_ventas_general_logic,
+    resumen_ventas_por_producto_logic,
+    ventas_por_metodo_pago_total_logic,
+
 };
 
 // Modulo de caja
@@ -787,6 +791,29 @@ pub fn ventas_del_turno_actual(
     reportes::logic::ventas_del_turno_actual_logic(&conn)
 }
 
+#[tauri::command]
+pub fn dashboard_ventas_general(
+    state: State<'_, DbState>,
+) -> Result<crate::models::reportes::reporte::DashboardVentasGeneral, String> {
+    let conn = state.conn.lock().unwrap();
+    reportes::logic::dashboard_ventas_general_logic(&conn)
+}
+
+#[tauri::command]
+pub fn resumen_ventas_por_producto(
+    state: State<'_, DbState>,
+) -> Result<Vec<crate::models::reportes::reporte::ResumenVentasProducto>, String> {
+    let conn = state.conn.lock().unwrap();
+    reportes::logic::resumen_ventas_por_producto_logic(&conn)
+}
+
+#[tauri::command]
+pub fn ventas_por_metodo_pago_total(
+    state: State<'_, DbState>,
+) -> Result<Vec<crate::models::reportes::reporte::VentasPorMetodoPagoTotal>, String> {
+    let conn = state.conn.lock().unwrap();
+    reportes::logic::ventas_por_metodo_pago_total_logic(&conn)
+}
 
 // Comandos de turnos
 #[tauri::command]
@@ -881,6 +908,9 @@ pub use reportes_entrada::logic::{
     dashboard_entradas_logic,
     reporte_entrada_detallado_logic,
     stock_actual_y_minimo_logic,
+    resumen_entradas_diario_logic,
+    dashboard_entradas_general_logic,
+    resumen_entradas_por_producto_total_logic,
 };
 
 // Comandos Tauri para reportes de entrada
@@ -960,6 +990,29 @@ pub fn stock_actual_y_minimo(
     stock_actual_y_minimo_logic(&conn)
 }
 
+#[tauri::command]
+pub fn resumen_entradas_diario(
+    state: State<'_, DbState>,
+) -> Result<Vec<crate::models::reportes_entrada::reporte_entrada::ResumenEntradasDiario>, String> {
+    let conn = state.conn.lock().unwrap();
+    resumen_entradas_diario_logic(&conn)
+}
+
+#[tauri::command]
+pub fn dashboard_entradas_general(
+    state: State<'_, DbState>,
+) -> Result<crate::models::reportes_entrada::reporte_entrada::DashboardEntradasGeneral, String> {
+    let conn = state.conn.lock().unwrap();
+    dashboard_entradas_general_logic(&conn)
+}
+
+#[tauri::command]
+pub fn resumen_entradas_por_producto_total(
+    state: State<'_, DbState>,
+) -> Result<Vec<crate::models::reportes_entrada::reporte_entrada::ResumenEntradasProducto>, String> {
+    let conn = state.conn.lock().unwrap();
+    resumen_entradas_por_producto_total_logic(&conn)
+}
 // Comando Tauri para reporte consolidado de ventas
 #[tauri::command]
 pub fn reporte_consolidado_ventas(

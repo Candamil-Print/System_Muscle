@@ -3,7 +3,7 @@ use crate::models::reportes::reporte::{
     DashboardResumen, DetalleMargenProducto, ProductoMasVendido, ReporteCaja, ReporteEntradasProducto,
     ReporteInventario, ReporteMargenGanancia, ReporteStockBajo, ResumenVentasDiario, ResumenVentasRango,
     VentasPorMetodoPago, VentasPorUsuario, VentasPorTurno, VentaDetallePorTurno, ReporteConsolidadoVentas,
-    ReporteVentasDetallado,
+    ReporteVentasDetallado, DashboardVentasGeneral, ResumenVentasProducto, VentasPorMetodoPagoTotal,
 };
 
 fn validar_rango_fechas(fecha_inicio: &str, fecha_fin: &str) -> Result<(), String> {
@@ -11,6 +11,243 @@ fn validar_rango_fechas(fecha_inicio: &str, fecha_fin: &str) -> Result<(), Strin
         return Err("Las fechas de inicio y fin son obligatorias".to_string());
     }
     Ok(())
+}
+
+
+/// Dashboard general de ventas (sin rango de fechas)
+pub fn dashboard_ventas_general_logic(conn: &Connection) -> Result<DashboardVentasGeneral, String> {
+    let fecha: String = conn
+        .query_row("SELECT DATE('now', 'localtime')", [], |row| row.get(0))
+        .map_err(|e| e.to_string())?;
+
+    // Ventas de hoy
+    let ventas_hoy: i32 = conn
+        .query_row(
+            "SELECT COUNT(*) FROM ventas WHERE DATE(fecha) = DATE('now', 'localtime')",
+            [],
+            |row| row.get(0),
+        )
+        .map_err(|e| e.to_string())?;
+
+    let total_vendido_hoy: f64 = conn
+        .query_row(
+            r#"SELECT COALESCE(SUM(dv.subtotal), 0)
+               FROM detalle_venta dv
+               INNER JOIN ventas v ON dv.id_venta = v.id_venta
+               WHERE DATE(v.fecha) = DATE('now', 'localtime')"#,
+            [],
+            |row| row.get(0),
+        )
+        .map_err(|e| e.to_string())?;
+
+    // Ventas de la semana (últimos 7 días)
+    let ventas_semana: i32 = conn
+        .query_row(
+            r#"SELECT COUNT(*)
+               FROM ventas
+               WHERE DATE(fecha) >= DATE('now', 'localtime', '-6 days')"#,
+            [],
+            |row| row.get(0),
+        )
+        .map_err(|e| e.to_string())?;
+
+    let total_vendido_semana: f64 = conn
+        .query_row(
+            r#"SELECT COALESCE(SUM(dv.subtotal), 0)
+               FROM detalle_venta dv
+               INNER JOIN ventas v ON dv.id_venta = v.id_venta
+               WHERE DATE(v.fecha) >= DATE('now', 'localtime', '-6 days')"#,
+            [],
+            |row| row.get(0),
+        )
+        .map_err(|e| e.to_string())?;
+
+    // Ventas del mes (últimos 30 días)
+    let ventas_mes: i32 = conn
+        .query_row(
+            r#"SELECT COUNT(*)
+               FROM ventas
+               WHERE DATE(fecha) >= DATE('now', 'localtime', '-29 days')"#,
+            [],
+            |row| row.get(0),
+        )
+        .map_err(|e| e.to_string())?;
+
+    let total_vendido_mes: f64 = conn
+        .query_row(
+            r#"SELECT COALESCE(SUM(dv.subtotal), 0)
+               FROM detalle_venta dv
+               INNER JOIN ventas v ON dv.id_venta = v.id_venta
+               WHERE DATE(v.fecha) >= DATE('now', 'localtime', '-29 days')"#,
+            [],
+            |row| row.get(0),
+        )
+        .map_err(|e| e.to_string())?;
+
+    // Totales generales
+    let total_ventas: i32 = conn
+        .query_row(
+            "SELECT COUNT(*) FROM ventas",
+            [],
+            |row| row.get(0),
+        )
+        .map_err(|e| e.to_string())?;
+
+    let total_general: f64 = conn
+        .query_row(
+            r#"SELECT COALESCE(SUM(dv.subtotal), 0)
+               FROM detalle_venta dv"#,
+            [],
+            |row| row.get(0),
+        )
+        .map_err(|e| e.to_string())?;
+
+    let total_efectivo: f64 = conn
+        .query_row(
+            r#"SELECT COALESCE(SUM(dv.subtotal), 0)
+               FROM detalle_venta dv
+               INNER JOIN metodos_pago mp ON dv.metodo_pago = mp.id_metodo
+               WHERE mp.nombre = 'EFECTIVO'"#,
+            [],
+            |row| row.get(0),
+        )
+        .map_err(|e| e.to_string())?;
+
+    let total_transferencia: f64 = conn
+        .query_row(
+            r#"SELECT COALESCE(SUM(dv.subtotal), 0)
+               FROM detalle_venta dv
+               INNER JOIN metodos_pago mp ON dv.metodo_pago = mp.id_metodo
+               WHERE mp.nombre = 'TRANSFERENCIA'"#,
+            [],
+            |row| row.get(0),
+        )
+        .map_err(|e| e.to_string())?;
+
+    // Productos distintos vendidos
+    let productos_distintos_vendidos: i32 = conn
+        .query_row(
+            "SELECT COUNT(DISTINCT id_producto) FROM detalle_venta",
+            [],
+            |row| row.get(0),
+        )
+        .map_err(|e| e.to_string())?;
+
+    // Número de métodos de pago usados
+    let numero_metodos_pago: i32 = conn
+        .query_row(
+            "SELECT COUNT(DISTINCT metodo_pago) FROM detalle_venta",
+            [],
+            |row| row.get(0),
+        )
+        .map_err(|e| e.to_string())?;
+
+    // Número de vendedores
+    let numero_vendedores: i32 = conn
+        .query_row(
+            "SELECT COUNT(DISTINCT id_usuario) FROM ventas",
+            [],
+            |row| row.get(0),
+        )
+        .map_err(|e| e.to_string())?;
+
+    Ok(DashboardVentasGeneral {
+        fecha,
+        ventas_hoy,
+        total_vendido_hoy,
+        ventas_semana,
+        total_vendido_semana,
+        ventas_mes,
+        total_vendido_mes,
+        total_ventas,
+        total_general,
+        total_efectivo,
+        total_transferencia,
+        productos_distintos_vendidos,
+        numero_metodos_pago,
+        numero_vendedores,
+    })
+}
+
+
+/// Resumen de ventas agrupado por producto (sin rango de fechas)
+pub fn resumen_ventas_por_producto_logic(conn: &Connection) -> Result<Vec<ResumenVentasProducto>, String> {
+    let mut stmt = conn
+        .prepare(
+            r#"SELECT 
+                dv.id_producto,
+                p.nombre,
+                p.tipo_producto,
+                SUM(dv.cantidad) AS cantidad_vendida,
+                SUM(dv.subtotal) AS total_ventas,
+                COUNT(DISTINCT v.id_venta) AS numero_ventas,
+                COALESCE(GROUP_CONCAT(DISTINCT mp.nombre), '') AS metodos_pago,
+                COALESCE(GROUP_CONCAT(DISTINCT u.nombre_completo), '') AS vendedores
+            FROM detalle_venta dv
+            INNER JOIN ventas v ON dv.id_venta = v.id_venta
+            INNER JOIN productos p ON dv.id_producto = p.id_producto
+            INNER JOIN metodos_pago mp ON dv.metodo_pago = mp.id_metodo
+            INNER JOIN usuarios u ON v.id_usuario = u.id_usuario
+            GROUP BY dv.id_producto
+            ORDER BY cantidad_vendida DESC"#,
+        )
+        .map_err(|e| e.to_string())?;
+
+    let rows = stmt
+        .query_map([], |row| {
+            Ok(ResumenVentasProducto {
+                id_producto: row.get(0)?,
+                nombre_producto: row.get(1)?,
+                tipo_producto: row.get(2)?,
+                cantidad_vendida: row.get(3)?,
+                total_ventas: row.get(4)?,
+                numero_ventas: row.get(5)?,
+                metodos_pago: row.get(6)?,
+                vendedores: row.get(7)?,
+            })
+        })
+        .map_err(|e| e.to_string())?;
+
+    let mut lista = Vec::new();
+    for item in rows {
+        lista.push(item.map_err(|e| e.to_string())?);
+    }
+    Ok(lista)
+}
+
+
+/// Ventas agrupadas por método de pago (total general, sin rango de fechas)
+pub fn ventas_por_metodo_pago_total_logic(conn: &Connection) -> Result<Vec<VentasPorMetodoPagoTotal>, String> {
+    let mut stmt = conn
+        .prepare(
+            r#"SELECT 
+                mp.id_metodo,
+                mp.nombre,
+                COUNT(dv.id_detalle) AS cantidad_lineas,
+                COALESCE(SUM(dv.subtotal), 0) AS total
+            FROM detalle_venta dv
+            INNER JOIN metodos_pago mp ON dv.metodo_pago = mp.id_metodo
+            GROUP BY mp.id_metodo
+            ORDER BY total DESC"#,
+        )
+        .map_err(|e| e.to_string())?;
+
+    let rows = stmt
+        .query_map([], |row| {
+            Ok(VentasPorMetodoPagoTotal {
+                id_metodo: row.get(0)?,
+                nombre_metodo: row.get(1)?,
+                cantidad_lineas: row.get(2)?,
+                total: row.get(3)?,
+            })
+        })
+        .map_err(|e| e.to_string())?;
+
+    let mut lista = Vec::new();
+    for item in rows {
+        lista.push(item.map_err(|e| e.to_string())?);
+    }
+    Ok(lista)
 }
 
 /// Resumen diario de ventas desde la vista del sistema.
