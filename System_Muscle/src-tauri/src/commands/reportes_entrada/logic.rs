@@ -286,59 +286,14 @@ pub fn entradas_por_dia_logic(
     fecha_inicio: &str,
     fecha_fin: &str,
 ) -> Result<Vec<EntradasPorDia>, String> {
-    let (sql, params_vec): (String, Vec<String>) = if fecha_inicio.is_empty() || fecha_fin.is_empty() {
-        (
-            r#"SELECT
-                DATE(fecha)                        AS fecha,
-                COUNT(id_movimiento)               AS numero_movimientos,
-                COALESCE(SUM(cantidad), 0)         AS cantidad_total_ingresada
-            FROM movimientos_entrada
-            GROUP BY DATE(fecha)
-            ORDER BY fecha DESC"#
-                .to_string(),
-            vec![],
-        )
-    } else {
-        (
-            r#"SELECT
-                DATE(fecha)                        AS fecha,
-                COUNT(id_movimiento)               AS numero_movimientos,
-                COALESCE(SUM(cantidad), 0)         AS cantidad_total_ingresada
-            FROM movimientos_entrada
-            WHERE DATE(fecha) BETWEEN DATE(?1) AND DATE(?2)
-            GROUP BY DATE(fecha)
-            ORDER BY fecha DESC"#
-                .to_string(),
-            vec![fecha_inicio.to_string(), fecha_fin.to_string()],
-        )
-    };
-
-    let mut stmt = conn.prepare(&sql).map_err(|e| e.to_string())?;
-
-    let rows = if params_vec.is_empty() {
-        stmt.query_map([], |row| {
-            Ok(EntradasPorDia {
-                fecha: row.get(0)?,
-                numero_movimientos: row.get(1)?,
-                cantidad_total_ingresada: row.get(2)?,
-            })
-        })
-    } else {
-        stmt.query_map(rusqlite::params![params_vec[0], params_vec[1]], |row| {
-            Ok(EntradasPorDia {
-                fecha: row.get(0)?,
-                numero_movimientos: row.get(1)?,
-                cantidad_total_ingresada: row.get(2)?,
-            })
-        })
-    }
-    .map_err(|e| e.to_string())?;
-
-    let mut lista = Vec::new();
-    for item in rows {
-        lista.push(item.map_err(|e| e.to_string())?);
-    }
-    Ok(lista)
+    let (sql, params_vec):(String,Vec<String>)= if fecha_inicio.is_empty()||fecha_fin.is_empty(){(
+r#"SELECT DATE(fecha) AS fecha, COUNT(id_movimiento) AS numero_movimientos, COALESCE(SUM(cantidad),0) AS cantidad_total_ingresada FROM movimientos_entrada GROUP BY DATE(fecha) ORDER BY fecha DESC"#.to_string(),vec![])} else {(
+r#"SELECT DATE(fecha) AS fecha, COUNT(id_movimiento) AS numero_movimientos, COALESCE(SUM(cantidad),0) AS cantidad_total_ingresada FROM movimientos_entrada WHERE DATE(fecha) BETWEEN DATE(?1) AND DATE(?2) GROUP BY DATE(fecha) ORDER BY fecha DESC"#.to_string(),vec![fecha_inicio.to_string(),fecha_fin.to_string()])};
+    let mut stmt=conn.prepare(&sql).map_err(|e|e.to_string())?;
+    let rows=stmt.query_map(rusqlite::params_from_iter(params_vec.iter()),|row|{
+        Ok(EntradasPorDia{fecha:row.get(0)?,numero_movimientos:row.get(1)?,cantidad_total_ingresada:row.get(2)?})
+    }).map_err(|e|e.to_string())?;
+    let mut lista=Vec::new(); for item in rows{lista.push(item.map_err(|e|e.to_string())?);} Ok(lista)
 }
 
 /// Entradas agrupadas por usuario en un rango de fechas.
@@ -384,65 +339,14 @@ pub fn entradas_por_usuario_logic(
 
 /// Entradas agrupadas por tipo de producto. Si no se pasan fechas, retorna todos los tipos.
 pub fn entradas_por_tipo_producto_logic(
-    conn: &Connection,
-    fecha_inicio: &str,
-    fecha_fin: &str,
-) -> Result<Vec<EntradasPorTipoProducto>, String> {
-    let (sql, params_vec): (String, Vec<String>) = if fecha_inicio.is_empty() || fecha_fin.is_empty() {
-        (
-            r#"SELECT
-                p.tipo_producto,
-                COUNT(me.id_movimiento)        AS numero_movimientos,
-                COALESCE(SUM(me.cantidad), 0)  AS cantidad_total_ingresada
-            FROM movimientos_entrada me
-            INNER JOIN productos p ON me.id_producto = p.id_producto
-            GROUP BY p.tipo_producto
-            ORDER BY cantidad_total_ingresada DESC"#
-                .to_string(),
-            vec![],
-        )
-    } else {
-        (
-            r#"SELECT
-                p.tipo_producto,
-                COUNT(me.id_movimiento)        AS numero_movimientos,
-                COALESCE(SUM(me.cantidad), 0)  AS cantidad_total_ingresada
-            FROM movimientos_entrada me
-            INNER JOIN productos p ON me.id_producto = p.id_producto
-            WHERE DATE(me.fecha) BETWEEN DATE(?1) AND DATE(?2)
-            GROUP BY p.tipo_producto
-            ORDER BY cantidad_total_ingresada DESC"#
-                .to_string(),
-            vec![fecha_inicio.to_string(), fecha_fin.to_string()],
-        )
-    };
-
-    let mut stmt = conn.prepare(&sql).map_err(|e| e.to_string())?;
-
-    let rows = if params_vec.is_empty() {
-        stmt.query_map([], |row| {
-            Ok(EntradasPorTipoProducto {
-                tipo_producto: row.get(0)?,
-                numero_movimientos: row.get(1)?,
-                cantidad_total_ingresada: row.get(2)?,
-            })
-        })
-    } else {
-        stmt.query_map(rusqlite::params![params_vec[0], params_vec[1]], |row| {
-            Ok(EntradasPorTipoProducto {
-                tipo_producto: row.get(0)?,
-                numero_movimientos: row.get(1)?,
-                cantidad_total_ingresada: row.get(2)?,
-            })
-        })
-    }
-    .map_err(|e| e.to_string())?;
-
-    let mut lista = Vec::new();
-    for item in rows {
-        lista.push(item.map_err(|e| e.to_string())?);
-    }
-    Ok(lista)
+    conn:&Connection,fecha_inicio:&str,fecha_fin:&str,
+)->Result<Vec<EntradasPorTipoProducto>,String>{
+let (sql,params_vec):(String,Vec<String>)=if fecha_inicio.is_empty()||fecha_fin.is_empty(){(r#"SELECT p.tipo_producto, COUNT(me.id_movimiento) AS numero_movimientos, COALESCE(SUM(me.cantidad),0) AS cantidad_total_ingresada FROM movimientos_entrada me INNER JOIN productos p ON me.id_producto=p.id_producto GROUP BY p.tipo_producto ORDER BY cantidad_total_ingresada DESC"#.to_string(),vec![])}else{(r#"SELECT p.tipo_producto, COUNT(me.id_movimiento) AS numero_movimientos, COALESCE(SUM(me.cantidad),0) AS cantidad_total_ingresada FROM movimientos_entrada me INNER JOIN productos p ON me.id_producto=p.id_producto WHERE DATE(me.fecha) BETWEEN DATE(?1) AND DATE(?2) GROUP BY p.tipo_producto ORDER BY cantidad_total_ingresada DESC"#.to_string(),vec![fecha_inicio.to_string(),fecha_fin.to_string()])};
+let mut stmt=conn.prepare(&sql).map_err(|e|e.to_string())?;
+let rows=stmt.query_map(rusqlite::params_from_iter(params_vec.iter()),|row|{
+Ok(EntradasPorTipoProducto{tipo_producto:row.get(0)?,numero_movimientos:row.get(1)?,cantidad_total_ingresada:row.get(2)?})
+}).map_err(|e|e.to_string())?;
+let mut lista=Vec::new(); for item in rows{lista.push(item.map_err(|e|e.to_string())?);} Ok(lista)
 }
 
 /// KPIs del módulo de entradas: movimientos de hoy y de la semana en curso.
