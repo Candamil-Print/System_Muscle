@@ -272,15 +272,12 @@ pub fn dashboard_entradas_logic(conn: &Connection) -> Result<DashboardEntradas, 
 }
 
 /// Reporte detallado de entradas en un rango de fechas.
-/// Si fecha_inicio o fecha_fin están vacías, se retorna toda la información disponible.
 pub fn reporte_entrada_detallado_logic(
     conn: &Connection,
     fecha_inicio: &str,
     fecha_fin: &str,
 ) -> Result<Vec<ReporteEntradaDetallado>, String> {
-    if !fecha_inicio.is_empty() && !fecha_fin.is_empty() {
-        validar_rango_fechas(fecha_inicio, fecha_fin)?;
-    }
+    validar_rango_fechas(fecha_inicio, fecha_fin)?;
 
     let mut stmt = conn
         .prepare(
@@ -294,7 +291,7 @@ pub fn reporte_entrada_detallado_logic(
             FROM movimientos_entrada me
             INNER JOIN usuarios u ON me.id_usuario = u.id_usuario
             INNER JOIN productos p ON me.id_producto = p.id_producto
-            WHERE (?1 = '' OR ?2 = '' OR DATE(me.fecha) BETWEEN DATE(?1) AND DATE(?2))
+            WHERE DATE(me.fecha) BETWEEN DATE(?1) AND DATE(?2)
             ORDER BY me.fecha DESC"#,
         )
         .map_err(|e| e.to_string())?;
@@ -318,7 +315,6 @@ pub fn reporte_entrada_detallado_logic(
     }
     Ok(lista)
 }
-
 
 /// Obtiene el stock actual y mínimo de todos los productos activos.
 pub fn stock_actual_y_minimo_logic(conn: &Connection) -> Result<Vec<StockActualMinimo>, String> {

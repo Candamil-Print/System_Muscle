@@ -337,22 +337,3 @@ fn test_flujo_completo_reportes_entrada() {
     println!("\n   ✅ FLUJO COMPLETO EXITOSO");
 }
 
-#[test]
-fn test_reporte_entrada_detallado_fechas_vacias() {
-    println!("\n📊 TEST: Reporte entrada detallado con fechas vacías");
-    let conn = get_db_connection().unwrap();
-
-    let nombre = nombre_unico("RptEntrada Det");
-    let id = crear_producto_con_stock(&conn, &nombre, 10);
-
-    // Con fechas vacías, debería retornar todas las entradas sin error
-    let reporte = reporte_entrada_detallado_logic(&conn, "", "").unwrap();
-    assert!(!reporte.is_empty());
-    
-    let item = reporte.iter().find(|r| r.producto == nombre).unwrap();
-    assert_eq!(item.cantidad, 10);
-    assert!(!item.usuario.is_empty());
-
-    println!("   ✅ Reporte detallado sin fechas verificado con éxito");
-    limpiar_producto(&conn, id);
-}
