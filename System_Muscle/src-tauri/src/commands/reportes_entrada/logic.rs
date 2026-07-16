@@ -280,16 +280,26 @@ pub fn totales_entradas_rango_logic(
     .map_err(|e| e.to_string())
 }
 
-/// Entradas agrupadas por día dentro de un rango de fechas.
+/// Entradas agrupadas por día. Si no se pasan fechas, retorna todos los días.
 pub fn entradas_por_dia_logic(
     conn: &Connection,
     fecha_inicio: &str,
     fecha_fin: &str,
 ) -> Result<Vec<EntradasPorDia>, String> {
-    validar_rango_fechas(fecha_inicio, fecha_fin)?;
-
-    let mut stmt = conn
-        .prepare(
+    let (sql, params_vec): (String, Vec<String>) = if fecha_inicio.is_empty() || fecha_fin.is_empty() {
+        (
+            r#"SELECT
+                DATE(fecha)                        AS fecha,
+                COUNT(id_movimiento)               AS numero_movimientos,
+                COALESCE(SUM(cantidad), 0)         AS cantidad_total_ingresada
+            FROM movimientos_entrada
+            GROUP BY DATE(fecha)
+            ORDER BY fecha DESC"#
+                .to_string(),
+            vec![],
+        )
+    } else {
+        (
             r#"SELECT
                 DATE(fecha)                        AS fecha,
                 COUNT(id_movimiento)               AS numero_movimientos,
@@ -297,19 +307,32 @@ pub fn entradas_por_dia_logic(
             FROM movimientos_entrada
             WHERE DATE(fecha) BETWEEN DATE(?1) AND DATE(?2)
             GROUP BY DATE(fecha)
-            ORDER BY fecha DESC"#,
+            ORDER BY fecha DESC"#
+                .to_string(),
+            vec![fecha_inicio.to_string(), fecha_fin.to_string()],
         )
-        .map_err(|e| e.to_string())?;
+    };
 
-    let rows = stmt
-        .query_map(rusqlite::params![fecha_inicio, fecha_fin], |row| {
+    let mut stmt = conn.prepare(&sql).map_err(|e| e.to_string())?;
+
+    let rows = if params_vec.is_empty() {
+        stmt.query_map([], |row| {
             Ok(EntradasPorDia {
                 fecha: row.get(0)?,
                 numero_movimientos: row.get(1)?,
                 cantidad_total_ingresada: row.get(2)?,
             })
         })
-        .map_err(|e| e.to_string())?;
+    } else {
+        stmt.query_map(rusqlite::params![params_vec[0], params_vec[1]], |row| {
+            Ok(EntradasPorDia {
+                fecha: row.get(0)?,
+                numero_movimientos: row.get(1)?,
+                cantidad_total_ingresada: row.get(2)?,
+            })
+        })
+    }
+    .map_err(|e| e.to_string())?;
 
     let mut lista = Vec::new();
     for item in rows {
@@ -359,16 +382,27 @@ pub fn entradas_por_usuario_logic(
     Ok(lista)
 }
 
-/// Entradas agrupadas por tipo de producto en un rango de fechas.
+/// Entradas agrupadas por tipo de producto. Si no se pasan fechas, retorna todos los tipos.
 pub fn entradas_por_tipo_producto_logic(
     conn: &Connection,
     fecha_inicio: &str,
     fecha_fin: &str,
 ) -> Result<Vec<EntradasPorTipoProducto>, String> {
-    validar_rango_fechas(fecha_inicio, fecha_fin)?;
-
-    let mut stmt = conn
-        .prepare(
+    let (sql, params_vec): (String, Vec<String>) = if fecha_inicio.is_empty() || fecha_fin.is_empty() {
+        (
+            r#"SELECT
+                p.tipo_producto,
+                COUNT(me.id_movimiento)        AS numero_movimientos,
+                COALESCE(SUM(me.cantidad), 0)  AS cantidad_total_ingresada
+            FROM movimientos_entrada me
+            INNER JOIN productos p ON me.id_producto = p.id_producto
+            GROUP BY p.tipo_producto
+            ORDER BY cantidad_total_ingresada DESC"#
+                .to_string(),
+            vec![],
+        )
+    } else {
+        (
             r#"SELECT
                 p.tipo_producto,
                 COUNT(me.id_movimiento)        AS numero_movimientos,
@@ -377,19 +411,32 @@ pub fn entradas_por_tipo_producto_logic(
             INNER JOIN productos p ON me.id_producto = p.id_producto
             WHERE DATE(me.fecha) BETWEEN DATE(?1) AND DATE(?2)
             GROUP BY p.tipo_producto
-            ORDER BY cantidad_total_ingresada DESC"#,
+            ORDER BY cantidad_total_ingresada DESC"#
+                .to_string(),
+            vec![fecha_inicio.to_string(), fecha_fin.to_string()],
         )
-        .map_err(|e| e.to_string())?;
+    };
 
-    let rows = stmt
-        .query_map(rusqlite::params![fecha_inicio, fecha_fin], |row| {
+    let mut stmt = conn.prepare(&sql).map_err(|e| e.to_string())?;
+
+    let rows = if params_vec.is_empty() {
+        stmt.query_map([], |row| {
             Ok(EntradasPorTipoProducto {
                 tipo_producto: row.get(0)?,
                 numero_movimientos: row.get(1)?,
                 cantidad_total_ingresada: row.get(2)?,
             })
         })
-        .map_err(|e| e.to_string())?;
+    } else {
+        stmt.query_map(rusqlite::params![params_vec[0], params_vec[1]], |row| {
+            Ok(EntradasPorTipoProducto {
+                tipo_producto: row.get(0)?,
+                numero_movimientos: row.get(1)?,
+                cantidad_total_ingresada: row.get(2)?,
+            })
+        })
+    }
+    .map_err(|e| e.to_string())?;
 
     let mut lista = Vec::new();
     for item in rows {
