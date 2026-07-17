@@ -6,12 +6,6 @@ use crate::models::reportes::reporte::{
     ReporteVentasDetallado, DashboardVentasGeneral, ResumenVentasProducto, VentasPorMetodoPagoTotal,
 };
 
-fn validar_rango_fechas(fecha_inicio: &str, fecha_fin: &str) -> Result<(), String> {
-    if fecha_inicio.is_empty() || fecha_fin.is_empty() {
-        return Err("Las fechas de inicio y fin son obligatorias".to_string());
-    }
-    Ok(())
-}
 
 
 /// Dashboard general de ventas (sin rango de fechas)
@@ -279,34 +273,40 @@ pub fn resumen_ventas_diario_logic(conn: &Connection) -> Result<Vec<ResumenVenta
     Ok(lista)
 }
 
-/// Resumen de ventas diario filtrado por rango de fechas (YYYY-MM-DD).
+/// Resumen de ventas diario filtrado por rango de fechas (YYYY-MM-DD). Si no hay fechas, retorna todos.
 pub fn resumen_ventas_diario_rango_logic(
     conn: &Connection,
     fecha_inicio: &str,
     fecha_fin: &str,
 ) -> Result<Vec<ResumenVentasDiario>, String> {
-    validar_rango_fechas(fecha_inicio, fecha_fin)?;
-
-    let mut stmt = conn
-        .prepare(
+    let (sql, params_vec): (String, Vec<String>) = if fecha_inicio.is_empty() || fecha_fin.is_empty() {
+        (
+            r#"SELECT fecha, numero_ventas, total_efectivo, total_transferencia, total_general
+               FROM vista_resumen_ventas_diario
+               ORDER BY fecha DESC"#.to_string(),
+            vec![]
+        )
+    } else {
+        (
             r#"SELECT fecha, numero_ventas, total_efectivo, total_transferencia, total_general
                FROM vista_resumen_ventas_diario
                WHERE DATE(fecha) BETWEEN DATE(?1) AND DATE(?2)
-               ORDER BY fecha DESC"#,
+               ORDER BY fecha DESC"#.to_string(),
+            vec![fecha_inicio.to_string(), fecha_fin.to_string()]
         )
-        .map_err(|e| e.to_string())?;
+    };
 
-    let rows = stmt
-        .query_map(rusqlite::params![fecha_inicio, fecha_fin], |row| {
-            Ok(ResumenVentasDiario {
-                fecha: row.get(0)?,
-                numero_ventas: row.get(1)?,
-                total_efectivo: row.get(2)?,
-                total_transferencia: row.get(3)?,
-                total_general: row.get(4)?,
-            })
+    let mut stmt = conn.prepare(&sql).map_err(|e| e.to_string())?;
+
+    let rows = stmt.query_map(rusqlite::params_from_iter(params_vec.iter()), |row| {
+        Ok(ResumenVentasDiario {
+            fecha: row.get(0)?,
+            numero_ventas: row.get(1)?,
+            total_efectivo: row.get(2)?,
+            total_transferencia: row.get(3)?,
+            total_general: row.get(4)?,
         })
-        .map_err(|e| e.to_string())?;
+    }).map_err(|e| e.to_string())?;
 
     let mut lista = Vec::new();
     for item in rows {
@@ -315,24 +315,40 @@ pub fn resumen_ventas_diario_rango_logic(
     Ok(lista)
 }
 
-/// Totales consolidados de ventas en un rango de fechas.
+/// Totales consolidados de ventas en un rango de fechas. Si no hay fechas, retorna todos.
 pub fn resumen_ventas_rango_logic(
     conn: &Connection,
     fecha_inicio: &str,
     fecha_fin: &str,
 ) -> Result<ResumenVentasRango, String> {
-    validar_rango_fechas(fecha_inicio, fecha_fin)?;
-
-    conn.query_row(
-        r#"SELECT COUNT(DISTINCT v.id_venta),
+    let (sql, params_vec): (String, Vec<String>) = if fecha_inicio.is_empty() || fecha_fin.is_empty() {
+        (
+            r#"SELECT COUNT(DISTINCT v.id_venta),
+                  COALESCE(SUM(CASE WHEN mp.nombre = 'EFECTIVO' THEN dv.subtotal ELSE 0 END), 0),
+                  COALESCE(SUM(CASE WHEN mp.nombre = 'TRANSFERENCIA' THEN dv.subtotal ELSE 0 END), 0),
+                  COALESCE(SUM(dv.subtotal), 0)
+           FROM ventas v
+           INNER JOIN detalle_venta dv ON v.id_venta = dv.id_venta
+           INNER JOIN metodos_pago mp ON dv.metodo_pago = mp.id_metodo"#.to_string(),
+            vec![]
+        )
+    } else {
+        (
+            r#"SELECT COUNT(DISTINCT v.id_venta),
                   COALESCE(SUM(CASE WHEN mp.nombre = 'EFECTIVO' THEN dv.subtotal ELSE 0 END), 0),
                   COALESCE(SUM(CASE WHEN mp.nombre = 'TRANSFERENCIA' THEN dv.subtotal ELSE 0 END), 0),
                   COALESCE(SUM(dv.subtotal), 0)
            FROM ventas v
            INNER JOIN detalle_venta dv ON v.id_venta = dv.id_venta
            INNER JOIN metodos_pago mp ON dv.metodo_pago = mp.id_metodo
-           WHERE DATE(v.fecha) BETWEEN DATE(?1) AND DATE(?2)"#,
-        rusqlite::params![fecha_inicio, fecha_fin],
+           WHERE DATE(v.fecha) BETWEEN DATE(?1) AND DATE(?2)"#.to_string(),
+            vec![fecha_inicio.to_string(), fecha_fin.to_string()]
+        )
+    };
+
+    conn.query_row(
+        &sql,
+        rusqlite::params_from_iter(params_vec.iter()),
         |row| {
             Ok(ResumenVentasRango {
                 fecha_inicio: fecha_inicio.to_string(),
@@ -347,18 +363,34 @@ pub fn resumen_ventas_rango_logic(
     .map_err(|e| e.to_string())
 }
 
-/// Top de productos más vendidos en un rango (por cantidad).
+/// Top de productos más vendidos en un rango (por cantidad). Si no hay fechas, retorna todos.
 pub fn productos_mas_vendidos_logic(
     conn: &Connection,
     fecha_inicio: &str,
     fecha_fin: &str,
     limite: i32,
 ) -> Result<Vec<ProductoMasVendido>, String> {
-    validar_rango_fechas(fecha_inicio, fecha_fin)?;
     let limite = limite.max(1).min(100);
 
-    let mut stmt = conn
-        .prepare(
+    let (sql, params_vec): (String, Vec<String>) = if fecha_inicio.is_empty() || fecha_fin.is_empty() {
+        (
+            r#"SELECT dv.id_producto, p.nombre, p.tipo_producto,
+                      SUM(dv.cantidad) AS cantidad_vendida,
+                      SUM(dv.subtotal) AS total_ventas,
+                      COALESCE(GROUP_CONCAT(DISTINCT mp.nombre), '') AS metodo_pago,
+                      COALESCE(GROUP_CONCAT(DISTINCT u.nombre_completo), '') AS vendedor
+               FROM detalle_venta dv
+               INNER JOIN ventas v ON dv.id_venta = v.id_venta
+               INNER JOIN productos p ON dv.id_producto = p.id_producto
+               INNER JOIN metodos_pago mp ON dv.metodo_pago = mp.id_metodo
+               INNER JOIN usuarios u ON v.id_usuario = u.id_usuario
+               GROUP BY dv.id_producto
+               ORDER BY cantidad_vendida DESC
+               LIMIT ?1"#.to_string(),
+            vec![limite.to_string()]
+        )
+    } else {
+        (
             r#"SELECT dv.id_producto, p.nombre, p.tipo_producto,
                       SUM(dv.cantidad) AS cantidad_vendida,
                       SUM(dv.subtotal) AS total_ventas,
@@ -372,23 +404,24 @@ pub fn productos_mas_vendidos_logic(
                WHERE DATE(v.fecha) BETWEEN DATE(?1) AND DATE(?2)
                GROUP BY dv.id_producto
                ORDER BY cantidad_vendida DESC
-               LIMIT ?3"#,
+               LIMIT ?3"#.to_string(),
+            vec![fecha_inicio.to_string(), fecha_fin.to_string(), limite.to_string()]
         )
-        .map_err(|e| e.to_string())?;
+    };
 
-    let rows = stmt
-        .query_map(rusqlite::params![fecha_inicio, fecha_fin, limite], |row| {
-            Ok(ProductoMasVendido {
-                id_producto: row.get(0)?,
-                nombre_producto: row.get(1)?,
-                tipo_producto: row.get(2)?,
-                cantidad_vendida: row.get(3)?,
-                total_ventas: row.get(4)?,
-                metodo_pago: row.get(5)?,
-                vendedor: row.get(6)?,
-            })
+    let mut stmt = conn.prepare(&sql).map_err(|e| e.to_string())?;
+
+    let rows = stmt.query_map(rusqlite::params_from_iter(params_vec.iter()), |row| {
+        Ok(ProductoMasVendido {
+            id_producto: row.get(0)?,
+            nombre_producto: row.get(1)?,
+            tipo_producto: row.get(2)?,
+            cantidad_vendida: row.get(3)?,
+            total_ventas: row.get(4)?,
+            metodo_pago: row.get(5)?,
+            vendedor: row.get(6)?,
         })
-        .map_err(|e| e.to_string())?;
+    }).map_err(|e| e.to_string())?;
 
     let mut lista = Vec::new();
     for item in rows {
@@ -465,16 +498,25 @@ pub fn reporte_inventario_logic(conn: &Connection) -> Result<Vec<ReporteInventar
     Ok(lista)
 }
 
-/// Entradas de inventario agrupadas por producto en un rango de fechas.
+/// Entradas de inventario agrupadas por producto en un rango de fechas. Si no hay fechas, retorna todos.
 pub fn reporte_entradas_rango_logic(
     conn: &Connection,
     fecha_inicio: &str,
     fecha_fin: &str,
 ) -> Result<Vec<ReporteEntradasProducto>, String> {
-    validar_rango_fechas(fecha_inicio, fecha_fin)?;
-
-    let mut stmt = conn
-        .prepare(
+    let (sql, params_vec): (String, Vec<String>) = if fecha_inicio.is_empty() || fecha_fin.is_empty() {
+        (
+            r#"SELECT me.id_producto, p.nombre,
+                      SUM(me.cantidad) AS cantidad_ingresada,
+                      COUNT(me.id_movimiento) AS numero_movimientos
+               FROM movimientos_entrada me
+               INNER JOIN productos p ON me.id_producto = p.id_producto
+               GROUP BY me.id_producto
+               ORDER BY cantidad_ingresada DESC"#.to_string(),
+            vec![]
+        )
+    } else {
+        (
             r#"SELECT me.id_producto, p.nombre,
                       SUM(me.cantidad) AS cantidad_ingresada,
                       COUNT(me.id_movimiento) AS numero_movimientos
@@ -482,20 +524,21 @@ pub fn reporte_entradas_rango_logic(
                INNER JOIN productos p ON me.id_producto = p.id_producto
                WHERE DATE(me.fecha) BETWEEN DATE(?1) AND DATE(?2)
                GROUP BY me.id_producto
-               ORDER BY cantidad_ingresada DESC"#,
+               ORDER BY cantidad_ingresada DESC"#.to_string(),
+            vec![fecha_inicio.to_string(), fecha_fin.to_string()]
         )
-        .map_err(|e| e.to_string())?;
+    };
 
-    let rows = stmt
-        .query_map(rusqlite::params![fecha_inicio, fecha_fin], |row| {
-            Ok(ReporteEntradasProducto {
-                id_producto: row.get(0)?,
-                nombre_producto: row.get(1)?,
-                cantidad_ingresada: row.get(2)?,
-                numero_movimientos: row.get(3)?,
-            })
+    let mut stmt = conn.prepare(&sql).map_err(|e| e.to_string())?;
+
+    let rows = stmt.query_map(rusqlite::params_from_iter(params_vec.iter()), |row| {
+        Ok(ReporteEntradasProducto {
+            id_producto: row.get(0)?,
+            nombre_producto: row.get(1)?,
+            cantidad_ingresada: row.get(2)?,
+            numero_movimientos: row.get(3)?,
         })
-        .map_err(|e| e.to_string())?;
+    }).map_err(|e| e.to_string())?;
 
     let mut lista = Vec::new();
     for item in rows {
@@ -504,16 +547,26 @@ pub fn reporte_entradas_rango_logic(
     Ok(lista)
 }
 
-/// Ventas totales por usuario en un rango de fechas.
+/// Ventas totales por usuario en un rango de fechas. Si no hay fechas, retorna todos.
 pub fn ventas_por_usuario_reporte_logic(
     conn: &Connection,
     fecha_inicio: &str,
     fecha_fin: &str,
 ) -> Result<Vec<VentasPorUsuario>, String> {
-    validar_rango_fechas(fecha_inicio, fecha_fin)?;
-
-    let mut stmt = conn
-        .prepare(
+    let (sql, params_vec): (String, Vec<String>) = if fecha_inicio.is_empty() || fecha_fin.is_empty() {
+        (
+            r#"SELECT v.id_usuario, u.nombre_completo,
+                      COUNT(DISTINCT v.id_venta) AS numero_ventas,
+                      COALESCE(SUM(dv.subtotal), 0) AS total_vendido
+               FROM ventas v
+               INNER JOIN usuarios u ON v.id_usuario = u.id_usuario
+               INNER JOIN detalle_venta dv ON v.id_venta = dv.id_venta
+               GROUP BY v.id_usuario
+               ORDER BY total_vendido DESC"#.to_string(),
+            vec![]
+        )
+    } else {
+        (
             r#"SELECT v.id_usuario, u.nombre_completo,
                       COUNT(DISTINCT v.id_venta) AS numero_ventas,
                       COALESCE(SUM(dv.subtotal), 0) AS total_vendido
@@ -522,20 +575,21 @@ pub fn ventas_por_usuario_reporte_logic(
                INNER JOIN detalle_venta dv ON v.id_venta = dv.id_venta
                WHERE DATE(v.fecha) BETWEEN DATE(?1) AND DATE(?2)
                GROUP BY v.id_usuario
-               ORDER BY total_vendido DESC"#,
+               ORDER BY total_vendido DESC"#.to_string(),
+            vec![fecha_inicio.to_string(), fecha_fin.to_string()]
         )
-        .map_err(|e| e.to_string())?;
+    };
 
-    let rows = stmt
-        .query_map(rusqlite::params![fecha_inicio, fecha_fin], |row| {
-            Ok(VentasPorUsuario {
-                id_usuario: row.get(0)?,
-                nombre_usuario: row.get(1)?,
-                numero_ventas: row.get(2)?,
-                total_vendido: row.get(3)?,
-            })
+    let mut stmt = conn.prepare(&sql).map_err(|e| e.to_string())?;
+
+    let rows = stmt.query_map(rusqlite::params_from_iter(params_vec.iter()), |row| {
+        Ok(VentasPorUsuario {
+            id_usuario: row.get(0)?,
+            nombre_usuario: row.get(1)?,
+            numero_ventas: row.get(2)?,
+            total_vendido: row.get(3)?,
         })
-        .map_err(|e| e.to_string())?;
+    }).map_err(|e| e.to_string())?;
 
     let mut lista = Vec::new();
     for item in rows {
@@ -544,16 +598,26 @@ pub fn ventas_por_usuario_reporte_logic(
     Ok(lista)
 }
 
-/// Ventas agrupadas por método de pago en un rango de fechas.
+/// Ventas agrupadas por método de pago en un rango de fechas. Si no hay fechas, retorna todos.
 pub fn ventas_por_metodo_pago_logic(
     conn: &Connection,
     fecha_inicio: &str,
     fecha_fin: &str,
 ) -> Result<Vec<VentasPorMetodoPago>, String> {
-    validar_rango_fechas(fecha_inicio, fecha_fin)?;
-
-    let mut stmt = conn
-        .prepare(
+    let (sql, params_vec): (String, Vec<String>) = if fecha_inicio.is_empty() || fecha_fin.is_empty() {
+        (
+            r#"SELECT mp.id_metodo, mp.nombre,
+                      COUNT(dv.id_detalle) AS cantidad_lineas,
+                      COALESCE(SUM(dv.subtotal), 0) AS total
+               FROM detalle_venta dv
+               INNER JOIN ventas v ON dv.id_venta = v.id_venta
+               INNER JOIN metodos_pago mp ON dv.metodo_pago = mp.id_metodo
+               GROUP BY mp.id_metodo
+               ORDER BY total DESC"#.to_string(),
+            vec![]
+        )
+    } else {
+        (
             r#"SELECT mp.id_metodo, mp.nombre,
                       COUNT(dv.id_detalle) AS cantidad_lineas,
                       COALESCE(SUM(dv.subtotal), 0) AS total
@@ -562,20 +626,21 @@ pub fn ventas_por_metodo_pago_logic(
                INNER JOIN metodos_pago mp ON dv.metodo_pago = mp.id_metodo
                WHERE DATE(v.fecha) BETWEEN DATE(?1) AND DATE(?2)
                GROUP BY mp.id_metodo
-               ORDER BY total DESC"#,
+               ORDER BY total DESC"#.to_string(),
+            vec![fecha_inicio.to_string(), fecha_fin.to_string()]
         )
-        .map_err(|e| e.to_string())?;
+    };
 
-    let rows = stmt
-        .query_map(rusqlite::params![fecha_inicio, fecha_fin], |row| {
-            Ok(VentasPorMetodoPago {
-                id_metodo: row.get(0)?,
-                nombre_metodo: row.get(1)?,
-                cantidad_lineas: row.get(2)?,
-                total: row.get(3)?,
-            })
+    let mut stmt = conn.prepare(&sql).map_err(|e| e.to_string())?;
+
+    let rows = stmt.query_map(rusqlite::params_from_iter(params_vec.iter()), |row| {
+        Ok(VentasPorMetodoPago {
+            id_metodo: row.get(0)?,
+            nombre_metodo: row.get(1)?,
+            cantidad_lineas: row.get(2)?,
+            total: row.get(3)?,
         })
-        .map_err(|e| e.to_string())?;
+    }).map_err(|e| e.to_string())?;
 
     let mut lista = Vec::new();
     for item in rows {
@@ -584,41 +649,50 @@ pub fn ventas_por_metodo_pago_logic(
     Ok(lista)
 }
 
-/// Cajas registradas en un rango de fechas de apertura.
+/// Cajas registradas en un rango de fechas de apertura. Si no hay fechas, retorna todas.
 pub fn reporte_cajas_rango_logic(
     conn: &Connection,
     fecha_inicio: &str,
     fecha_fin: &str,
 ) -> Result<Vec<ReporteCaja>, String> {
-    validar_rango_fechas(fecha_inicio, fecha_fin)?;
-
-    let mut stmt = conn
-        .prepare(
+    let (sql, params_vec): (String, Vec<String>) = if fecha_inicio.is_empty() || fecha_fin.is_empty() {
+        (
+            r#"SELECT c.id_caja, c.fecha_apertura, c.fecha_cierre, c.estado,
+                      c.monto_apertura, c.monto_cierre, c.total_efectivo,
+                      c.total_transferencia, u.nombre_completo
+               FROM caja c
+               INNER JOIN usuarios u ON c.id_usuario_apertura = u.id_usuario
+               ORDER BY c.fecha_apertura DESC"#.to_string(),
+            vec![]
+        )
+    } else {
+        (
             r#"SELECT c.id_caja, c.fecha_apertura, c.fecha_cierre, c.estado,
                       c.monto_apertura, c.monto_cierre, c.total_efectivo,
                       c.total_transferencia, u.nombre_completo
                FROM caja c
                INNER JOIN usuarios u ON c.id_usuario_apertura = u.id_usuario
                WHERE DATE(c.fecha_apertura) BETWEEN DATE(?1) AND DATE(?2)
-               ORDER BY c.fecha_apertura DESC"#,
+               ORDER BY c.fecha_apertura DESC"#.to_string(),
+            vec![fecha_inicio.to_string(), fecha_fin.to_string()]
         )
-        .map_err(|e| e.to_string())?;
+    };
 
-    let rows = stmt
-        .query_map(rusqlite::params![fecha_inicio, fecha_fin], |row| {
-            Ok(ReporteCaja {
-                id_caja: row.get(0)?,
-                fecha_apertura: row.get(1)?,
-                fecha_cierre: row.get(2)?,
-                estado: row.get(3)?,
-                monto_apertura: row.get(4)?,
-                monto_cierre: row.get(5)?,
-                total_efectivo: row.get(6)?,
-                total_transferencia: row.get(7)?,
-                nombre_usuario_apertura: row.get(8)?,
-            })
+    let mut stmt = conn.prepare(&sql).map_err(|e| e.to_string())?;
+
+    let rows = stmt.query_map(rusqlite::params_from_iter(params_vec.iter()), |row| {
+        Ok(ReporteCaja {
+            id_caja: row.get(0)?,
+            fecha_apertura: row.get(1)?,
+            fecha_cierre: row.get(2)?,
+            estado: row.get(3)?,
+            monto_apertura: row.get(4)?,
+            monto_cierre: row.get(5)?,
+            total_efectivo: row.get(6)?,
+            total_transferencia: row.get(7)?,
+            nombre_usuario_apertura: row.get(8)?,
         })
-        .map_err(|e| e.to_string())?;
+    }).map_err(|e| e.to_string())?;
 
     let mut lista = Vec::new();
     for item in rows {
@@ -690,29 +764,43 @@ pub fn dashboard_resumen_logic(conn: &Connection) -> Result<DashboardResumen, St
     })
 }
 
-/// Reporte del margen de ganancia en un rango de fechas
+/// Reporte del margen de ganancia en un rango de fechas. Si no hay fechas, retorna todos.
 pub fn reporte_margen_ganancia_logic(
     conn: &Connection,
     fecha_inicio: &str,
     fecha_fin: &str,
 ) -> Result<ReporteMargenGanancia, String> {
-    validar_rango_fechas(fecha_inicio, fecha_fin)?;
-
     // 1. Obtener totales consolidados
+    let (sql_totales, params_vec): (String, Vec<String>) = if fecha_inicio.is_empty() || fecha_fin.is_empty() {
+        (
+            r#"SELECT 
+                  COALESCE(SUM(dv.subtotal), 0.0) AS total_ventas,
+                  COALESCE(SUM(dv.cantidad * p.precio_costo), 0.0) AS total_costo
+               FROM detalle_venta dv
+               INNER JOIN ventas v ON dv.id_venta = v.id_venta
+               INNER JOIN productos p ON dv.id_producto = p.id_producto"#.to_string(),
+            vec![]
+        )
+    } else {
+        (
+            r#"SELECT 
+                  COALESCE(SUM(dv.subtotal), 0.0) AS total_ventas,
+                  COALESCE(SUM(dv.cantidad * p.precio_costo), 0.0) AS total_costo
+               FROM detalle_venta dv
+               INNER JOIN ventas v ON dv.id_venta = v.id_venta
+               INNER JOIN productos p ON dv.id_producto = p.id_producto
+               WHERE DATE(v.fecha) BETWEEN DATE(?1) AND DATE(?2)"#.to_string(),
+            vec![fecha_inicio.to_string(), fecha_fin.to_string()]
+        )
+    };
+
     let (total_ventas, total_costo): (f64, f64) = conn.query_row(
-        r#"SELECT 
-              COALESCE(SUM(dv.subtotal), 0.0) AS total_ventas,
-              COALESCE(SUM(dv.cantidad * p.precio_costo), 0.0) AS total_costo
-           FROM detalle_venta dv
-           INNER JOIN ventas v ON dv.id_venta = v.id_venta
-           INNER JOIN productos p ON dv.id_producto = p.id_producto
-           WHERE DATE(v.fecha) BETWEEN DATE(?1) AND DATE(?2)"#,
-        rusqlite::params![fecha_inicio, fecha_fin],
+        &sql_totales,
+        rusqlite::params_from_iter(params_vec.iter()),
         |row| {
             Ok((row.get(0)?, row.get(1)?))
         },
-    )
-    .map_err(|e| e.to_string())?;
+    ).map_err(|e| e.to_string())?;
 
     let ganancia_neta = total_ventas - total_costo;
     let margen_porcentaje = if total_ventas > 0.0 {
@@ -722,48 +810,58 @@ pub fn reporte_margen_ganancia_logic(
     };
 
     // 2. Obtener desglose por producto
-    let mut stmt = conn
-        .prepare(
-            r#"SELECT 
-                  p.id_producto,
-                  p.nombre,
-                  SUM(dv.cantidad) AS cantidad_vendida,
-                  SUM(dv.subtotal) AS total_ventas_prod,
-                  SUM(dv.cantidad * p.precio_costo) AS total_costo_prod
-               FROM detalle_venta dv
-               INNER JOIN ventas v ON dv.id_venta = v.id_venta
-               INNER JOIN productos p ON dv.id_producto = p.id_producto
-               WHERE DATE(v.fecha) BETWEEN DATE(?1) AND DATE(?2)
-               GROUP BY p.id_producto, p.nombre
-               ORDER BY total_ventas_prod DESC"#,
-        )
-        .map_err(|e| e.to_string())?;
+    let sql_productos = if fecha_inicio.is_empty() || fecha_fin.is_empty() {
+        r#"SELECT 
+              p.id_producto,
+              p.nombre,
+              SUM(dv.cantidad) AS cantidad_vendida,
+              SUM(dv.subtotal) AS total_ventas_prod,
+              SUM(dv.cantidad * p.precio_costo) AS total_costo_prod
+           FROM detalle_venta dv
+           INNER JOIN ventas v ON dv.id_venta = v.id_venta
+           INNER JOIN productos p ON dv.id_producto = p.id_producto
+           GROUP BY p.id_producto, p.nombre
+           ORDER BY total_ventas_prod DESC"#.to_string()
+    } else {
+        r#"SELECT 
+              p.id_producto,
+              p.nombre,
+              SUM(dv.cantidad) AS cantidad_vendida,
+              SUM(dv.subtotal) AS total_ventas_prod,
+              SUM(dv.cantidad * p.precio_costo) AS total_costo_prod
+           FROM detalle_venta dv
+           INNER JOIN ventas v ON dv.id_venta = v.id_venta
+           INNER JOIN productos p ON dv.id_producto = p.id_producto
+           WHERE DATE(v.fecha) BETWEEN DATE(?1) AND DATE(?2)
+           GROUP BY p.id_producto, p.nombre
+           ORDER BY total_ventas_prod DESC"#.to_string()
+    };
 
-    let rows = stmt
-        .query_map(rusqlite::params![fecha_inicio, fecha_fin], |row| {
-            let id_producto: i32 = row.get(0)?;
-            let nombre_producto: String = row.get(1)?;
-            let cantidad_vendida: i32 = row.get(2)?;
-            let total_ventas_prod: f64 = row.get(3)?;
-            let total_costo_prod: f64 = row.get(4)?;
-            let ganancia_neta_prod = total_ventas_prod - total_costo_prod;
-            let margen_porcentaje_prod = if total_ventas_prod > 0.0 {
-                (ganancia_neta_prod / total_ventas_prod) * 100.0
-            } else {
-                0.0
-            };
+    let mut stmt = conn.prepare(&sql_productos).map_err(|e| e.to_string())?;
 
-            Ok(DetalleMargenProducto {
-                id_producto,
-                nombre_producto,
-                cantidad_vendida,
-                total_ventas: total_ventas_prod,
-                total_costo: total_costo_prod,
-                ganancia_neta: ganancia_neta_prod,
-                margen_porcentaje: margen_porcentaje_prod,
-            })
+    let rows = stmt.query_map(rusqlite::params_from_iter(params_vec.iter()), |row| {
+        let id_producto: i32 = row.get(0)?;
+        let nombre_producto: String = row.get(1)?;
+        let cantidad_vendida: i32 = row.get(2)?;
+        let total_ventas_prod: f64 = row.get(3)?;
+        let total_costo_prod: f64 = row.get(4)?;
+        let ganancia_neta_prod = total_ventas_prod - total_costo_prod;
+        let margen_porcentaje_prod = if total_ventas_prod > 0.0 {
+            (ganancia_neta_prod / total_ventas_prod) * 100.0
+        } else {
+            0.0
+        };
+
+        Ok(DetalleMargenProducto {
+            id_producto,
+            nombre_producto,
+            cantidad_vendida,
+            total_ventas: total_ventas_prod,
+            total_costo: total_costo_prod,
+            ganancia_neta: ganancia_neta_prod,
+            margen_porcentaje: margen_porcentaje_prod,
         })
-        .map_err(|e| e.to_string())?;
+    }).map_err(|e| e.to_string())?;
 
     let mut productos = Vec::new();
     for item in rows {
@@ -928,8 +1026,6 @@ pub fn reporte_consolidado_ventas_logic(
     fecha_fin: &str,
     limite_productos: i32,
 ) -> Result<ReporteConsolidadoVentas, String> {
-    validar_rango_fechas(fecha_inicio, fecha_fin)?;
-
     let productos_mas_vendidos = productos_mas_vendidos_logic(conn, fecha_inicio, fecha_fin, limite_productos)?;
     let metodos_pago = ventas_por_metodo_pago_logic(conn, fecha_inicio, fecha_fin)?;
     let ventas_por_vendedor = ventas_por_usuario_reporte_logic(conn, fecha_inicio, fecha_fin)?;
@@ -943,46 +1039,76 @@ pub fn reporte_consolidado_ventas_logic(
     })
 }
 
-/// Reporte detallado de ventas por rango de fechas
+/// Reporte detallado de ventas por rango de fechas. Si no hay fechas, retorna todos.
 pub fn reporte_ventas_detallado_logic(
     conn: &Connection,
     fecha_inicio: &str,
     fecha_fin: &str,
 ) -> Result<Vec<ReporteVentasDetallado>, String> {
-    validar_rango_fechas(fecha_inicio, fecha_fin)?;
+    let (sql, params_vec): (String, Vec<String>) = if fecha_inicio.is_empty() || fecha_fin.is_empty() {
+        (
+            r#"SELECT 
+                v.id_venta,
+                v.fecha,
+                u.nombre_completo as vendedor,
+                p.nombre as producto,
+                dv.cantidad,
+                dv.precio_unitario,
+                dv.subtotal,
+                mp.nombre as metodo_pago,
+                c.id_caja,
+                c.monto_apertura as caja_inicial_valor,
+                c.fecha_apertura as caja_inicial_hora,
+                c.monto_cierre as caja_final_valor,
+                c.fecha_cierre as caja_final_hora,
+                c.total_efectivo,
+                c.total_transferencia,
+                (c.total_efectivo + c.total_transferencia) as total_final,
+                (c.monto_cierre + c.monto_apertura) as caja_total
+            FROM ventas v
+            INNER JOIN usuarios u ON v.id_usuario = u.id_usuario
+            INNER JOIN detalle_venta dv ON v.id_venta = dv.id_venta
+            INNER JOIN productos p ON dv.id_producto = p.id_producto
+            INNER JOIN metodos_pago mp ON dv.metodo_pago = mp.id_metodo
+            INNER JOIN caja c ON v.id_caja = c.id_caja
+            ORDER BY v.fecha DESC"#.to_string(),
+            vec![]
+        )
+    } else {
+        (
+            r#"SELECT 
+                v.id_venta,
+                v.fecha,
+                u.nombre_completo as vendedor,
+                p.nombre as producto,
+                dv.cantidad,
+                dv.precio_unitario,
+                dv.subtotal,
+                mp.nombre as metodo_pago,
+                c.id_caja,
+                c.monto_apertura as caja_inicial_valor,
+                c.fecha_apertura as caja_inicial_hora,
+                c.monto_cierre as caja_final_valor,
+                c.fecha_cierre as caja_final_hora,
+                c.total_efectivo,
+                c.total_transferencia,
+                (c.total_efectivo + c.total_transferencia) as total_final,
+                (c.monto_cierre + c.monto_apertura) as caja_total
+            FROM ventas v
+            INNER JOIN usuarios u ON v.id_usuario = u.id_usuario
+            INNER JOIN detalle_venta dv ON v.id_venta = dv.id_venta
+            INNER JOIN productos p ON dv.id_producto = p.id_producto
+            INNER JOIN metodos_pago mp ON dv.metodo_pago = mp.id_metodo
+            INNER JOIN caja c ON v.id_caja = c.id_caja
+            WHERE DATE(v.fecha) BETWEEN DATE(?1) AND DATE(?2)
+            ORDER BY v.fecha DESC"#.to_string(),
+            vec![fecha_inicio.to_string(), fecha_fin.to_string()]
+        )
+    };
 
-    let mut stmt = conn.prepare(
-        r#"
-        SELECT 
-            v.id_venta,
-            v.fecha,
-            u.nombre_completo as vendedor,
-            p.nombre as producto,
-            dv.cantidad,
-            dv.precio_unitario,
-            dv.subtotal,
-            mp.nombre as metodo_pago,
-            c.id_caja,
-            c.monto_apertura as caja_inicial_valor,
-            c.fecha_apertura as caja_inicial_hora,
-            c.monto_cierre as caja_final_valor,
-            c.fecha_cierre as caja_final_hora,
-            c.total_efectivo,
-            c.total_transferencia,
-            (c.total_efectivo + c.total_transferencia) as total_final,
-            (c.monto_cierre + c.monto_apertura) as caja_total
-        FROM ventas v
-        INNER JOIN usuarios u ON v.id_usuario = u.id_usuario
-        INNER JOIN detalle_venta dv ON v.id_venta = dv.id_venta
-        INNER JOIN productos p ON dv.id_producto = p.id_producto
-        INNER JOIN metodos_pago mp ON dv.metodo_pago = mp.id_metodo
-        INNER JOIN caja c ON v.id_caja = c.id_caja
-        WHERE DATE(v.fecha) BETWEEN DATE(?1) AND DATE(?2)
-        ORDER BY v.fecha DESC
-        "#
-    ).map_err(|e| e.to_string())?;
+    let mut stmt = conn.prepare(&sql).map_err(|e| e.to_string())?;
 
-    let rows = stmt.query_map(rusqlite::params![fecha_inicio, fecha_fin], |row| {
+    let rows = stmt.query_map(rusqlite::params_from_iter(params_vec.iter()), |row| {
         Ok(ReporteVentasDetallado {
             id_venta: row.get(0)?,
             fecha: row.get(1)?,
