@@ -1,0 +1,1026 @@
+// Modulo de usuarios
+pub mod usuarios;
+
+pub use usuarios::logic::{
+    crear_usuario_logic,
+    modificar_usuario_logic,
+    obtener_usuario_logic,
+    listar_usuarios_logic,
+    habilitar_usuario_logic,
+    deshabilitar_usuario_logic,
+};
+
+// Modulo de login
+pub mod login;
+
+pub use login::logic::{login_logic, verificar_sesion_logic};
+
+// Modulo de productos
+pub mod productos;
+
+pub use productos::logic::{
+    crear_producto_logic,
+    modificar_producto_logic,
+    obtener_producto_logic,
+    obtener_producto_simple_logic,
+    listar_productos_logic,
+    buscar_productos_logic,
+    eliminar_producto_logic,
+    activar_producto_logic,
+    desactivar_producto_logic,
+};
+
+// Modulo de stock
+pub mod stock;
+
+pub use stock::logic::{
+    obtener_stock_por_producto_logic,
+    listar_stock_logic,
+    ajustar_stock_logic,
+    listar_stock_bajo_logic,
+};
+
+// Modulo de notificaciones
+pub mod notificaciones;
+
+pub use notificaciones::logic::{
+    obtener_notificacion_logic,
+    listar_notificaciones_logic,
+    notificaciones_por_producto_logic,
+    notificaciones_por_estado_logic,
+    contar_no_leidas_logic,
+    marcar_notificacion_logic,
+    marcar_todas_leidas_logic,
+};
+
+// Modulo de movimientos de entrada
+pub mod movimientos_entrada;
+
+pub use movimientos_entrada::logic::{
+    registrar_entrada_logic,
+    obtener_movimiento_logic,
+    listar_movimientos_entrada_logic,
+    movimientos_por_producto_logic,
+    movimientos_por_usuario_logic,
+    movimientos_por_rango_fechas_logic,
+    total_entradas_por_producto_logic,
+};
+
+// Modulo de ventas
+pub mod ventas;
+
+pub use ventas::logic::{
+    registrar_venta_logic,
+    obtener_venta_logic,
+    listar_detalle_venta_logic,
+    listar_ventas_logic,
+    ventas_por_usuario_logic,
+    ventas_por_caja_logic,
+    ventas_por_rango_fechas_logic,
+    total_ventas_por_producto_logic,
+};
+
+// Modulo de reportes
+pub mod reportes;
+
+pub use reportes::logic::{
+    resumen_ventas_diario_logic,
+    resumen_ventas_diario_rango_logic,
+    resumen_ventas_rango_logic,
+    productos_mas_vendidos_logic,
+    reporte_stock_bajo_logic,
+    reporte_inventario_logic,
+    reporte_entradas_rango_logic,
+    ventas_por_usuario_reporte_logic,
+    ventas_por_metodo_pago_logic,
+    reporte_cajas_rango_logic,
+    dashboard_resumen_logic,
+    reporte_margen_ganancia_logic,
+    ventas_por_turno_logic,
+    ventas_por_turno_detalle_logic,
+    ventas_del_turno_actual_logic,
+    reporte_consolidado_ventas_logic,
+    reporte_ventas_detallado_logic,
+    dashboard_ventas_general_logic,
+    resumen_ventas_por_producto_logic,
+    ventas_por_metodo_pago_total_logic,
+
+};
+
+// Modulo de caja
+pub mod caja;
+
+pub use caja::logic::{
+    abrir_caja_logic,
+    cerrar_caja_logic,
+    obtener_caja_logic,
+    obtener_caja_activa_logic,
+    listar_cajas_logic,
+};
+
+// Modulo de historial
+pub mod historial;
+
+pub use historial::logic::{
+    registrar_accion_logic,
+    listar_historial_logic,
+    obtener_accion_logic,
+    historial_por_usuario_logic,
+    historial_por_turno_logic,
+    historial_por_accion_logic,
+    historial_por_rango_fechas_logic,
+    listar_historial_detalle_logic,
+    ultimos_historial_logic,
+};
+
+// Modulo de turnos
+pub mod turnos;
+
+pub use turnos::logic::{
+    abrir_turno_logic,
+    cerrar_turno_logic,
+    obtener_turno_logic,
+    obtener_turno_activo_logic,
+    obtener_turno_activo_general_logic,
+    listar_turnos_logic,
+    listar_turnos_detalle_logic,
+    turnos_por_usuario_logic,
+    turnos_por_estado_logic,
+    obtener_tipo_turno_actual_logic,
+    abrir_turno_automatico_logic,
+};
+
+// Comandos de Tauri
+use tauri::State;
+use crate::services::db::connection::DbState;
+use crate::models::login::login::CredencialesLogin;
+use crate::models::usuarios::usuario::{NuevoUsuario, UsuarioModificacion};
+use crate::models::productos::producto::{NuevoProducto, ModificarProducto};
+use crate::models::stock::stock::AjusteStock;
+use crate::models::movimientos_entrada::movimiento_entrada::NuevoMovimientoEntrada;
+use crate::models::ventas::venta::NuevaVenta;
+use crate::models::caja::caja::{NuevaCaja, CierreCaja};
+use crate::models::historial::historial::{NuevaAccion, FiltroHistorial};
+use crate::models::turnos::turno::{NuevoTurno, Turno, TurnoDetalle, FiltroTurno};
+#[allow(unused_imports)]
+use crate::models::reportes_entrada::reporte_entrada::{ResumenEntradasProducto, TotalesEntradas, EntradasPorDia, EntradasPorUsuario, EntradasPorTipoProducto, DashboardEntradas, ReporteEntradaDetallado, StockActualMinimo};
+
+// Comandos de utilidad
+#[tauri::command]
+pub fn test_db_connection() -> Result<String, String> {
+    match rusqlite::Connection::open("system_muscle.db") {
+        Ok(conn) => {
+            match conn.query_row("SELECT 'Conectado exitosamente'", [], |row| {
+                row.get::<_, String>(0)
+            }) {
+                Ok(mensaje) => Ok(mensaje),
+                Err(e) => Err(format!("Error en consulta: {}", e)),
+            }
+        }
+        Err(e) => Err(format!("Error al abrir DB: {}", e)),
+    }
+}
+
+// Comandos de usuarios
+#[tauri::command]
+pub fn crear_usuario(
+    state: State<'_, DbState>,
+    nuevo: NuevoUsuario,
+) -> Result<i32, String> {
+    let conn = state.conn.lock().unwrap();
+    crear_usuario_logic(&conn, &nuevo)
+}
+
+#[tauri::command]
+pub fn modificar_usuario(
+    state: State<'_, DbState>,
+    id: i32,
+    modificacion: UsuarioModificacion,
+) -> Result<(), String> {
+    let conn = state.conn.lock().unwrap();
+    modificar_usuario_logic(&conn, id, &modificacion)
+}
+
+#[tauri::command]
+pub fn obtener_usuario(
+    state: State<'_, DbState>,
+    id: i32,
+) -> Result<crate::models::usuarios::usuario::Usuario, String> {
+    let conn = state.conn.lock().unwrap();
+    obtener_usuario_logic(&conn, id)
+}
+
+#[tauri::command]
+pub fn listar_usuarios(
+    state: State<'_, DbState>,
+    solo_activos: bool,
+) -> Result<Vec<crate::models::usuarios::usuario::Usuario>, String> {
+    let conn = state.conn.lock().unwrap();
+    listar_usuarios_logic(&conn, solo_activos)
+}
+
+#[tauri::command]
+pub fn habilitar_usuario(
+    state: State<'_, DbState>,
+    id: i32,
+) -> Result<(), String> {
+    let conn = state.conn.lock().unwrap();
+    habilitar_usuario_logic(&conn, id)
+}
+
+#[tauri::command]
+pub fn deshabilitar_usuario(
+    state: State<'_, DbState>,
+    id: i32,
+) -> Result<(), String> {
+    let conn = state.conn.lock().unwrap();
+    deshabilitar_usuario_logic(&conn, id)
+}
+
+#[tauri::command]
+pub fn login(
+    state: State<'_, DbState>,
+    credenciales: CredencialesLogin,
+) -> Result<Option<crate::models::login::login::SesionUsuario>, String> {
+    let conn = state.conn.lock().unwrap();
+    login_logic(&conn, &credenciales)
+}
+
+#[tauri::command]
+pub fn verificar_sesion(
+    state: State<'_, DbState>,
+    id_usuario: i32,
+) -> Result<Option<crate::models::login::login::SesionUsuario>, String> {
+    let conn = state.conn.lock().unwrap();
+    verificar_sesion_logic(&conn, id_usuario)
+}
+
+// Comandos de productos
+#[tauri::command]
+pub fn crear_producto(
+    state: State<'_, DbState>,
+    nuevo: NuevoProducto,
+) -> Result<i32, String> {
+    let conn = state.conn.lock().unwrap();
+    crear_producto_logic(&conn, &nuevo)
+}
+
+#[tauri::command]
+pub fn modificar_producto(
+    state: State<'_, DbState>,
+    id: i32,
+    datos: ModificarProducto,
+) -> Result<(), String> {
+    let conn = state.conn.lock().unwrap();
+    modificar_producto_logic(&conn, id, &datos)
+}
+
+#[tauri::command]
+pub fn obtener_producto(
+    state: State<'_, DbState>,
+    id: i32,
+) -> Result<crate::models::productos::producto::ProductoConStock, String> {
+    let conn = state.conn.lock().unwrap();
+    obtener_producto_logic(&conn, id)
+}
+
+#[tauri::command]
+pub fn listar_productos(
+    state: State<'_, DbState>,
+    solo_activos: bool,
+) -> Result<Vec<crate::models::productos::producto::ProductoConStock>, String> {
+    let conn = state.conn.lock().unwrap();
+    listar_productos_logic(&conn, solo_activos)
+}
+
+#[tauri::command]
+pub fn buscar_productos(
+    state: State<'_, DbState>,
+    termino: String,
+    solo_activos: bool,
+) -> Result<Vec<crate::models::productos::producto::ProductoConStock>, String> {
+    let conn = state.conn.lock().unwrap();
+    buscar_productos_logic(&conn, &termino, solo_activos)
+}
+
+#[tauri::command]
+pub fn eliminar_producto(
+    state: State<'_, DbState>,
+    id: i32,
+) -> Result<(), String> {
+    let conn = state.conn.lock().unwrap();
+    productos::logic::eliminar_producto_logic(&conn, id)
+}
+
+// Comandos de stock
+#[tauri::command]
+pub fn obtener_stock_por_producto(
+    state: State<'_, DbState>,
+    id_producto: i32,
+) -> Result<crate::models::stock::stock::Stock, String> {
+    let conn = state.conn.lock().unwrap();
+    obtener_stock_por_producto_logic(&conn, id_producto)
+}
+
+#[tauri::command]
+pub fn listar_stock(
+    state: State<'_, DbState>,
+) -> Result<Vec<crate::models::stock::stock::StockConProducto>, String> {
+    let conn = state.conn.lock().unwrap();
+    listar_stock_logic(&conn)
+}
+
+#[tauri::command]
+pub fn ajustar_stock(
+    state: State<'_, DbState>,
+    id_producto: i32,
+    ajuste: AjusteStock,
+) -> Result<(), String> {
+    let conn = state.conn.lock().unwrap();
+    ajustar_stock_logic(&conn, id_producto, &ajuste)
+}
+
+#[tauri::command]
+pub fn listar_stock_bajo(
+    state: State<'_, DbState>,
+) -> Result<Vec<crate::models::stock::stock::ProductoStockBajo>, String> {
+    let conn = state.conn.lock().unwrap();
+    listar_stock_bajo_logic(&conn)
+}
+
+// Comandos de notificaciones
+#[tauri::command]
+pub fn obtener_notificacion(
+    state: State<'_, DbState>,
+    id_notificacion: i32,
+) -> Result<crate::models::notificaciones::notificacion::Notificacion, String> {
+    let conn = state.conn.lock().unwrap();
+    obtener_notificacion_logic(&conn, id_notificacion)
+}
+
+#[tauri::command]
+pub fn listar_notificaciones(
+    state: State<'_, DbState>,
+    solo_no_leidas: bool,
+) -> Result<Vec<crate::models::notificaciones::notificacion::Notificacion>, String> {
+    let conn = state.conn.lock().unwrap();
+    listar_notificaciones_logic(&conn, solo_no_leidas)
+}
+
+#[tauri::command]
+pub fn notificaciones_por_producto(
+    state: State<'_, DbState>,
+    id_producto: i32,
+) -> Result<Vec<crate::models::notificaciones::notificacion::Notificacion>, String> {
+    let conn = state.conn.lock().unwrap();
+    notificaciones_por_producto_logic(&conn, id_producto)
+}
+
+#[tauri::command]
+pub fn notificaciones_por_estado(
+    state: State<'_, DbState>,
+    estado: i32,
+) -> Result<Vec<crate::models::notificaciones::notificacion::Notificacion>, String> {
+    let conn = state.conn.lock().unwrap();
+    notificaciones_por_estado_logic(&conn, estado)
+}
+
+#[tauri::command]
+pub fn contar_notificaciones_no_leidas(
+    state: State<'_, DbState>,
+) -> Result<i32, String> {
+    let conn = state.conn.lock().unwrap();
+    contar_no_leidas_logic(&conn)
+}
+
+#[tauri::command]
+pub fn marcar_notificacion(
+    state: State<'_, DbState>,
+    id_notificacion: i32,
+    estado: i32,
+) -> Result<(), String> {
+    let conn = state.conn.lock().unwrap();
+    marcar_notificacion_logic(&conn, id_notificacion, estado)
+}
+
+#[tauri::command]
+pub fn marcar_todas_notificaciones_leidas(
+    state: State<'_, DbState>,
+) -> Result<i32, String> {
+    let conn = state.conn.lock().unwrap();
+    marcar_todas_leidas_logic(&conn)
+}
+
+// Comandos de movimientos de entrada
+#[tauri::command]
+pub fn registrar_entrada(
+    state: State<'_, DbState>,
+    entrada: NuevoMovimientoEntrada,
+) -> Result<i32, String> {
+    let conn = state.conn.lock().unwrap();
+    registrar_entrada_logic(&conn, &entrada)
+}
+
+#[tauri::command]
+pub fn obtener_movimiento(
+    state: State<'_, DbState>,
+    id: i32,
+) -> Result<crate::models::movimientos_entrada::movimiento_entrada::MovimientoEntrada, String> {
+    let conn = state.conn.lock().unwrap();
+    obtener_movimiento_logic(&conn, id)
+}
+
+#[tauri::command]
+pub fn listar_movimientos_entrada(
+    state: State<'_, DbState>,
+) -> Result<Vec<crate::models::movimientos_entrada::movimiento_entrada::MovimientoEntradaDetalle>, String> {
+    let conn = state.conn.lock().unwrap();
+    listar_movimientos_entrada_logic(&conn)
+}
+
+#[tauri::command]
+pub fn movimientos_por_producto(
+    state: State<'_, DbState>,
+    id_producto: i32,
+) -> Result<Vec<crate::models::movimientos_entrada::movimiento_entrada::MovimientoEntradaDetalle>, String> {
+    let conn = state.conn.lock().unwrap();
+    movimientos_por_producto_logic(&conn, id_producto)
+}
+
+#[tauri::command]
+pub fn movimientos_por_usuario(
+    state: State<'_, DbState>,
+    id_usuario: i32,
+) -> Result<Vec<crate::models::movimientos_entrada::movimiento_entrada::MovimientoEntradaDetalle>, String> {
+    let conn = state.conn.lock().unwrap();
+    movimientos_por_usuario_logic(&conn, id_usuario)
+}
+
+#[tauri::command]
+pub fn movimientos_por_rango_fechas(
+    state: State<'_, DbState>,
+    fecha_inicio: String,
+    fecha_fin: String,
+) -> Result<Vec<crate::models::movimientos_entrada::movimiento_entrada::MovimientoEntradaDetalle>, String> {
+    let conn = state.conn.lock().unwrap();
+    movimientos_por_rango_fechas_logic(&conn, &fecha_inicio, &fecha_fin)
+}
+
+#[tauri::command]
+pub fn total_entradas_por_producto(
+    state: State<'_, DbState>,
+    id_producto: i32,
+) -> Result<i32, String> {
+    let conn = state.conn.lock().unwrap();
+    total_entradas_por_producto_logic(&conn, id_producto)
+}
+
+// Comandos de ventas
+#[tauri::command]
+pub fn registrar_venta(
+    state: State<'_, DbState>,
+    venta: NuevaVenta,
+) -> Result<i32, String> {
+    let conn = state.conn.lock().unwrap();
+    registrar_venta_logic(&conn, &venta)
+}
+
+#[tauri::command]
+pub fn obtener_venta(
+    state: State<'_, DbState>,
+    id_venta: i32,
+) -> Result<crate::models::ventas::venta::Venta, String> {
+    let conn = state.conn.lock().unwrap();
+    obtener_venta_logic(&conn, id_venta)
+}
+
+#[tauri::command]
+pub fn listar_detalle_venta(
+    state: State<'_, DbState>,
+    id_venta: i32,
+) -> Result<Vec<crate::models::ventas::venta::DetalleVentaDetalle>, String> {
+    let conn = state.conn.lock().unwrap();
+    listar_detalle_venta_logic(&conn, id_venta)
+}
+
+#[tauri::command]
+pub fn listar_ventas(
+    state: State<'_, DbState>,
+) -> Result<Vec<crate::models::ventas::venta::VentaResumen>, String> {
+    let conn = state.conn.lock().unwrap();
+    listar_ventas_logic(&conn)
+}
+
+#[tauri::command]
+pub fn ventas_por_usuario(
+    state: State<'_, DbState>,
+    id_usuario: i32,
+) -> Result<Vec<crate::models::ventas::venta::VentaResumen>, String> {
+    let conn = state.conn.lock().unwrap();
+    ventas_por_usuario_logic(&conn, id_usuario)
+}
+
+#[tauri::command]
+pub fn ventas_por_caja(
+    state: State<'_, DbState>,
+    id_caja: i32,
+) -> Result<Vec<crate::models::ventas::venta::VentaResumen>, String> {
+    let conn = state.conn.lock().unwrap();
+    ventas_por_caja_logic(&conn, id_caja)
+}
+
+#[tauri::command]
+pub fn ventas_por_rango_fechas(
+    state: State<'_, DbState>,
+    fecha_inicio: String,
+    fecha_fin: String,
+) -> Result<Vec<crate::models::ventas::venta::VentaResumen>, String> {
+    let conn = state.conn.lock().unwrap();
+    ventas_por_rango_fechas_logic(&conn, &fecha_inicio, &fecha_fin)
+}
+
+#[tauri::command]
+pub fn total_ventas_por_producto(
+    state: State<'_, DbState>,
+    id_producto: i32,
+) -> Result<i32, String> {
+    let conn = state.conn.lock().unwrap();
+    total_ventas_por_producto_logic(&conn, id_producto)
+}
+
+
+// Comandos de caja
+#[tauri::command]
+pub fn abrir_caja(
+    state: State<'_, DbState>,
+    nueva: NuevaCaja,
+) -> Result<i32, String> {
+    let conn = state.conn.lock().unwrap();
+    abrir_caja_logic(&conn, &nueva)
+}
+
+#[tauri::command]
+pub fn cerrar_caja(
+    state: State<'_, DbState>,
+    cierre: CierreCaja,
+) -> Result<(), String> {
+    let conn = state.conn.lock().unwrap();
+    cerrar_caja_logic(&conn, &cierre)
+}
+
+#[tauri::command]
+pub fn obtener_caja(
+    state: State<'_, DbState>,
+    id: i32,
+) -> Result<crate::models::caja::caja::Caja, String> {
+    let conn = state.conn.lock().unwrap();
+    obtener_caja_logic(&conn, id)
+}
+
+#[tauri::command]
+pub fn obtener_caja_activa(
+    state: State<'_, DbState>,
+) -> Result<Option<crate::models::caja::caja::Caja>, String> {
+    let conn = state.conn.lock().unwrap();
+    obtener_caja_activa_logic(&conn)
+}
+
+#[tauri::command]
+pub fn listar_cajas(
+    state: State<'_, DbState>,
+    solo_abiertas: bool,
+) -> Result<Vec<crate::models::caja::caja::Caja>, String> {
+    let conn = state.conn.lock().unwrap();
+    listar_cajas_logic(&conn, solo_abiertas)
+}
+
+
+// Comandos de historial
+#[tauri::command]
+pub fn registrar_accion(
+    state: State<'_, DbState>,
+    accion: NuevaAccion,
+) -> Result<i32, String> {
+    let conn = state.conn.lock().unwrap();
+    registrar_accion_logic(&conn, &accion)
+}
+
+#[tauri::command]
+pub fn listar_historial(
+    state: State<'_, DbState>,
+    filtro: FiltroHistorial,
+) -> Result<Vec<crate::models::historial::historial::HistorialAccion>, String> {
+    let conn = state.conn.lock().unwrap();
+    listar_historial_logic(&conn, &filtro)
+}
+
+#[tauri::command]
+pub fn obtener_accion(
+    state: State<'_, DbState>,
+    id: i32,
+) -> Result<crate::models::historial::historial::HistorialAccion, String> {
+    let conn = state.conn.lock().unwrap();
+    obtener_accion_logic(&conn, id)
+}
+
+#[tauri::command]
+pub fn historial_por_usuario(
+    state: State<'_, DbState>,
+    id_usuario: i32,
+) -> Result<Vec<crate::models::historial::historial::HistorialAccion>, String> {
+    let conn = state.conn.lock().unwrap();
+    historial_por_usuario_logic(&conn, id_usuario)
+}
+
+#[tauri::command]
+pub fn historial_por_turno(
+    state: State<'_, DbState>,
+    id_turno: i32,
+) -> Result<Vec<crate::models::historial::historial::HistorialAccion>, String> {
+    let conn = state.conn.lock().unwrap();
+    historial_por_turno_logic(&conn, id_turno)
+}
+
+// Comandos de reportes
+#[tauri::command]
+pub fn resumen_ventas_diario(
+    state: State<'_, DbState>,
+) -> Result<Vec<crate::models::reportes::reporte::ResumenVentasDiario>, String> {
+    let conn = state.conn.lock().unwrap();
+    resumen_ventas_diario_logic(&conn)
+}
+
+#[tauri::command]
+pub fn resumen_ventas_diario_rango(
+    state: State<'_, DbState>,
+    fecha_inicio: String,
+    fecha_fin: String,
+) -> Result<Vec<crate::models::reportes::reporte::ResumenVentasDiario>, String> {
+    let conn = state.conn.lock().unwrap();
+    resumen_ventas_diario_rango_logic(&conn, &fecha_inicio, &fecha_fin)
+}
+
+#[tauri::command]
+pub fn resumen_ventas_rango(
+    state: State<'_, DbState>,
+    fecha_inicio: String,
+    fecha_fin: String,
+) -> Result<crate::models::reportes::reporte::ResumenVentasRango, String> {
+    let conn = state.conn.lock().unwrap();
+    resumen_ventas_rango_logic(&conn, &fecha_inicio, &fecha_fin)
+}
+
+#[tauri::command]
+pub fn productos_mas_vendidos(
+    state: State<'_, DbState>,
+    fecha_inicio: String,
+    fecha_fin: String,
+    limite: i32,
+) -> Result<Vec<crate::models::reportes::reporte::ProductoMasVendido>, String> {
+    let conn = state.conn.lock().unwrap();
+    productos_mas_vendidos_logic(&conn, &fecha_inicio, &fecha_fin, limite)
+}
+
+#[tauri::command]
+pub fn reporte_stock_bajo(
+    state: State<'_, DbState>,
+) -> Result<Vec<crate::models::reportes::reporte::ReporteStockBajo>, String> {
+    let conn = state.conn.lock().unwrap();
+    reporte_stock_bajo_logic(&conn)
+}
+
+#[tauri::command]
+pub fn reporte_inventario(
+    state: State<'_, DbState>,
+) -> Result<Vec<crate::models::reportes::reporte::ReporteInventario>, String> {
+    let conn = state.conn.lock().unwrap();
+    reporte_inventario_logic(&conn)
+}
+
+#[tauri::command]
+pub fn reporte_entradas_rango(
+    state: State<'_, DbState>,
+    fecha_inicio: String,
+    fecha_fin: String,
+) -> Result<Vec<crate::models::reportes::reporte::ReporteEntradasProducto>, String> {
+    let conn = state.conn.lock().unwrap();
+    reporte_entradas_rango_logic(&conn, &fecha_inicio, &fecha_fin)
+}
+
+#[tauri::command]
+pub fn ventas_por_usuario_reporte(
+    state: State<'_, DbState>,
+    fecha_inicio: String,
+    fecha_fin: String,
+) -> Result<Vec<crate::models::reportes::reporte::VentasPorUsuario>, String> {
+    let conn = state.conn.lock().unwrap();
+    ventas_por_usuario_reporte_logic(&conn, &fecha_inicio, &fecha_fin)
+}
+
+#[tauri::command]
+pub fn ventas_por_metodo_pago_reporte(
+    state: State<'_, DbState>,
+    fecha_inicio: String,
+    fecha_fin: String,
+) -> Result<Vec<crate::models::reportes::reporte::VentasPorMetodoPago>, String> {
+    let conn = state.conn.lock().unwrap();
+    ventas_por_metodo_pago_logic(&conn, &fecha_inicio, &fecha_fin)
+}
+
+#[tauri::command]
+pub fn reporte_cajas_rango(
+    state: State<'_, DbState>,
+    fecha_inicio: String,
+    fecha_fin: String,
+) -> Result<Vec<crate::models::reportes::reporte::ReporteCaja>, String> {
+    let conn = state.conn.lock().unwrap();
+    reporte_cajas_rango_logic(&conn, &fecha_inicio, &fecha_fin)
+}
+
+#[tauri::command]
+pub fn dashboard_resumen(
+    state: State<'_, DbState>,
+) -> Result<crate::models::reportes::reporte::DashboardResumen, String> {
+    let conn = state.conn.lock().unwrap();
+    dashboard_resumen_logic(&conn)
+}
+
+#[tauri::command]
+pub fn reporte_margen_ganancia(
+    state: State<'_, DbState>,
+    fecha_inicio: String,
+    fecha_fin: String,
+) -> Result<crate::models::reportes::reporte::ReporteMargenGanancia, String> {
+    let conn = state.conn.lock().unwrap();
+    reporte_margen_ganancia_logic(&conn, &fecha_inicio, &fecha_fin)
+}
+
+#[tauri::command]
+pub fn reporte_ventas_detallado(
+    state: State<'_, DbState>,
+    fecha_inicio: String,
+    fecha_fin: String,
+) -> Result<Vec<crate::models::reportes::reporte::ReporteVentasDetallado>, String> {
+    let conn = state.conn.lock().unwrap();
+    reporte_ventas_detallado_logic(&conn, &fecha_inicio, &fecha_fin)
+}
+
+#[tauri::command]
+pub fn ventas_por_turno(
+    state: State<'_, DbState>,
+    solo_abiertos: bool,
+) -> Result<Vec<crate::models::reportes::reporte::VentasPorTurno>, String> {
+    let conn = state.conn.lock().unwrap();
+    reportes::logic::ventas_por_turno_logic(&conn, solo_abiertos)
+}
+
+#[tauri::command]
+pub fn ventas_por_turno_detalle(
+    state: State<'_, DbState>,
+    id_turno: i32,
+) -> Result<Vec<crate::models::reportes::reporte::VentaDetallePorTurno>, String> {
+    let conn = state.conn.lock().unwrap();
+    reportes::logic::ventas_por_turno_detalle_logic(&conn, id_turno)
+}
+
+#[tauri::command]
+pub fn ventas_del_turno_actual(
+    state: State<'_, DbState>,
+) -> Result<Vec<crate::models::reportes::reporte::VentasPorTurno>, String> {
+    let conn = state.conn.lock().unwrap();
+    reportes::logic::ventas_del_turno_actual_logic(&conn)
+}
+
+#[tauri::command]
+pub fn dashboard_ventas_general(
+    state: State<'_, DbState>,
+) -> Result<crate::models::reportes::reporte::DashboardVentasGeneral, String> {
+    let conn = state.conn.lock().unwrap();
+    reportes::logic::dashboard_ventas_general_logic(&conn)
+}
+
+#[tauri::command]
+pub fn resumen_ventas_por_producto(
+    state: State<'_, DbState>,
+) -> Result<Vec<crate::models::reportes::reporte::ResumenVentasProducto>, String> {
+    let conn = state.conn.lock().unwrap();
+    reportes::logic::resumen_ventas_por_producto_logic(&conn)
+}
+
+#[tauri::command]
+pub fn ventas_por_metodo_pago_total(
+    state: State<'_, DbState>,
+) -> Result<Vec<crate::models::reportes::reporte::VentasPorMetodoPagoTotal>, String> {
+    let conn = state.conn.lock().unwrap();
+    reportes::logic::ventas_por_metodo_pago_total_logic(&conn)
+}
+
+// Comandos de turnos
+#[tauri::command]
+pub fn abrir_turno(
+    state: State<'_, DbState>,
+    nuevo: NuevoTurno,
+) -> Result<i32, String> {
+    let conn = state.conn.lock().unwrap();
+    abrir_turno_logic(&conn, &nuevo)
+}
+
+#[tauri::command]
+pub fn cerrar_turno(
+    state: State<'_, DbState>,
+    id_turno: i32,
+) -> Result<(), String> {
+    let conn = state.conn.lock().unwrap();
+    cerrar_turno_logic(&conn, id_turno)
+}
+
+#[tauri::command]
+pub fn obtener_turno(
+    state: State<'_, DbState>,
+    id: i32,
+) -> Result<Turno, String> {
+    let conn = state.conn.lock().unwrap();
+    obtener_turno_logic(&conn, id)
+}
+
+#[tauri::command]
+pub fn obtener_turno_activo(
+    state: State<'_, DbState>,
+    id_usuario: i32,
+) -> Result<Option<Turno>, String> {
+    let conn = state.conn.lock().unwrap();
+    obtener_turno_activo_logic(&conn, id_usuario)
+}
+
+#[tauri::command]
+pub fn obtener_turno_activo_general(
+    state: State<'_, DbState>,
+) -> Result<Option<Turno>, String> {
+    let conn = state.conn.lock().unwrap();
+    obtener_turno_activo_general_logic(&conn)
+}
+
+#[tauri::command]
+pub fn listar_turnos(
+    state: State<'_, DbState>,
+    filtro: FiltroTurno,
+) -> Result<Vec<Turno>, String> {
+    let conn = state.conn.lock().unwrap();
+    listar_turnos_logic(&conn, &filtro)
+}
+
+#[tauri::command]
+pub fn listar_turnos_detalle(
+    state: State<'_, DbState>,
+    filtro: FiltroTurno,
+) -> Result<Vec<TurnoDetalle>, String> {
+    let conn = state.conn.lock().unwrap();
+    listar_turnos_detalle_logic(&conn, &filtro)
+}
+
+// Comando para obtener el tipo de turno actual
+#[tauri::command]
+pub fn obtener_tipo_turno_actual(
+    state: State<'_, DbState>,
+) -> Result<i32, String> {
+    let conn = state.conn.lock().unwrap();
+    turnos::logic::obtener_tipo_turno_actual_logic(&conn)
+}
+
+// Comando para abrir turno automático
+#[tauri::command]
+pub fn abrir_turno_automatico(
+    state: State<'_, DbState>,
+    id_usuario: i32,
+) -> Result<i32, String> {
+    let conn = state.conn.lock().unwrap();
+    turnos::logic::abrir_turno_automatico_logic(&conn, id_usuario)
+}
+// Comandos de reportes de entradas
+pub mod reportes_entrada;
+
+pub use reportes_entrada::logic::{
+    resumen_entradas_por_producto_logic,
+    totales_entradas_rango_logic,
+    entradas_por_dia_logic,
+    entradas_por_usuario_logic,
+    entradas_por_tipo_producto_logic,
+    dashboard_entradas_logic,
+    reporte_entrada_detallado_logic,
+    stock_actual_y_minimo_logic,
+    resumen_entradas_diario_logic,
+    dashboard_entradas_general_logic,
+    resumen_entradas_por_producto_total_logic,
+};
+
+// Comandos Tauri para reportes de entrada
+#[tauri::command]
+pub fn resumen_entradas_por_producto(
+    state: State<'_, DbState>,
+    fecha_inicio: String,
+    fecha_fin: String,
+) -> Result<Vec<crate::models::reportes_entrada::reporte_entrada::ResumenEntradasProducto>, String> {
+    let conn = state.conn.lock().unwrap();
+    resumen_entradas_por_producto_logic(&conn, &fecha_inicio, &fecha_fin)
+}
+
+#[tauri::command]
+pub fn totales_entradas_rango(
+    state: State<'_, DbState>,
+    fecha_inicio: String,
+    fecha_fin: String,
+) -> Result<crate::models::reportes_entrada::reporte_entrada::TotalesEntradas, String> {
+    let conn = state.conn.lock().unwrap();
+    totales_entradas_rango_logic(&conn, &fecha_inicio, &fecha_fin)
+}
+
+#[tauri::command]
+pub fn entradas_por_dia(
+    state: State<'_, DbState>,
+    fecha_inicio: String,
+    fecha_fin: String,
+) -> Result<Vec<crate::models::reportes_entrada::reporte_entrada::EntradasPorDia>, String> {
+    let conn = state.conn.lock().unwrap();
+    entradas_por_dia_logic(&conn, &fecha_inicio, &fecha_fin)
+}
+
+#[tauri::command]
+pub fn entradas_por_usuario(
+    state: State<'_, DbState>,
+    fecha_inicio: String,
+    fecha_fin: String,
+) -> Result<Vec<crate::models::reportes_entrada::reporte_entrada::EntradasPorUsuario>, String> {
+    let conn = state.conn.lock().unwrap();
+    entradas_por_usuario_logic(&conn, &fecha_inicio, &fecha_fin)
+}
+
+#[tauri::command]
+pub fn entradas_por_tipo_producto(
+    state: State<'_, DbState>,
+    fecha_inicio: String,
+    fecha_fin: String,
+) -> Result<Vec<crate::models::reportes_entrada::reporte_entrada::EntradasPorTipoProducto>, String> {
+    let conn = state.conn.lock().unwrap();
+    entradas_por_tipo_producto_logic(&conn, &fecha_inicio, &fecha_fin)
+}
+
+#[tauri::command]
+pub fn dashboard_entradas(
+    state: State<'_, DbState>,
+) -> Result<crate::models::reportes_entrada::reporte_entrada::DashboardEntradas, String> {
+    let conn = state.conn.lock().unwrap();
+    dashboard_entradas_logic(&conn)
+}
+
+#[tauri::command]
+pub fn reporte_entrada_detallado(
+    state: State<'_, DbState>,
+    fecha_inicio: String,
+    fecha_fin: String,
+) -> Result<Vec<crate::models::reportes_entrada::reporte_entrada::ReporteEntradaDetallado>, String> {
+    let conn = state.conn.lock().unwrap();
+    reporte_entrada_detallado_logic(&conn, &fecha_inicio, &fecha_fin)
+}
+
+#[tauri::command]
+pub fn stock_actual_y_minimo(
+    state: State<'_, DbState>,
+) -> Result<Vec<crate::models::reportes_entrada::reporte_entrada::StockActualMinimo>, String> {
+    let conn = state.conn.lock().unwrap();
+    stock_actual_y_minimo_logic(&conn)
+}
+
+#[tauri::command]
+pub fn resumen_entradas_diario(
+    state: State<'_, DbState>,
+) -> Result<Vec<crate::models::reportes_entrada::reporte_entrada::ResumenEntradasDiario>, String> {
+    let conn = state.conn.lock().unwrap();
+    resumen_entradas_diario_logic(&conn)
+}
+
+#[tauri::command]
+pub fn dashboard_entradas_general(
+    state: State<'_, DbState>,
+) -> Result<crate::models::reportes_entrada::reporte_entrada::DashboardEntradasGeneral, String> {
+    let conn = state.conn.lock().unwrap();
+    dashboard_entradas_general_logic(&conn)
+}
+
+#[tauri::command]
+pub fn resumen_entradas_por_producto_total(
+    state: State<'_, DbState>,
+) -> Result<Vec<crate::models::reportes_entrada::reporte_entrada::ResumenEntradasProducto>, String> {
+    let conn = state.conn.lock().unwrap();
+    resumen_entradas_por_producto_total_logic(&conn)
+}
+// Comando Tauri para reporte consolidado de ventas
+#[tauri::command]
+pub fn reporte_consolidado_ventas(
+    state: State<'_, DbState>,
+    fecha_inicio: String,
+    fecha_fin: String,
+    limite_productos: i32,
+) -> Result<crate::models::reportes::reporte::ReporteConsolidadoVentas, String> {
+    let conn = state.conn.lock().unwrap();
+    reporte_consolidado_ventas_logic(&conn, &fecha_inicio, &fecha_fin, limite_productos)
+}
