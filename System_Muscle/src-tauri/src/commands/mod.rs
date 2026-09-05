@@ -168,7 +168,7 @@ use crate::models::reportes_entrada::reporte_entrada::{ResumenEntradasProducto, 
 // Comandos de utilidad
 #[tauri::command]
 pub fn test_db_connection() -> Result<String, String> {
-    match rusqlite::Connection::open("system_muscle.db") {
+    match rusqlite::Connection::open(crate::services::db::connection::get_db_path()) {
         Ok(conn) => {
             match conn.query_row("SELECT 'Conectado exitosamente'", [], |row| {
                 row.get::<_, String>(0)
