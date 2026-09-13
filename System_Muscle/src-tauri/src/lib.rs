@@ -108,6 +108,7 @@ tauri::Builder::default()
             commands::ventas_por_metodo_pago_total,
             // Reportes de entrada
             commands::resumen_entradas_por_producto,
+            commands::resumen_entradas_por_producto_total,
             commands::totales_entradas_rango,
             commands::entradas_por_dia,
             commands::entradas_por_usuario,
