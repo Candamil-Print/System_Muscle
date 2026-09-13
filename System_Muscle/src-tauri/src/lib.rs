@@ -6,6 +6,7 @@ pub mod models;
 pub mod services;
 
 use tauri_plugin_fs;
+use tauri::{Manager, Listener};
 
 use services::db::connection::DbState;
 use std::sync::Mutex;
@@ -33,6 +34,30 @@ tauri::Builder::default()
     .manage(DbState {
         conn: Mutex::new(conn),
     })
+        .setup(|app| {
+            // La ventana se crea oculta (ver tauri.conf.json: "visible": false).
+            // Solo la mostramos cuando el frontend (SvelteKit) avisa que ya
+            // terminó de montarse y pintar, para evitar el flash blanco.
+            let window = app.get_webview_window("main").unwrap();
+
+            let window_clone = window.clone();
+            window.listen("frontend-ready", move |_event| {
+                let _ = window_clone.show();
+                let _ = window_clone.set_focus();
+            });
+
+            // Fallback de seguridad: si por algún motivo el evento nunca
+            // llega (error de JS, build distinto, etc.), mostramos la
+            // ventana de todas formas pasado un momento para que la app
+            // nunca quede invisible.
+            let fallback_window = app.get_webview_window("main").unwrap();
+            std::thread::spawn(move || {
+                std::thread::sleep(std::time::Duration::from_millis(1500));
+                let _ = fallback_window.show();
+            });
+
+            Ok(())
+        })
         .invoke_handler(tauri::generate_handler![
             // Utilidades
             commands::test_db_connection,
