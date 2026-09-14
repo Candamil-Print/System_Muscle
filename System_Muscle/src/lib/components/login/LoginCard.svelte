@@ -6,14 +6,13 @@
 <div
 	class="rounded-3xl
 	border border-zinc-200
-	bg-white/80
+	bg-white/95
 	p-8
 	shadow-2xl
-	backdrop-blur-xl
 	transition-all duration-500
 
 	dark:border-white/10
-	dark:bg-white/5
+	dark:bg-[#0F172A]/95
 	dark:shadow-black/40"
 >
 	<LoginHeader />
